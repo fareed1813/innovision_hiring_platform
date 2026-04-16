@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Innovision Overseas Pvt. Ltd. — Apply for UAE overseas deployment jobs. Skill assessment platform for manpower recruitment."/>
+  <meta name="keywords" content="Innovision Overseas, UAE jobs, overseas manpower, recruitment India, Gulf jobs, Dubai jobs"/>
+  <meta name="author" content="Innovision Overseas Pvt. Ltd."/>
+  <meta property="og:title" content="Innovision Overseas — UAE Hiring Platform"/>
+  <meta property="og:description" content="Apply for UAE deployment. Innovision Overseas Pvt. Ltd. — MOIA Registered Manpower Consultancy."/>
+  <meta property="og:type" content="website"/>
+  <title>Innovision Overseas — UAE Hiring & Assessment Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+  <link rel="icon" type="image/png" href="assets/logo.png"/>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     ADMIN LOGIN PAGE
+═══════════════════════════════════════════ -->
+<div id="page-admin-login" class="page" style="background:var(--bg);min-height:100vh;">
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo" onclick="goHome()" role="button" tabindex="0" aria-label="Go to first page">
+        <div class="login-logo-mark">
+          <img class="login-logo-img" src="assets/logo.png" alt="Innovision logo"/>
+        </div>
+        <div class="login-logo-text">
+          <span class="login-logo-main">Innovision Overseas</span>
+          <span class="login-logo-sub">Admin Portal · UAE Recruitment</span>
+        </div>
+      </div>
+      <div class="login-title">Admin Sign In</div>
+      <div class="login-sub">Access the recruitment dashboard to manage candidates, review assessments, and make UAE deployment decisions.</div>
+
+      <div id="login-error" class="login-error hidden">
+        <span>⚠</span>
+        <span id="login-error-text">Invalid credentials. Please try again.</span>
+      </div>
+
+      <div class="login-form-group">
+        <label class="login-label">Username</label>
+        <input class="login-input" id="login-username" type="text"
+          placeholder="Enter your username" autocomplete="username"
+          onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <div class="login-form-group">
+        <label class="login-label">Password</label>
+        <div class="login-input-wrap">
+          <input class="login-input has-icon" id="login-password" type="password"
+            placeholder="Enter your password" autocomplete="current-password"
+            onkeydown="if(event.key==='Enter')doLogin()"/>
+          <button class="login-eye" onclick="togglePwd()" id="eye-btn" title="Show/hide password">👁</button>
+        </div>
+      </div>
+
+      <button class="btn-login" id="login-btn" onclick="doLogin()">Sign In</button>
+
+
+      <div class="login-footer">
+        Innovision Overseas Pvt. Ltd. · MOIA Registered · UAE Deployment Partner<br/>
+        <span style="color:var(--border2);">Not an admin? </span>
+        <span style="color:var(--primary);cursor:pointer;" onclick="goToCandidate()">Apply as a candidate →</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN APP SHELL (shown after login / candidate entry)
+═══════════════════════════════════════════ -->
+<div id="app-shell">
+
+  <!-- NAVIGATION -->
+  <nav>
+    <div class="nav-logo" onclick="goHome()" role="button" tabindex="0" aria-label="Go to first page">
+      <div class="nav-logo-mark">
+        <img class="nav-logo-img" src="assets/logo.png" alt="Innovision logo"/>
+      </div>
+      <div class="nav-logo-text">
+        <span class="nav-logo-main">Innovision Overseas</span>
+        <span class="nav-logo-sub">Manpower Consultancy · UAE Deployment</span>
+      </div>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" id="tab-candidate" onclick="showPage('candidate',this)">Candidate Portal</button>
+      <button class="nav-tab" id="tab-admin" onclick="requireAdminLogin(this)">Admin Dashboard</button>
+    </div>
+    <div class="nav-right">
+      <div class="uae-flag">🇦🇪 Deploying to UAE</div>
+      <div class="admin-user-badge hidden" id="admin-badge">
+        👤 <span id="admin-username-display">Admin</span>
+      </div>
+      <button class="btn-logout hidden" id="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- ─────────────────────────────────────
+       CANDIDATE PORTAL
+  ───────────────────────────────────── -->
+  <div id="page-candidate" class="page active">
+
+    <!-- STEP 0: HERO / LANDING -->
+    <div id="step-0">
+      <div class="hero">
+        <div class="hero-eyebrow">🇦🇪 UAE Overseas Deployment — Now Open</div>
+        <h1>Build Your Future<br/>in the <em>UAE</em></h1>
+        <p class="hero-tagline">Innovision Overseas Pvt. Ltd. bridges skilled Indian professionals with leading employers across the United Arab Emirates.</p>
+        <div class="hero-company-note">
+          <strong>Innovision Overseas Pvt. Ltd.</strong> is a licensed overseas manpower recruitment consultancy headquartered in India. We specialise in sourcing, screening, and deploying qualified candidates to UAE-based employers across sectors including hospitality, construction, security, facilities management, and logistics. All placements comply with MOIA guidelines and UAE Labour Law.
+        </div>
+        <div class="source-title">How did you reach us?</div>
+        <div class="source-row">
+          <div class="source-btn src-instagram" onclick="selectSource('Instagram',this)">
+            <div class="source-icon">
+              <svg viewBox="0 0 64 64" fill="none">
+                <defs>
+                  <linearGradient id="ig" x1="12" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+                    <stop offset="0" stop-color="#833ab4"/><stop offset="0.45" stop-color="#fd1d1d"/><stop offset="1" stop-color="#fcb045"/>
+                  </linearGradient>
+                </defs>
+                <rect class="ig-bg" x="6" y="6" width="52" height="52" rx="12"/><rect x="20" y="20" width="24" height="24" rx="8" stroke="#fff" stroke-width="4"/><circle cx="32" cy="32" r="6" stroke="#fff" stroke-width="4"/><circle cx="43.5" cy="20.5" r="2.5" fill="#fff"/>
+              </svg>
+            </div>
+            Instagram
+          </div>
+          <div class="source-btn src-facebook" onclick="selectSource('Facebook',this)">
+            <div class="source-icon">
+              <svg viewBox="0 0 64 64" fill="none"><rect class="fb-bg" x="6" y="6" width="52" height="52" rx="12"/><path d="M37.6 20.8H41V15.1C40.4 15 38.3 14.8 35.8 14.8C30.5 14.8 27 18 27 23.9V28.9H21.7V35.3H27V49.2H33.5V35.3H38.6L39.4 28.9H33.5V24.5C33.5 22.7 34 20.8 37.6 20.8Z" fill="#fff"/></svg>
+            </div>
+            Facebook
+          </div>
+          <div class="source-btn src-whatsapp" onclick="selectSource('WhatsApp',this)">
+            <div class="source-icon">
+              <svg viewBox="0 0 32 32" fill="none">
+                <path class="wa-bg" d="M16 2C8.268 2 2 8.268 2 16c0 2.485.644 4.819 1.77 6.837L2 30l7.466-1.921A13.935 13.935 0 0 0 16 30c7.732 0 14-6.268 14-14S23.732 2 16 2z" fill="currentColor"/>
+                <path d="M24.2 20.2c-.3-.2-1.9-.9-2.2-1.1-.3-.1-.5-.2-.7.1-.2.3-.8 1-1 1.2s-.4.3-.8.1c-.4-.2-1.6-.6-3-1.9-1.1-1-1.9-2.2-2.1-2.5-.2-.4 0-.6.2-.8.2-.2.4-.4.6-.6s.3-.3.4-.6 0-.5-.1-.7c-.1-.2-.8-2.1-1.1-2.9-.3-.8-.5-.7-.7-.7-.2 0-.5 0-.8 0s-.7.1-1.1.5-1.6 1.5-1.6 3.8 1.6 4.5 1.8 4.8c.2.3 3.1 4.8 7.6 6.7 1.1.5 1.9.7 2.5 1 1.1.3 2.1.3 2.9.1.9-.1 2.6-1.1 3-2.1s.3-.9.2-1.1c-.1-.2-.3-.4-.5-.6z" fill="#fff"/>
+              </svg>
+            </div>
+            WhatsApp
+          </div>
+          <div class="source-btn src-referral" onclick="selectSource('Referral',this)">
+            <div class="source-icon">
+              <svg viewBox="0 0 64 64" fill="none"><path fill="currentColor" d="M21.71 8.71C22.96 7.46 22.39 6 21.71 5.29L18.71 2.29C17.45 1.04 16 1.61 15.29 2.29L13.59 4H11C9.1 4 8 5 7.44 6.15L3 10.59V14.59L2.29 15.29C1.04 16.55 1.61 18 2.29 18.71L5.29 21.71C5.83 22.25 6.41 22.45 6.96 22.45C7.67 22.45 8.32 22.1 8.71 21.71L11.41 19H15C16.7 19 17.56 17.94 17.87 16.9C19 16.6 19.62 15.74 19.87 14.9C21.42 14.5 22 13.03 22 12V9H21.41L21.71 8.71M20 12C20 12.45 19.81 13 19 13L18 13L18 14C18 14.45 17.81 15 17 15L16 15L16 16C16 16.45 15.81 17 15 17H10.59L7.31 20.28C7 20.57 6.82 20.4 6.71 20.29L3.72 17.31C3.43 17 3.6 16.82 3.71 16.71L5 15.41V11.41L7 9.41V11C7 12.21 7.8 14 10 14S13 12.21 13 11H20V12M20.29 7.29L18.59 9H11V11C11 11.45 10.81 12 10 12S9 11.45 9 11V8C9 7.54 9.17 6 11 6H14.41L16.69 3.72C17 3.43 17.18 3.6 17.29 3.71L20.28 6.69C20.57 7 20.4 7.18 20.29 7.29Z" transform="translate(16 16) scale(1.3333333)"/></svg>
+            </div>
+            Referral
+          </div>
+          <div class="source-btn src-direct" onclick="selectSource('Direct',this)">
+            <div class="source-icon">
+              <svg viewBox="0 0 64 64" fill="none"><path d="M28.4 36.6l-1.9 1.9a6.2 6.2 0 0 1-8.8 0 6.2 6.2 0 0 1 0-8.8l1.9-1.9a6.2 6.2 0 0 1 8.8 0" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M35.6 27.4l1.9-1.9a6.2 6.2 0 0 1 8.8 0 6.2 6.2 0 0 1 0 8.8l-1.9 1.9a6.2 6.2 0 0 1-8.8 0" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M27.8 36.2l8.4-8.4" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg>
+            </div>
+            Direct
+          </div>
+        </div>
+        <button class="btn-primary" onclick="goStep(1)">Begin Application →</button>
+      </div>
+    </div>
+
+    <!-- STEP 1: PERSONAL DETAILS -->
+    <div id="step-1" class="step-wrap hidden">
+      <div class="prog-bar"><div class="prog-fill" style="width:25%"></div></div>
+      <div class="step-header">
+        <div class="step-eyebrow">Step 1 of 4</div>
+        <div class="step-title">Your Personal Details</div>
+        <div class="step-sub">All information is used exclusively for UAE visa and deployment processing by Innovision Overseas.</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">First Name *</label><input class="form-input" id="fname" placeholder="Rajesh" autocomplete="given-name"/></div>
+        <div class="form-group"><label class="form-label">Last Name *</label><input class="form-input" id="lname" placeholder="Kumar" autocomplete="family-name"/></div>
+      </div>
+      <div class="form-group"><label class="form-label">Mobile Number *</label><input class="form-input" id="phone" placeholder="+91 98765 43210" type="tel" autocomplete="tel"/></div>
+      <div class="form-group"><label class="form-label">Email Address</label><input class="form-input" id="email" placeholder="rajesh@example.com" type="email" autocomplete="email"/></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">City / State *</label><input class="form-input" id="city" placeholder="e.g. Gurugram, Haryana"/></div>
+        <div class="form-group"><label class="form-label">Years of Experience *</label><input class="form-input" id="exp" placeholder="4" type="number" min="0" max="50"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Passport Status *</label>
+          <select class="form-input" id="passport">
+            <option value="">— Select —</option>
+            <option>Valid Passport (6+ months)</option>
+            <option>Valid Passport (less than 6 months)</option>
+            <option>Applied — awaiting</option>
+            <option>No Passport</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Highest Education</label>
+          <select class="form-input" id="education">
+            <option value="">— Select —</option>
+            <option>10th Pass</option>
+            <option>12th Pass</option>
+            <option>ITI / Diploma</option>
+            <option>Graduate</option>
+            <option>Post Graduate</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Languages Known</label>
+        <input class="form-input" id="langs" placeholder="Hindi, English, Punjabi, Arabic (basic)"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Have you worked in UAE / GCC before?</label>
+        <select class="form-input" id="gulf_exp">
+          <option value="">— Select —</option>
+          <option>Yes — UAE</option>
+          <option>Yes — Saudi Arabia</option>
+          <option>Yes — Other GCC</option>
+          <option>No — First time</option>
+        </select>
+      </div>
+      <div class="step-footer step-footer-between">
+        <button class="btn-outline" onclick="goStep(0)">← Back</button>
+        <button class="btn-primary" onclick="validateStep1()">Next: Choose Role →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: JOB ROLE SELECTION -->
+    <div id="step-2" class="step-wrap hidden">
+      <div class="prog-bar"><div class="prog-fill" style="width:50%"></div></div>
+      <div class="step-header">
+        <div class="step-eyebrow">Step 2 of 4</div>
+        <div class="step-title">Select Deployment Role</div>
+        <div class="step-sub">Choose the role you are applying for. All positions are for deployment in the United Arab Emirates.</div>
+      </div>
+      <div class="job-grid" id="job-grid-container"></div>
+      <div class="step-footer step-footer-between">
+        <button class="btn-outline" onclick="goStep(1)">← Back</button>
+        <button class="btn-primary" onclick="validateStep2()">Start Assessment →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: ASSESSMENT QUESTIONS -->
+    <div id="step-3" class="step-wrap step-wrap-wide hidden">
+      <!-- Top Timer Banner (Replaces old header) -->
+      <div id="test-timer-banner" class="timer-banner">
+        <div class="timer-content">
+          <span class="timer-label">Time Remaining</span>
+          <span id="test-timer-clock" class="timer-clock">45:00</span>
+        </div>
+      </div>
+
+      <div class="assessment-layout">
+        <!-- Main Question Area -->
+        <div class="assessment-main" id="q-container"></div>
+
+        <!-- Right Side Sidebar -->
+        <aside class="assessment-sidebar">
+          <div class="sidebar-card">
+            <div class="sidebar-title">Question Palette</div>
+            <div class="q-grid" id="q-nav-grid">
+              <!-- Indicators injected here -->
+            </div>
+            <div class="q-legend">
+              <div class="leg-item"><span class="leg-dot"></span> Not Started: <strong id="count-todo">0</strong></div>
+              <div class="leg-item"><span class="leg-dot attempted"></span> Attempted: <strong id="count-done">0</strong></div>
+              <div class="leg-item"><span class="leg-dot review"></span> For Review: <strong id="count-review">0</strong></div>
+            </div>
+            <button class="btn-outline btn-full" style="margin-top:20px;" onclick="showSummary()">
+              Finish & Review Summary
+            </button>
+          </div>
+        </aside>
+      </div>
+
+      <div class="step-footer step-footer-between">
+        <div class="nav-controls">
+          <button class="btn-outline" id="btn-prev-q" onclick="prevQuestion()">← Previous</button>
+          <button class="btn-outline" id="btn-review-q" onclick="toggleMarkForReview()">☆ Mark for Review</button>
+        </div>
+        <button class="btn-primary" id="btn-next-q" onclick="nextQuestion()">Next Question →</button>
+      </div>
+
+      <!-- INLINE SUMMARY VIEW (Initially Hidden) -->
+      <div id="q-summary-view" class="summary-view-box hidden">
+        <div class="summary-card-inner">
+          <div class="step-header" style="text-align:center;">
+            <div class="step-title">Assessment Summary</div>
+            <div class="step-sub">Please review your progress before final submission.</div>
+          </div>
+          
+          <div class="summary-stats">
+            <div class="stat-card">
+              <div class="stat-num" id="sum-total">—</div>
+              <div class="stat-label">Total Questions</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-num attempted" id="sum-done">—</div>
+              <div class="stat-label">Attempted</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-num review" id="sum-review">—</div>
+              <div class="stat-label">To Review</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-num pending" id="sum-missed">—</div>
+              <div class="stat-label">Remaining</div>
+            </div>
+          </div>
+
+          <div class="summary-msg" id="summary-msg">
+            Ready to submit? You cannot change your answers after this step.
+          </div>
+
+          <div class="step-footer step-footer-between">
+            <button class="btn-outline" onclick="hideSummary()">Back to Questions</button>
+            <button class="btn-primary" onclick="submitAssessment()">Confirm & Submit Assessment →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- STEP 4: RESULT / CONFIRMATION DASHBOARD -->
+    <div id="step-4" class="step-wrap hidden">
+      <div class="conf-dashboard">
+        
+        <!-- TOP SUCCESS STATUS -->
+        <div class="conf-card main-status-box">
+          <div class="conf-check-ring">
+            <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+              <circle class="checkmark__circle" cx="26" cy="26" r="25" fill="none"/>
+              <path class="checkmark__check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+          </div>
+          <h2 class="conf-title">Assessment Submitted Successfully</h2>
+          <p class="conf-subtitle">Thank you for your time, <span id="conf-name-display" style="font-weight: 700;">Candidate</span>. Your application has been securely recorded.</p>
+          
+          <div class="receipt-id-badge">
+            <span class="receipt-lbl">Tracking ID</span>
+            <span class="receipt-val" id="ref-id-dash">INV-0000000</span>
+          </div>
+        </div>
+
+        <!-- WHAT HAPPENS NEXT (Timeline) -->
+        <div class="conf-card next-steps-box">
+          <h3 class="conf-sec-title">What Happens Next?</h3>
+          <div class="timeline-container">
+            <div class="timeline-lane">
+              <!-- Step 1: DONE -->
+              <div class="t-step s-done">
+                <div class="t-icon">1</div>
+                <div class="t-info">
+                  <div class="t-label">Successfully Submitted</div>
+                  <div class="t-desc">Your assessment and personal documents are received.</div>
+                </div>
+              </div>
+              <!-- Step 2: FUTURE -->
+              <div class="t-step s-future">
+                <div class="t-icon">2</div>
+                <div class="t-info">
+                  <div class="t-label">Admin Document Review</div>
+                  <div class="t-desc">Our team will verify your UAE visa eligibility. (3–5 Working Days)</div>
+                </div>
+              </div>
+              <!-- Step 3: FUTURE -->
+              <div class="t-step s-future">
+                <div class="t-icon">3</div>
+                <div class="t-info">
+                  <div class="t-label">Contact & Deployment</div>
+                  <div class="t-desc">Final result & flight schedules via official WhatsApp.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="conf-footer-text">
+          <img src="https://img.icons8.com/ios-filled/50/000000/guarantee.png" alt="security" style="width:14px; opacity:0.6; margin-right:5px; vertical-align:middle; filter: invert(1);">
+          Innovision Overseas Pvt. Ltd. · MOIA Registered · UAE Manpower Partner
+        </div>
+
+        <div class="step-footer" style="justify-content:center; margin-top:32px;">
+          <button class="btn-primary" onclick="goToHomePage()">Return to Home Page →</button>
+        </div>
+      </div>
+
+      <!-- Hidden Scores for Admin logic persistence -->
+      <div id="grade-display" class="hidden"></div>
+      <div id="final-score" class="hidden"></div>
+      <div id="bar-r" style="display:none;"></div>
+      <div id="sc-r" style="display:none;"></div>
+      <div id="bar-v" style="display:none;"></div>
+      <div id="sc-v" style="display:none;"></div>
+      <div id="bar-q" style="display:none;"></div>
+      <div id="sc-q" style="display:none;"></div>
+      <div id="result-ring" style="display:none;"></div>
+    </div>
+
+  </div><!-- /page-candidate -->
+
+  <!-- ─────────────────────────────────────
+       ADMIN DASHBOARD
+  ───────────────────────────────────── -->
+  <div id="page-admin" class="page">
+    <div class="admin-shell">
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar" role="navigation" aria-label="Admin navigation">
+        <div class="sidebar-top">
+          <div class="sidebar-company">Innovision Overseas Pvt. Ltd.</div>
+          <div class="sidebar-role" id="sidebar-role-label">Recruitment Admin</div>
+        </div>
+        <div class="sidebar-section">Candidates</div>
+        <div class="sb-item active" onclick="switchAdminTab('dashboard',this)" role="button" tabindex="0">
+          <span class="sb-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          </span> Dashboard
+          <span class="sb-badge" id="pending-badge">0</span>
+        </div>
+        <div class="sb-item" onclick="switchAdminTab('all-candidates',this)" role="button" tabindex="0">
+          <span class="sb-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </span> All Candidates
+        </div>
+        <div class="sb-item" onclick="switchAdminTab('selected',this)" role="button" tabindex="0">
+          <span class="sb-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          </span> Selected
+        </div>
+        <div class="sb-item" onclick="switchAdminTab('rejected',this)" role="button" tabindex="0">
+          <span class="sb-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+          </span> Rejected
+        </div>
+        <div class="sb-item" onclick="switchAdminTab('pending-review',this)" role="button" tabindex="0">
+          <span class="sb-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </span> Pending Review
+        </div>
+        <div class="sidebar-section">Configuration</div>
+        <div class="sb-item" onclick="switchAdminTab('question-bank',this)" role="button" tabindex="0">
+          <span class="sb-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </span> Question Bank
+        </div>
+        <div class="sidebar-section">Info</div>
+        <div class="sb-item" onclick="switchAdminTab('about',this)" role="button" tabindex="0">
+          <span class="sb-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="2"></line><line x1="15" y1="22" x2="15" y2="2"></line><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="10" x2="20" y2="10"></line><line x1="4" y1="14" x2="20" y2="14"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>
+          </span> About Innovision
+        </div>
+      </aside>
+
+      <!-- ADMIN MAIN CONTENT -->
+      <main class="admin-main">
+
+        <!-- VIEW: DASHBOARD -->
+        <div id="view-dashboard" class="admin-view active">
+          <div class="admin-hdr-flex">
+            <div>
+              <div class="admin-page-title">Recruitment Dashboard</div>
+              <div class="admin-page-sub">Innovision Overseas — UAE Deployment Pipeline</div>
+            </div>
+            <button class="btn-primary btn-sm" onclick="downloadCandidatesCSV('dash')">⬇ Download CSV File</button>
+          </div>
+          <div class="stats-row">
+            <div class="stat-box"><div class="stat-val" id="s-total">0</div><div class="stat-lbl">Total Applicants</div></div>
+            <div class="stat-box"><div class="stat-val" id="s-pending">0</div><div class="stat-lbl">Pending Review</div></div>
+            <div class="stat-box"><div class="stat-val" id="s-selected">0</div><div class="stat-lbl">Selected for UAE</div></div>
+            <div class="stat-box"><div class="stat-val" id="s-rejected">0</div><div class="stat-lbl">Rejected</div></div>
+          </div>
+          <div class="tbl-toolbar">
+            <button type="button" class="filter-btn filter-all active" data-role="all" onclick="filterTable('all',this,'dash')">All Roles</button>
+            <button type="button" class="filter-btn filter-role" data-role="driver" onclick="filterTable('driver',this,'dash')">
+              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-1.1 0-2 .9-2 2v7c0 1.1.9 2 2 2h2m12 0c0 1.1-.9 2-2 2s-2-.9-2-2m-8 0c0 1.1-.9 2-2 2s-2-.9-2-2m14-8V9c0-1.1-.9-2-2-2h-3l-4-4H5c-1.1 0-2 .9-2 2v2"></path></svg> Driver
+            </button>
+            <button type="button" class="filter-btn filter-role" data-role="security" onclick="filterTable('security',this,'dash')">
+              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> Security
+            </button>
+            <button type="button" class="filter-btn filter-role" data-role="housekeeping" onclick="filterTable('housekeeping',this,'dash')">
+              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 21 18-18"></path><path d="M11 21H3V7c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v8"></path><path d="M14 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"></path><path d="M14 21v-4"></path><path d="M18 21v-8"></path></svg> Housekeeping
+            </button>
+            <button type="button" class="filter-btn filter-role" data-role="supervisor" onclick="filterTable('supervisor',this,'dash')">
+              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Supervisor
+            </button>
+            <button type="button" class="filter-btn filter-role" data-role="helper" onclick="filterTable('helper',this,'dash')">
+              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg> Helper
+            </button>
+            <input type="search" class="search-box" placeholder="Search name, phone…" oninput="searchTable(this.value,'dash')" aria-label="Search candidates"/>
+          </div>
+          <div class="tbl-wrap">
+            <table role="grid">
+              <thead><tr><th>Candidate</th><th>Role</th><th>Score</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="tbody-dash"></tbody>
+            </table>
+            <div class="empty-state hidden" id="empty-dash">No candidates yet.</div>
+          </div>
+        </div>
+
+        <!-- VIEW: ALL CANDIDATES -->
+        <div id="view-all-candidates" class="admin-view">
+          <div class="admin-hdr-flex">
+            <div>
+              <div class="admin-page-title">All Candidates</div>
+              <div class="admin-page-sub">Complete applicant list — all statuses</div>
+            </div>
+            <button class="btn-primary btn-sm" onclick="downloadCandidatesCSV('all')">⬇ Download CSV File</button>
+          </div>
+          <div class="tbl-toolbar">
+            <button type="button" class="filter-btn filter-all active" data-role="all" onclick="filterTable('all',this,'all')">All</button>
+            <button type="button" class="filter-btn filter-role" data-role="driver" onclick="filterTable('driver',this,'all')">
+              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-1.1 0-2 .9-2 2v7c0 1.1.9 2 2 2h2m12 0c0 1.1-.9 2-2 2s-2-.9-2-2m-8 0c0 1.1-.9 2-2 2s-2-.9-2-2m14-8V9c0-1.1-.9-2-2-2h-3l-4-4H5c-1.1 0-2 .9-2 2v2"></path></svg> Driver
+            </button>
+            <button type="button" class="filter-btn filter-role" data-role="security" onclick="filterTable('security',this,'all')">
+              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> Security
+            </button>
+            <button type="button" class="filter-btn filter-role" data-role="housekeeping" onclick="filterTable('housekeeping',this,'all')">
+              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 21 18-18"></path><path d="M11 21H3V7c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v8"></path><path d="M14 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"></path><path d="M14 21v-4"></path><path d="M18 21v-8"></path></svg> Housekeeping
+            </button>
+            <button type="button" class="filter-btn filter-role" data-role="supervisor" onclick="filterTable('supervisor',this,'all')">
+              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Supervisor
+            </button>
+            <button type="button" class="filter-btn filter-role" data-role="helper" onclick="filterTable('helper',this,'all')">
+              <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg> Helper
+            </button>
+            <input type="search" class="search-box" placeholder="Search…" oninput="searchTable(this.value,'all')" aria-label="Search"/>
+          </div>
+          <div class="tbl-wrap">
+            <table role="grid">
+              <thead><tr><th>Candidate</th><th>Role</th><th>Score</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="tbody-all"></tbody>
+            </table>
+            <div class="empty-state hidden" id="empty-all">No candidates.</div>
+          </div>
+        </div>
+
+        <!-- VIEW: SELECTED -->
+        <div id="view-selected" class="admin-view">
+          <div class="admin-hdr-flex">
+            <div>
+              <div class="admin-page-title">Selected Candidates</div>
+              <div class="admin-page-sub">Candidates approved for UAE deployment</div>
+            </div>
+            <button class="btn-primary btn-sm" onclick="downloadCandidatesCSV('selected')">⬇ Download CSV File</button>
+          </div>
+          <div class="tbl-wrap">
+            <table role="grid">
+              <thead><tr><th>Candidate</th><th>Role</th><th>Score</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="tbody-selected"></tbody>
+            </table>
+            <div class="empty-state hidden" id="empty-selected">No selected candidates yet.</div>
+          </div>
+        </div>
+
+        <!-- VIEW: REJECTED -->
+        <div id="view-rejected" class="admin-view">
+          <div class="admin-hdr-flex">
+            <div>
+              <div class="admin-page-title">Rejected Candidates</div>
+              <div class="admin-page-sub">Candidates not proceeding at this time</div>
+            </div>
+            <button class="btn-primary btn-sm" onclick="downloadCandidatesCSV('rejected')">⬇ Download CSV File</button>
+          </div>
+          <div class="tbl-wrap">
+            <table role="grid">
+              <thead><tr><th>Candidate</th><th>Role</th><th>Score</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="tbody-rejected"></tbody>
+            </table>
+            <div class="empty-state hidden" id="empty-rejected">No rejected candidates.</div>
+          </div>
+        </div>
+
+        <!-- VIEW: PENDING REVIEW -->
+        <div id="view-pending-review" class="admin-view">
+          <div class="admin-hdr-flex">
+            <div>
+              <div class="admin-page-title">Pending Review</div>
+              <div class="admin-page-sub">Candidates awaiting admin decision</div>
+            </div>
+            <button class="btn-primary btn-sm" onclick="downloadCandidatesCSV('pending-review')">⬇ Download CSV File</button>
+          </div>
+          <div class="tbl-wrap">
+            <table role="grid">
+              <thead><tr><th>Candidate</th><th>Role</th><th>Score</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="tbody-pending-review"></tbody>
+            </table>
+            <div class="empty-state hidden" id="empty-pending-review">No pending candidates.</div>
+          </div>
+        </div>
+
+        <!-- VIEW: QUESTION BANK -->
+        <div id="view-question-bank" class="admin-view">
+          <div class="admin-page-title">Question Bank</div>
+          <div class="admin-page-sub">Manage assessment questions per role. Upload CSV/JSON or add questions manually.</div>
+          <div id="qb-sections"></div>
+        </div>
+
+        <!-- VIEW: ABOUT -->
+        <div id="view-about" class="admin-view">
+          <div class="admin-page-title">About Innovision Overseas</div>
+          <div class="admin-page-sub">Company profile and deployment information</div>
+          <div class="about-grid">
+            <div class="stat-box about-hero-box">
+              <div class="about-company-name">Innovision Overseas Pvt. Ltd.</div>
+              <p class="about-desc">A Ministry of External Affairs (India) registered overseas manpower recruitment consultancy. Innovision Overseas specialises in sourcing, skill-testing, documentation, visa processing, and deploying qualified Indian workers to the <strong style="color:var(--text);">United Arab Emirates</strong>. We work with verified UAE employers across Dubai, Abu Dhabi, Sharjah, and Ajman in sectors including facilities management, hospitality, logistics, construction, and security.</p>
+            </div>
+            <div class="stat-box"><div class="about-lbl">Registration</div><div class="about-val">MOIA Registered Recruitment Agency</div></div>
+            <div class="stat-box"><div class="about-lbl">Deployment Country</div><div class="about-val">🇦🇪 United Arab Emirates (UAE)</div></div>
+            <div class="stat-box"><div class="about-lbl">Sectors</div><div class="about-val">Security · Hospitality · Logistics · FM · Construction</div></div>
+            <div class="stat-box"><div class="about-lbl">Platform Purpose</div><div class="about-val">Lead Conversion → Skill Assessment → UAE Deployment</div></div>
+            <div class="stat-box about-journey-box">
+              <div class="about-lbl">Candidate Journey</div>
+              <div class="journey-steps">
+                <span class="journey-step step-gold">1. Social Media Lead</span>
+                <span class="journey-arrow">→</span>
+                <span class="journey-step step-blue">2. Online Application</span>
+                <span class="journey-arrow">→</span>
+                <span class="journey-step step-green">3. Skill Assessment</span>
+                <span class="journey-arrow">→</span>
+                <span class="journey-step step-gold">4. Admin Review</span>
+                <span class="journey-arrow">→</span>
+                <span class="journey-step step-blue">5. UAE Deployment</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div><!-- /page-admin -->
+
+</div><!-- /app-shell -->
+
+<!-- ═══════════════════════════════════════════
+     CANDIDATE DETAIL MODAL
+═══════════════════════════════════════════ -->
+<div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="m-name">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div>
+        <div class="modal-name" id="m-name">—</div>
+        <div class="modal-meta" id="m-meta">—</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+    </div>
+    <div class="detail-grid" id="m-details"></div>
+    <hr class="divider"/>
+    <div class="modal-score-row">
+      <div class="modal-score-block">
+        <div class="modal-score-num" id="m-score">—</div>
+        <div class="modal-score-lbl">Proficiency Score</div>
+      </div>
+      <div class="modal-breakdown" id="m-breakdown"></div>
+    </div>
+    <hr class="divider"/>
+    <div class="modal-section-title">Assessment Responses</div>
+    <div id="m-qa"></div>
+    <hr class="divider"/>
+    <div class="modal-actions" id="m-actions"></div>
+  </div>
+</div>
+
+<!-- CUSTOM CURSOR -->
+<div class="cursor-dot" id="cursor-dot"></div>
+<div class="cursor-outline" id="cursor-outline"></div>
+
+<!-- TOAST NOTIFICATION -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- SCRIPTS -->
+<script src="js/data.js"></script>
+<script src="js/lenis.js"></script>
+<script src="js/smooth.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/candidate.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/questionbank.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
