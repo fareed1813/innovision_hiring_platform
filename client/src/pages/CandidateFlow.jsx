@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
-import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, ShieldCheck, Car, Sparkles, Users, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown } from 'lucide-react';
+import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, ShieldCheck, Car, Sparkles, Users, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle } from 'lucide-react';
 import Footer from '../components/Footer';
 
 const ROLES_MAP = {
@@ -114,6 +114,7 @@ export default function CandidateFlow() {
   // Results
   const [result, setResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
   const [validating, setValidating] = useState(false);
   const [dupError, setDupError] = useState('');
   const [isFull, setIsFull] = useState(false);
@@ -404,9 +405,18 @@ export default function CandidateFlow() {
     } catch (err) {
       console.error(err);
       if (err.response?.status === 409) {
-        alert(`Duplicate Application: ${err.response.data.message || 'You have already completed the assessment for this role.'} Please contact support if you need to retake it. (Ref: ${err.response.data.refId || 'N/A'})`);
+        setSubmitError({
+          title: 'Duplicate Application',
+          message: err.response.data.message || 'You have already completed the assessment for this role.',
+          refId: err.response.data.refId || 'N/A',
+          isDuplicate: true
+        });
       } else {
-        alert('Submission failed. Please try again or contact support.');
+        setSubmitError({
+          title: 'Submission Failed',
+          message: 'An unexpected error occurred while saving your assessment. Please check your internet connection and try again.',
+          isDuplicate: false
+        });
       }
     } finally {
       setSubmitting(false);
@@ -900,6 +910,42 @@ export default function CandidateFlow() {
             </div>
             <h2 className="submitting-title">Generating Your Evaluation</h2>
             <p className="submitting-text">Please wait while our AI engine analyzes your performance...</p>
+          </div>
+        </div>
+      )}
+
+      {/* ERROR OVERLAY */}
+      {submitError && (
+        <div className="submitting-overlay">
+          <div className="submitting-card" style={{ maxWidth: '440px', padding: '40px' }}>
+            <div className="submitting-icon" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--brand-red)' }}>
+              <AlertTriangle size={64} />
+            </div>
+            <h2 className="submitting-title" style={{ color: 'var(--text)' }}>{submitError.title}</h2>
+            <p className="submitting-text" style={{ color: 'var(--muted)', fontSize: '15px' }}>
+              {submitError.message}
+            </p>
+            {submitError.refId && (
+              <div style={{ marginTop: '20px', padding: '12px', background: 'var(--surface2)', borderRadius: '8px', border: '1px dashed var(--border)', fontSize: '13px', color: 'var(--text)', fontWeight: 600 }}>
+                Reference ID: <span style={{ color: 'var(--brand-red)' }}>{submitError.refId}</span>
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: '12px', marginTop: '32px', width: '100%' }}>
+              <button 
+                className="btn btn-ghost" 
+                style={{ flex: 1 }}
+                onClick={() => setSubmitError(null)}
+              >
+                Close
+              </button>
+              <button 
+                className="btn btn-primary" 
+                style={{ flex: 1 }}
+                onClick={() => navigate('/')}
+              >
+                Return Home
+              </button>
+            </div>
           </div>
         </div>
       )}

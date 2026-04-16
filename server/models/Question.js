@@ -37,6 +37,13 @@ const questionSchema = new mongoose.Schema({
     a: String
   }],
   seeds: [{ type: String }],
+  // For security role — MCQs linked to the essay topic
+  topicMCQs: [{
+    qid: String,
+    question: String,
+    expectedOption: String,
+    options: [{ key: String, text: String }]
+  }],
   active: { type: Boolean, default: true }
 }, { timestamps: true });
 

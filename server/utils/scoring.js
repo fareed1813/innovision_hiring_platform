@@ -200,7 +200,12 @@ export function evaluateAnswer(question, answer) {
     const variety = Math.min(1, uniq / Math.max(20, words * 0.6));
     
     // Final Weighted Score (Keywords 40%, Similarity 30%, Variety 20%, Length 10%)
-    const score = (coverage * 0.4) + (sim * 0.3) + (variety * 0.2) + (Math.min(1, words / 120) * 0.1);
+    let score = (coverage * 0.4) + (sim * 0.3) + (variety * 0.2) + (Math.min(1, words / 120) * 0.1);
+    
+    // Generosity curve: Reward solid effort with a boost
+    if (score > 0.45) {
+      score = Math.min(1.0, score * 1.15);
+    }
     
     let feedback = `Keyword Alignment: ${matchedKeywords.length}/${keywords.length} core themes detected. `;
     if (variety < 0.4) feedback += 'Frequent word repetition flagged. ';
