@@ -696,7 +696,6 @@ export default function CandidateFlow() {
     const unansweredCount = questions.length - answeredCount;
 
     return (
-    return (
       <div style={{ background: 'var(--surface)', minHeight: '100vh' }}>
         {/* Fullscreen Lockdown Overlay - AT ROOT to prevent z-index/transform bugs */}
         {!isFull && (
