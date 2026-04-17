@@ -55,43 +55,43 @@ const FLUENCY_PASSAGES = [
 ];
 
 const ESSAY_PROMPTS = [
-  { topic: 'The benefits of Travelling', mcq: [
+  { topic: 'The benefits of Travelling', seeds: ['travel', 'culture', 'experience', 'learn', 'country', 'explore', 'adventure', 'knowledge'], mcq: [
       { q: 'What is a common benefit of visiting new countries?', opts: ['Learning new traditions','Avoiding work','Staying indoors'], cor: 'A' },
-      { q: 'How does travel usually impact a person’s mindset?', opts: ['Makes them tired','Makes them open-minded','Makes them bored'], cor: 'B' }
+      { q: 'How does travel usually impact a person\u2019s mindset?', opts: ['Makes them tired','Makes them open-minded','Makes them bored'], cor: 'B' }
   ]},
-  { topic: 'How I spend my free time', mcq: [
+  { topic: 'How I spend my free time', seeds: ['relax', 'hobby', 'family', 'friends', 'enjoy', 'sports', 'read', 'happy'], mcq: [
       { q: 'Why is spending time with family and friends beneficial?', opts: ['It creates stress','It makes one feel happy and refreshed','It saves money'], cor: 'B' },
       { q: 'How does relaxing after a long day help a person?', opts: ['It helps them relax and recover','It makes them lazy','It increases workload'], cor: 'A' }
   ]},
-  { topic: 'How Mobile Phone have changed the world', mcq: [
+  { topic: 'How Mobile Phone have changed the world', seeds: ['communication', 'technology', 'internet', 'social', 'connect', 'information', 'fast', 'health'], mcq: [
       { q: 'What is a major change brought by mobile phones?', opts: ['Communication is slower','Communication is faster','No more letters'], cor: 'B' },
       { q: 'Too much use of technology can affect...', opts: ['Our bank account','Our health','Our height'], cor: 'B' }
   ]},
-  { topic: 'My future plans', mcq: [
+  { topic: 'My future plans', seeds: ['goal', 'education', 'career', 'job', 'study', 'success', 'family', 'work'], mcq: [
       { q: 'What is essential for achieving future goals?', opts: ['Sleeping a lot','Staying focused and studying regularly','Playing games'], cor: 'B' },
       { q: 'A good education can provide...', opts: ['Better job opportunities','Less knowledge','More free time'], cor: 'A' }
   ]},
-  { topic: 'The day I will never forget', mcq: [
+  { topic: 'The day I will never forget', seeds: ['remember', 'special', 'happy', 'surprise', 'family', 'moment', 'feeling', 'experience'], mcq: [
       { q: 'Unforgettable moments usually make one feel...', opts: ['Sad','Special and happy','Bored'], cor: 'B' },
       { q: 'Special events are often shared with...', opts: ['Strangers','Family and friends','Nobody'], cor: 'B' }
   ]},
-  { topic: 'My hobbies', mcq: [
+  { topic: 'My hobbies', seeds: ['enjoy', 'hobby', 'reading', 'sports', 'painting', 'music', 'relax', 'time'], mcq: [
       { q: 'Hobbies help people to...', opts: ['Be more stressed','Relax and enjoy activities','Waste time'], cor: 'B' },
       { q: 'Common hobbies include...', opts: ['Working late','Reading, sports, or painting','Sleeping in traffic'], cor: 'B' }
   ]},
-  { topic: 'The importance of saving money', mcq: [
+  { topic: 'The importance of saving money', seeds: ['save', 'money', 'future', 'emergency', 'plan', 'budget', 'bank', 'spend'], mcq: [
       { q: 'Why is saving money important?', opts: ['To spend it all today','For financial planning and emergencies','To show off to others'], cor: 'B' },
       { q: 'Planning for the future involves...', opts: ['Ignoring expenses','Saving for emergencies','Buying expensive cars'], cor: 'B' }
   ]},
-  { topic: 'The importance of being honest', mcq: [
+  { topic: 'The importance of being honest', seeds: ['honest', 'trust', 'truth', 'respect', 'integrity', 'character', 'loyal', 'believe'], mcq: [
       { q: 'What is a key value in character building?', opts: ['Lying','Honesty and integrity','Rudeness'], cor: 'B' },
       { q: 'Trust is built through...', opts: ['Tricking people','Being honest and truthful','Keeping secrets'], cor: 'B' }
   ]},
-  { topic: 'My dream vacation destination', mcq: [
+  { topic: 'My dream vacation destination', seeds: ['travel', 'vacation', 'destination', 'beach', 'culture', 'explore', 'food', 'adventure'], mcq: [
       { q: 'Dream vacations often include...', opts: ['Difficult work','Adventure and new cultures','Staying at the office'], cor: 'B' },
       { q: 'What is a great way to learn about new food and lifestyles?', opts: ['Watching TV only','Traveling to new places','Reading the news'], cor: 'B' }
   ]},
-  { topic: 'My number one goal in life and why I chose it', mcq: [
+  { topic: 'My number one goal in life and why I chose it', seeds: ['goal', 'ambition', 'purpose', 'achieve', 'success', 'dream', 'focus', 'effort'], mcq: [
       { q: 'What drives a person to achieve their goals?', opts: ['Having no plan','Purpose and ambition','Luck alone'], cor: 'B' },
       { q: 'Setting priorities helps in...', opts: ['Losing focus','Achieving success and achievement','Becoming lazy'], cor: 'B' }
   ]}
@@ -213,7 +213,7 @@ async function seed() {
         question: `Write an essay about: ${ep.topic}`,
         // Follow-ups as situational MCQs
         followUps: ep.mcq.map(m => ({ q: m.q, a: m.opts[m.cor.charCodeAt(0) - 65] })), // For legacy situational model
-        seeds: ep.topic.split(' '),
+        seeds: ep.seeds,
         // The specific MCQs for Security
         topicMCQs: ep.mcq.map((m, mi) => ({
           qid: `essay_${i + 1}_mcq_${mi + 1}`,

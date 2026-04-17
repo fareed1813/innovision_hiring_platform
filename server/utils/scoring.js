@@ -86,11 +86,6 @@ function industrySimilarity(candidateRaw, expectedRaw) {
   }
   
   let recall = matchedTokens / expTokens.length;
-  // Lenient curve to provide full marks for answers covering the same meaning/keywords
-  if (recall > 0.4) {
-    recall = Math.min(1.0, recall * 1.4);
-  }
-  
   return recall;
 }
 
