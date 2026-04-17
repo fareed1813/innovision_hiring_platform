@@ -274,19 +274,25 @@ export default function CandidateFlow() {
     else if (el.msRequestFullscreen) el.msRequestFullscreen();
   };
 
-  // Pre-warm microphone when assessment starts
+  // Pre-warm microphone and trigger fullscreen when assessment step begins
   useEffect(() => {
-    if (step === 2 && !audioStreamRef.current) {
-      navigator.mediaDevices?.getUserMedia({ audio: true })
-        .then(stream => { audioStreamRef.current = stream; })
-        .catch(() => {});
+    if (step === 2) {
+      // Trigger fullscreen after the step renders (user gesture context is preserved via React event)
+      const fsTimeout = setTimeout(() => enterFS(), 100);
+      // Pre-warm microphone
+      if (!audioStreamRef.current) {
+        navigator.mediaDevices?.getUserMedia({ audio: true })
+          .then(stream => { audioStreamRef.current = stream; })
+          .catch(() => {});
+      }
+      return () => clearTimeout(fsTimeout);
     }
   }, [step]);
 
-  // Timer
+
+  // Timer — run regardless of fullscreen so it counts down even on the lockout overlay
   useEffect(() => {
-    // Only tick if on Step 2 AND in Fullscreen
-    if (step !== 2 || timeLeft <= 0 || !isFull) return;
+    if (step !== 2 || timeLeft <= 0) return;
     const interval = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) { clearInterval(interval); handleSubmit(); return 0; }
@@ -296,11 +302,9 @@ export default function CandidateFlow() {
     return () => clearInterval(interval);
   }, [step, timeLeft]);
 
+
   // Fetch questions when starting assessment
   const startAssessment = async () => {
-    // Request Fullscreen immediately (must be synchronous with user click)
-    enterFS();
-
     setValidating(true);
     setDupError('');
     try {
@@ -322,7 +326,7 @@ export default function CandidateFlow() {
       setTimeLeft(time);
       setTotalTime(time);
       
-      // 3. Change step
+      // 3. Change step — fullscreen will be triggered by useEffect below
       handleStepChange(2);
     } catch (err) {
       console.error(err);
@@ -331,6 +335,7 @@ export default function CandidateFlow() {
       setValidating(false);
     }
   };
+
 
   // Voice recording toggle
   const toggleVoice = useCallback((qid) => {
