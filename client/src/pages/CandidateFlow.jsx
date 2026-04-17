@@ -274,18 +274,12 @@ export default function CandidateFlow() {
     else if (el.msRequestFullscreen) el.msRequestFullscreen();
   };
 
-  // Pre-warm microphone and trigger fullscreen when assessment step begins
+  // Pre-warm microphone when assessment starts
   useEffect(() => {
-    if (step === 2) {
-      // Trigger fullscreen after the step renders (user gesture context is preserved via React event)
-      const fsTimeout = setTimeout(() => enterFS(), 100);
-      // Pre-warm microphone
-      if (!audioStreamRef.current) {
-        navigator.mediaDevices?.getUserMedia({ audio: true })
-          .then(stream => { audioStreamRef.current = stream; })
-          .catch(() => {});
-      }
-      return () => clearTimeout(fsTimeout);
+    if (step === 2 && !audioStreamRef.current) {
+      navigator.mediaDevices?.getUserMedia({ audio: true })
+        .then(stream => { audioStreamRef.current = stream; })
+        .catch(() => {});
     }
   }, [step]);
 
@@ -303,8 +297,20 @@ export default function CandidateFlow() {
   }, [step, timeLeft]);
 
 
+  // Exit fullscreen helper
+  const exitFS = () => {
+    if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+      if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      else if (document.msExitFullscreen) document.msExitFullscreen();
+    }
+  };
+
   // Fetch questions when starting assessment
   const startAssessment = async () => {
+    // MUST call enterFS synchronously inside click handler — browsers require user gesture
+    enterFS();
+
     setValidating(true);
     setDupError('');
     try {
@@ -316,6 +322,7 @@ export default function CandidateFlow() {
       if (dupCheck.data.isDuplicate) {
         setDupError(`You have already completed the assessment for ${ROLES_MAP[selectedRole]?.label}. Only one attempt per role is permitted.`);
         setValidating(false);
+        exitFS(); // Exit fullscreen if duplicate
         return;
       }
 
@@ -326,10 +333,11 @@ export default function CandidateFlow() {
       setTimeLeft(time);
       setTotalTime(time);
       
-      // 3. Change step — fullscreen will be triggered by useEffect below
+      // 3. Change step — fullscreen is already active from the enterFS() call above
       handleStepChange(2);
     } catch (err) {
       console.error(err);
+      exitFS(); // Exit fullscreen on error
       alert('Verification failed. Please try again.');
     } finally {
       setValidating(false);
@@ -431,14 +439,13 @@ export default function CandidateFlow() {
       setResult(res.data);
       localStorage.removeItem('candidate_draft'); // Success path
       
-      // Auto exit fullscreen after completion
-      if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
-      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-      else if (document.msExitFullscreen) document.msExitFullscreen();
+      // Exit fullscreen after completion
+      exitFS();
       
       handleStepChange(3);
     } catch (err) {
       console.error(err);
+      exitFS(); // Also exit fullscreen on error so user isn't stuck
       if (err.response?.status === 409) {
         setSubmitError({
           title: 'Duplicate Application',
