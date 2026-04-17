@@ -120,7 +120,9 @@ export default function CandidateFlow() {
   const [isFull, setIsFull] = useState(false);
   const [reviewed, setReviewed] = useState(new Set());
   const [resetsRemaining, setResetsRemaining] = useState(2);
-  const [violationCount, setViolationCount] = useState(0);
+  const [violations, setViolations] = useState({ tabSwitches: 0, fullscreenExits: 0 });
+  const lastViolationRef = useRef(0);
+
   const [showResumePrompt, setShowResumePrompt] = useState(false);
 
   // ── OFFLINE RECOVERY: Load from LocalStorage ──
@@ -166,6 +168,15 @@ export default function CandidateFlow() {
   const handleReset = (qid) => {
     if (resetsRemaining <= 0) return;
 
+    // Stop active recording if it matches this question
+    if (speechRecRef.current) {
+      try { speechRecRef.current.stop(); } catch(e){}
+    }
+    if (mediaRecRef.current && mediaRecRef.current.state === 'recording') {
+      try { mediaRecRef.current.stop(); } catch(e){}
+    }
+    setIsRecording(false);
+
     // Reset the internal memory so active recording drops prior text but keeps listening
     activeVoiceStateRef.current = { baseText: '', accumulated: '' };
 
@@ -201,18 +212,30 @@ export default function CandidateFlow() {
 
   // Handle Fullscreen Events and Navbar Hiding
   useEffect(() => {
+    const handleViolation = (type) => {
+      if (step !== 2) return;
+      const now = Date.now();
+      if (now - lastViolationRef.current < 2000) return;
+      lastViolationRef.current = now;
+
+      setViolations(prev => ({
+        ...prev,
+        [type === 'tab' ? 'tabSwitches' : 'fullscreenExits']: prev[type === 'tab' ? 'tabSwitches' : 'fullscreenExits'] + 1
+      }));
+    };
+
     const checkFS = () => {
       const full = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
       // Proctoring check: If they exit fullscreen while in the assessment step, record a violation
       if (isFull && !full && step === 2) {
-        setViolationCount(prev => prev + 1);
+        handleViolation('fs');
       }
       setIsFull(full);
     };
     
     const handleBlur = () => {
       // Focus lost (tab switched or app minimized)
-      if (step === 2) setViolationCount(prev => prev + 1);
+      if (step === 2) handleViolation('tab');
     };
     
     document.addEventListener('fullscreenchange', checkFS);
@@ -390,7 +413,7 @@ export default function CandidateFlow() {
         questions, // Send the snapshot of what was actually shown
         answers,
         audioRecordings,
-        proctoringViolations: violationCount
+        proctoring: violations
       };
       const res = await api.post('/candidates', payload);
       setResult(res.data);
@@ -683,7 +706,7 @@ export default function CandidateFlow() {
                 <h2>Assessment in Progress</h2>
                 <p className="section-sub">Please stay in fullscreen mode. Any attempt to switch tabs or exit will be recorded for evaluation.</p>
                 
-                {violationCount > 0 && (
+                {violations.tabSwitches + violations.fullscreenExits > 0 && (
                   <div style={{ 
                     background: 'rgba(239, 68, 68, 0.1)', 
                     border: '1px solid var(--danger)', 
@@ -698,7 +721,7 @@ export default function CandidateFlow() {
                     marginBottom: '24px'
                   }}>
                     <AlertCircle size={18} />
-                    Integrity Alert: {violationCount} exit(s) recorded. Please remain in fullscreen.
+                    Integrity Alert: {violations.tabSwitches + violations.fullscreenExits} violation(s) recorded. Please remain in fullscreen.
                   </div>
                 )}
 

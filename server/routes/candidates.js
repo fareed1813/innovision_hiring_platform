@@ -12,7 +12,7 @@ const router = Router();
 /* ─── POST /api/candidates — Submit assessment ──────── */
 router.post('/', async (req, res) => {
   try {
-    const { personal, job, source, answers, audioRecordings, questions: providedQuestions, proctoringViolations } = req.body;
+    const { personal, job, source, answers, audioRecordings, questions: providedQuestions, proctoringViolations, proctoring } = req.body;
     
     if (!personal || !job) {
       return res.status(400).json({ error: 'Personal details and job role are required.' });
@@ -46,6 +46,15 @@ router.post('/', async (req, res) => {
     const { total, reading, voice, quality, evaluations } = scoreAssessment(questions, answers || {});
     
     const refId = 'INV' + Date.now().toString().slice(-7);
+
+    // Map proctoring data
+    const finalProctoring = proctoring || { 
+      tabSwitches: typeof proctoringViolations === 'number' ? proctoringViolations : 0, 
+      fullscreenExits: 0 
+    };
+    const finalViolationsCount = typeof proctoringViolations === 'number' 
+      ? proctoringViolations 
+      : ((finalProctoring?.tabSwitches || 0) + (finalProctoring?.fullscreenExits || 0));
     
     const candidate = new Candidate({
       refId,
@@ -57,7 +66,8 @@ router.post('/', async (req, res) => {
       audioRecordings: audioRecordings || {},
       evaluations,
       scores: { total, reading, voice, quality },
-      proctoringViolations: proctoringViolations || 0,
+      proctoring: finalProctoring,
+      proctoringViolations: finalViolationsCount,
       status: 'pending'
     });
     

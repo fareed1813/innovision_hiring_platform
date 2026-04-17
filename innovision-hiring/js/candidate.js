@@ -17,7 +17,12 @@ const S = {
   refId:     '',
   fluencyResets: {},
   currentIdx: 0,        // Track current question in paginated view
-  reviewSet:  new Set() // Track question IDs marked for review
+  reviewSet:  new Set(), // Track question IDs marked for review
+  proctoring: {
+    tabSwitches: 0,
+    fullscreenExits: 0,
+    lastViolationTime: 0
+  }
 };
 
 /* ── RECORDING STATE & STREAMS ───────────────────── */
@@ -286,6 +291,65 @@ function startAssessmentTimer() {
   tick();
   timerInterval = setInterval(tick, 1000);
 }
+
+/* ── PROCTORING & FULLSCREEN LOGIC ────────────────── */
+function enterAssessmentFullscreen() {
+  const el = document.documentElement;
+  const requestFS = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+  if (requestFS) {
+    requestFS.call(el).catch(err => {
+      console.warn("Fullscreen request denied:", err);
+    });
+  }
+}
+
+function exitAssessmentFullscreen() {
+  const exitFS = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+  if (exitFS && document.fullscreenElement) {
+    exitFS.call(document).catch(() => {});
+  }
+}
+
+// Global Proctoring Listeners
+function initProctoring() {
+  const handleViolation = (type) => {
+    // Only track violations during step 3 (Assessment)
+    if (window.currentStep !== 3) return;
+    
+    // Throttle violations (max 1 per 2 seconds) to avoid spam
+    const now = Date.now();
+    if (now - S.proctoring.lastViolationTime < 2000) return;
+    S.proctoring.lastViolationTime = now;
+
+    if (type === 'tab') S.proctoring.tabSwitches++;
+    if (type === 'fs') S.proctoring.fullscreenExits++;
+
+    showToast(`⚠ Integrity Alert: ${type === 'tab' ? 'Tab switch' : 'Fullscreen exit'} detected. Please stay on this page.`, 'danger');
+    
+    // If they exited fullscreen, try to prompt them back (optional, let's just toast for now)
+    console.warn(`Proctoring Violation [${type}]:`, S.proctoring);
+  };
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') handleViolation('tab');
+  });
+
+  window.addEventListener('blur', () => {
+    handleViolation('tab');
+  });
+
+  const fsEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
+  fsEvents.forEach(evt => {
+    document.addEventListener(evt, () => {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+        handleViolation('fs');
+      }
+    });
+  });
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', initProctoring);
 
 /* ── RENDER SPECIFIC QUESTION (Pagination) ────────── */
 function renderQuestion(idx) {
@@ -629,18 +693,21 @@ function toggleVoice(qid) {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   const r = new SpeechRecognition();
   r.continuous     = true;
-  r.interimResults = true;
-  r.lang           = 'en-US'; 
-  r.maxAlternatives = 3;      
+  r.lang           = 'en-IN'; // Changed from en-US for better recognition
+  r.maxAlternatives = 5;      
   r._userStopped   = false;
+  r._isReset       = false;
 
   const baseText = (ta ? ta.value : '');
   let accumulated = '';
 
   r.onresult = e => {
+    if (r._isReset) return;
+
     let fin = '', inter = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
       let bestAlt = e.results[i][0];
+      // Pick best alt based on confidence
       for (let a = 1; a < e.results[i].length; a++) {
         if (e.results[i][a].confidence > bestAlt.confidence) {
           bestAlt = e.results[i][a];
@@ -650,7 +717,7 @@ function toggleVoice(qid) {
       else                       inter += bestAlt.transcript;
     }
     if (fin) accumulated += fin;
-    if (ta) {
+    if (ta && !r._isReset) {
       const sep = baseText && !baseText.endsWith(' ') ? ' ' : '';
       ta.value = baseText + sep + accumulated + inter;
       S.answers[qid] = ta.value;
@@ -672,6 +739,8 @@ function toggleVoice(qid) {
   };
 
   r.onend = () => {
+    if (r._isReset) return;
+    
     if (ta) {
       const sep = baseText && !baseText.endsWith(' ') ? ' ' : '';
       ta.value = baseText + sep + accumulated;
@@ -710,6 +779,7 @@ function resetFluencyAnswer(qid) {
   // Stop any active recording first
   if (recs[qid] || mediaRecs[qid]) {
     if (recs[qid]) {
+      recs[qid]._isReset = true; // Set flag to ignore pending events
       recs[qid]._userStopped = true;
       try { recs[qid].stop(); } catch(e){}
       delete recs[qid];
@@ -780,6 +850,7 @@ function submitAssessment(isForced = false) {
     job:       S.job,
     source:    S.source,
     scores:    S.scores,
+    proctoring: { ...S.proctoring },
     evaluations: { ...S.evaluations },
     questions: S.questions,
     answers:   { ...S.answers },

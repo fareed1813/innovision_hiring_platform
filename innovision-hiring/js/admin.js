@@ -228,6 +228,15 @@ function openModal(id) {
     <div class="detail-item"><label>Gulf Experience</label><span>${c.gulfExp || '—'}</span></div>
     <div class="detail-item"><label>Lead Source</label><span>${c.source}</span></div>
     <div class="detail-item"><label>Status</label><span>${c.status === 'selected' ? 'Accepted' : c.status}</span></div>
+    ${c.proctoring && (c.proctoring.tabSwitches > 0 || c.proctoring.fullscreenExits > 0) ? `
+      <div class="detail-item" style="grid-column: span 2; background: rgba(239, 68, 68, 0.05); padding: 8px; border-radius: 6px; border: 1px dashed var(--danger); margin-top: 8px;">
+        <label style="color: var(--danger); font-weight: 700;">⚠ Integrity Flags</label>
+        <span style="color: var(--danger); font-weight: 600;">
+          ${c.proctoring.tabSwitches > 0 ? `${c.proctoring.tabSwitches} Tab Switch(es) ` : ''}
+          ${c.proctoring.fullscreenExits > 0 ? `${c.proctoring.fullscreenExits} Fullscreen Exit(s)` : ''}
+        </span>
+      </div>
+    ` : ''}
   `;
 
   // Score breakdown bars — aggregate by question type from evaluations

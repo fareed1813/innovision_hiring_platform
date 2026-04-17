@@ -59,6 +59,10 @@ const candidateSchema = new mongoose.Schema({
   },
   
   // Integrity
+  proctoring: {
+    tabSwitches: { type: Number, default: 0 },
+    fullscreenExits: { type: Number, default: 0 }
+  },
   proctoringViolations: { type: Number, default: 0 }
 }, { timestamps: true });
 
