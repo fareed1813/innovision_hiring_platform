@@ -86,8 +86,24 @@ a { color: var(--primary); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 /* ── UTILITY ── */
-.hidden { display: none !important; }
-.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+    .hidden { display: none !important; }
+    #fs-enforcer {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: var(--bg);
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+    }
+    #fs-enforcer.hidden { display: none !important; }
+    #fs-enforcer h2 { color: var(--danger); margin-bottom: 12px; }
+    #fs-enforcer p { color: var(--muted); margin-bottom: 24px; max-width: 440px; line-height: 1.6; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
 
 /* ── PAGE SYSTEM ── */
 .page { display: none; }
@@ -1967,6 +1983,12 @@ tr:hover td       { background: rgba(2, 6, 23, 0.03); }
 
     <!-- STEP 3: ASSESSMENT QUESTIONS -->
     <div id="step-3" class="step-wrap step-wrap-wide hidden">
+      <div id="fs-enforcer" class="hidden">
+        <div class="result-icon">🚫</div>
+        <h2>Fullscreen Required</h2>
+        <p>To ensure assessment integrity, you must remain in fullscreen mode. Any attempt to exit or switch tabs is recorded for review.</p>
+        <button class="btn-primary" onclick="enterAssessmentFullscreen()">Re-enter Full Screen</button>
+      </div>
       <!-- Top Timer Banner (Replaces old header) -->
       <div id="test-timer-banner" class="timer-banner">
         <div class="timer-content">
@@ -3324,6 +3346,7 @@ function validateStep2() {
     return;
   }
   buildQuestions();
+  enterAssessmentFullscreen();
   goStep(3);
 }
 
@@ -4475,23 +4498,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const handleFsChange = () => {
-    // Enforce only on step 3 (Assessment) before submitting
-    if (typeof currentStep !== 'undefined' && currentStep === 3 && typeof S !== 'undefined' && !S.submitted) {
-      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
-      if (!isFs) {
-        fsOverlay.classList.remove('hidden');
-      } else {
-        fsOverlay.classList.add('hidden');
-      }
+  const overlay = document.getElementById('fs-enforcer');
+
+  const handleViolation = (type) => {
+    // Only track violations during step 3 (Assessment) before submission
+    if (typeof currentStep === 'undefined' || currentStep !== 3 || (typeof S !== 'undefined' && S.submitted)) return;
+    
+    // Throttle violations (max 1 per 2 seconds) to avoid spam
+    if (!S.proctoring) S.proctoring = { tabSwitches: 0, fullscreenExits: 0, lastViolationTime: 0 };
+    const now = Date.now();
+    if (now - S.proctoring.lastViolationTime < 2000) return;
+    S.proctoring.lastViolationTime = now;
+
+    if (type === 'tab') S.proctoring.tabSwitches++;
+    if (type === 'fs') S.proctoring.fullscreenExits++;
+
+    showToast(`⚠ Integrity Alert: ${type === 'tab' ? 'Tab switch' : 'Fullscreen exit'} detected.`, 'danger');
+    console.warn(`Proctoring Violation [${type}]:`, S.proctoring);
+  };
+
+  const checkFS = () => {
+    if (typeof currentStep === 'undefined' || currentStep !== 3 || (typeof S !== 'undefined' && S.submitted)) {
+      if (overlay) overlay.classList.add('hidden');
+      return;
+    }
+
+    const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+    if (!isFs) {
+      if (overlay) overlay.classList.remove('hidden');
+      handleViolation('fs');
     } else {
-      fsOverlay.classList.add('hidden');
+      if (overlay) overlay.classList.add('hidden');
     }
   };
 
-  document.addEventListener('fullscreenchange', handleFsChange);
-  document.addEventListener('webkitfullscreenchange', handleFsChange);
-  document.addEventListener('MSFullscreenChange', handleFsChange);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) handleViolation('tab');
+  });
+
+  window.addEventListener('blur', () => {
+    if (document.hidden) handleViolation('tab');
+  });
+
+  document.addEventListener('fullscreenchange', checkFS);
+  document.addEventListener('webkitfullscreenchange', checkFS);
+  document.addEventListener('mozfullscreenchange', checkFS);
+  document.addEventListener('MSFullscreenChange', checkFS);
   // ---------------------------
 
   const nameCharRe = /[^a-zA-Z ]/g;       // remove everything except letters + spaces

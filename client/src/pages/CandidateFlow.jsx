@@ -235,13 +235,19 @@ export default function CandidateFlow() {
     
     const handleBlur = () => {
       // Focus lost (tab switched or app minimized)
-      if (step === 2) handleViolation('tab');
+      // Use document.hidden as a more reliable check for tab switching
+      if (step === 2 && document.hidden) handleViolation('tab');
+    };
+    
+    const handleVisibility = () => {
+      if (document.hidden) handleViolation('tab');
     };
     
     document.addEventListener('fullscreenchange', checkFS);
     document.addEventListener('webkitfullscreenchange', checkFS);
     document.addEventListener('mozfullscreenchange', checkFS);
     document.addEventListener('MSFullscreenChange', checkFS);
+    document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('blur', handleBlur);
     
     if (step === 2) {
@@ -255,6 +261,7 @@ export default function CandidateFlow() {
       document.removeEventListener('webkitfullscreenchange', checkFS);
       document.removeEventListener('mozfullscreenchange', checkFS);
       document.removeEventListener('MSFullscreenChange', checkFS);
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('blur', handleBlur);
       document.body.classList.remove('hide-navbar');
     };

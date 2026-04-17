@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
-import { Users, Clock, CheckCircle, XCircle, Search, Download, Eye, Check, X, ChevronLeft, ChevronRight, LogOut, ChevronDown, ShieldCheck } from 'lucide-react';
+import { Users, Clock, CheckCircle, XCircle, Search, Download, Eye, Check, X, ChevronLeft, ChevronRight, LogOut, ChevronDown, ShieldCheck, Info } from 'lucide-react';
 
 const ROLES = {
   driver: 'Taxi Driver',

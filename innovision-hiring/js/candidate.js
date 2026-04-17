@@ -175,6 +175,7 @@ function validateStep2() {
   }
   buildQuestions();
   goStep(3);
+  enterAssessmentFullscreen(); // Trigger fullscreen on user gesture
 }
 
 /* ── STEP 3: BUILD QUESTIONS ─────────────────────── */
@@ -312,9 +313,11 @@ function exitAssessmentFullscreen() {
 
 // Global Proctoring Listeners
 function initProctoring() {
+  const overlay = document.getElementById('fs-enforcer');
+
   const handleViolation = (type) => {
-    // Only track violations during step 3 (Assessment)
-    if (window.currentStep !== 3) return;
+    // Only track violations during step 3 (Assessment) before submission
+    if (window.currentStep !== 3 || (typeof S !== 'undefined' && S.submitted)) return;
     
     // Throttle violations (max 1 per 2 seconds) to avoid spam
     const now = Date.now();
@@ -324,28 +327,36 @@ function initProctoring() {
     if (type === 'tab') S.proctoring.tabSwitches++;
     if (type === 'fs') S.proctoring.fullscreenExits++;
 
-    showToast(`⚠ Integrity Alert: ${type === 'tab' ? 'Tab switch' : 'Fullscreen exit'} detected. Please stay on this page.`, 'danger');
-    
-    // If they exited fullscreen, try to prompt them back (optional, let's just toast for now)
+    showToast(`⚠ Integrity Alert: ${type === 'tab' ? 'Tab switch' : 'Fullscreen exit'} detected.`, 'danger');
     console.warn(`Proctoring Violation [${type}]:`, S.proctoring);
   };
 
+  const checkFS = () => {
+    if (window.currentStep !== 3 || (typeof S !== 'undefined' && S.submitted)) {
+      if (overlay) overlay.classList.add('hidden');
+      return;
+    }
+
+    const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+    if (!isFs) {
+      if (overlay) overlay.classList.remove('hidden');
+      handleViolation('fs');
+    } else {
+      if (overlay) overlay.classList.add('hidden');
+    }
+  };
+
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') handleViolation('tab');
+    if (document.hidden) handleViolation('tab');
   });
 
   window.addEventListener('blur', () => {
-    handleViolation('tab');
+    // Hidden check avoids recording for innocent system dialogs unless tab is actually lost
+    if (document.hidden) handleViolation('tab');
   });
 
   const fsEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
-  fsEvents.forEach(evt => {
-    document.addEventListener(evt, () => {
-      if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-        handleViolation('fs');
-      }
-    });
-  });
+  fsEvents.forEach(evt => document.addEventListener(evt, checkFS));
 }
 
 // Initialize on load

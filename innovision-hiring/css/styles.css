@@ -48,6 +48,24 @@
   --wa-icon:       #cbd8e6;
 }
 
+/* Fullscreen Enforcer Overlay */
+#fs-enforcer {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: var(--bg);
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+}
+#fs-enforcer.hidden { display: none !important; }
+#fs-enforcer h2 { color: var(--danger); margin-bottom: 12px; }
+#fs-enforcer p { color: var(--muted); margin-bottom: 24px; max-width: 440px; line-height: 1.6; }
+
 /* ── RESET & BASE ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }

@@ -237,6 +237,13 @@
 
     <!-- STEP 3: ASSESSMENT QUESTIONS -->
     <div id="step-3" class="step-wrap step-wrap-wide hidden">
+      <!-- Fullscreen Enforcer Overlay -->
+      <div id="fs-enforcer" class="hidden">
+        <div class="result-icon">🚫</div>
+        <h2>Fullscreen Required</h2>
+        <p>To ensure assessment integrity, you must remain in fullscreen mode. Any attempt to exit or switch tabs is recorded for review.</p>
+        <button class="btn-primary" onclick="enterAssessmentFullscreen()">Re-enter Full Screen</button>
+      </div>
       <!-- Top Timer Banner (Replaces old header) -->
       <div id="test-timer-banner" class="timer-banner">
         <div class="timer-content">
