@@ -696,66 +696,69 @@ export default function CandidateFlow() {
     const unansweredCount = questions.length - answeredCount;
 
     return (
+    return (
       <div style={{ background: 'var(--surface)', minHeight: '100vh' }}>
-        {/* Consolidated Sticky Header - Moved outside page-wrapper to fix position:fixed breaking due to parent transform */}
-        <div className="test-sticky-header">
-          <div className="test-header-content">
-            <div className="test-info">
-              {ROLES_MAP[selectedRole]?.label} Assessment · Innovision Limited
-            </div>
-            <div className={`test-timer ${timeLeft < 60 ? 'critical' : ''}`}>
-              <span className="timer-label">Time remaining :</span>
-              <span className="timer-value">{formatTime(timeLeft)}</span>
+        {/* Fullscreen Lockdown Overlay - AT ROOT to prevent z-index/transform bugs */}
+        {!isFull && (
+          <div className="fullscreen-lockout">
+            <div className="lockout-card">
+              <div className="section-tag">Assessment Integrity</div>
+              <h2>Assessment in Progress</h2>
+              <p className="section-sub">Please stay in fullscreen mode. Any attempt to switch tabs or exit will be recorded for evaluation.</p>
+              
+              {violations.tabSwitches + violations.fullscreenExits > 0 && (
+                <div style={{ 
+                  background: 'rgba(239, 68, 68, 0.1)', 
+                  border: '1px solid var(--danger)', 
+                  padding: '12px 16px', 
+                  borderRadius: '10px',
+                  color: 'var(--danger)',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  marginBottom: '24px'
+                }}>
+                  <AlertCircle size={18} />
+                  Integrity Alert: {violations.tabSwitches + violations.fullscreenExits} violation(s) recorded. Please remain in fullscreen.
+                </div>
+              )}
+
+              <button 
+                className="btn btn-primary btn-lg" 
+                style={{ gap: '12px', paddingLeft: '40px', paddingRight: '40px' }}
+                onClick={enterFS}
+              >
+                <Maximize size={18} /> RE-ENTER FULL SCREEN
+              </button>
             </div>
           </div>
-          <div className="test-progress-strip">
-            <div 
-              className="progress-fill" 
-              style={{ width: `${((currentQ + 1) / questions.length) * 100}%` }}
-            ></div>
-          </div>
-        </div>
+        )}
 
-        <div className="page-wrapper" style={{ padding: 0 }}>
-          {/* Fullscreen Lockdown Overlay */}
-          {!isFull && (
-            <div className="fullscreen-lockout">
-              <div className="lockout-card">
-                <div className="section-tag">Assessment Integrity</div>
-                <h2>Assessment in Progress</h2>
-                <p className="section-sub">Please stay in fullscreen mode. Any attempt to switch tabs or exit will be recorded for evaluation.</p>
-                
-                {violations.tabSwitches + violations.fullscreenExits > 0 && (
-                  <div style={{ 
-                    background: 'rgba(239, 68, 68, 0.1)', 
-                    border: '1px solid var(--danger)', 
-                    padding: '12px 16px', 
-                    borderRadius: '10px',
-                    color: 'var(--danger)',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    marginBottom: '24px'
-                  }}>
-                    <AlertCircle size={18} />
-                    Integrity Alert: {violations.tabSwitches + violations.fullscreenExits} violation(s) recorded. Please remain in fullscreen.
-                  </div>
-                )}
-
-                <button 
-                  className="btn btn-primary btn-lg" 
-                  style={{ gap: '12px', paddingLeft: '40px', paddingRight: '40px' }}
-                  onClick={enterFS}
-                >
-                  <Maximize size={18} /> RE-ENTER FULL SCREEN
-                </button>
+        {/* Hide the test completely if they are not in fullscreen */}
+        <div style={{ display: isFull ? 'block' : 'none' }}>
+          {/* Consolidated Sticky Header */}
+          <div className="test-sticky-header">
+            <div className="test-header-content">
+              <div className="test-info">
+                {ROLES_MAP[selectedRole]?.label} Assessment · Innovision Limited
+              </div>
+              <div className={`test-timer ${timeLeft < 60 ? 'critical' : ''}`}>
+                <span className="timer-label">Time remaining :</span>
+                <span className="timer-value">{formatTime(timeLeft)}</span>
               </div>
             </div>
-          )}
+            <div className="test-progress-strip">
+              <div 
+                className="progress-fill" 
+                style={{ width: `${((currentQ + 1) / questions.length) * 100}%` }}
+              ></div>
+            </div>
+          </div>
 
-          <div className="test-main-layout">
+          <div className="page-wrapper" style={{ padding: 0 }}>
+            <div className="test-main-layout">
           {/* Main Assessment Card */}
           <div className="test-card-container">
             <div className="assessment-card active" style={{ minHeight: '500px', display: 'flex', flexDirection: 'column' }}>
@@ -941,6 +944,7 @@ export default function CandidateFlow() {
             </div>
           </aside>
         </div>
+      </div>
       </div>
       
       {/* LUXURY SUBMISSION OVERLAY */}
