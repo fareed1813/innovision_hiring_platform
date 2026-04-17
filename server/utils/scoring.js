@@ -262,10 +262,9 @@ export function scoreAssessment(questions, answers) {
   const avg = a => a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0;
   const metrics = { reading: Math.round(avg(buckets.reading) * 100), voice: Math.round(avg(buckets.voice) * 100), quality: Math.round(avg(buckets.quality) * 100) };
   
-  const w = { reading: 0.35, voice: 0.30, quality: 0.35 };
-  const getW = b => buckets[b].length ? w[b] : 0;
-  const totalWeight = getW('reading') + getW('voice') + getW('quality') || 1;
-  const total = Math.round((metrics.reading * getW('reading') + metrics.voice * getW('voice') + metrics.quality * getW('quality')) / totalWeight);
+  // Calculate total as a flat average across all questions
+  const allScores = [...buckets.reading, ...buckets.voice, ...buckets.quality];
+  const total = allScores.length ? Math.round((allScores.reduce((s, v) => s + v, 0) / allScores.length) * 100) : 0;
 
   return { total, ...metrics, evaluations: evals };
 }
