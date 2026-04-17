@@ -308,9 +308,6 @@ export default function CandidateFlow() {
 
   // Fetch questions when starting assessment
   const startAssessment = async () => {
-    // MUST call enterFS synchronously inside click handler — browsers require user gesture
-    enterFS();
-
     setValidating(true);
     setDupError('');
     try {
@@ -673,7 +670,10 @@ export default function CandidateFlow() {
               <button
                 className="btn btn-primary btn-lg"
                 disabled={!isFormValid() || validating || !!dupError}
-                onClick={startAssessment}
+                onClick={(e) => {
+                  enterFS();
+                  startAssessment();
+                }}
               >
                 {validating ? 'Verifying...' : 'Start Assessment'} <ChevronRight size={16} />
               </button>
