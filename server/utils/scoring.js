@@ -166,21 +166,20 @@ export function evaluateAnswer(question, answer) {
     };
   }
 
-  // 2. Fluency (High-Precision Acoustic Alignment)
+  // 2. Fluency (Word Match / Word Error Rate Precision)
   if (question.type === 'fluency') {
     let acc = werAccuracy(question.expectedAnswer || question.passage, ans);
     
-    // Aggressive curve to push decent recordings to 100% since dictation software often misses small artifacts
-    if (acc >= 0.70) acc = 1.0;
-    else if (acc > 0.45) acc = Math.min(1.0, acc * 1.3);
+    // Generosity curve: Dictation software can occasionally misinterpret thick accents
+    if (acc >= 0.60) acc = 1.0;
+    else if (acc > 0.40) acc = Math.min(1.0, acc * 1.5);
 
-    const matched = acc > 0.45;
+    const matched = acc > 0.40;
     
     let feedback = '';
-    if (acc >= 0.88) feedback = 'Exceptional articulation. Native-level clarity and flow observed.';
-    else if (acc > 0.70) feedback = 'High fluency. Minimal pronunciation drifts in complex segments.';
-    else if (acc > 0.45) feedback = 'Moderate fluency. Communication is clear but lacks certain professional cadence.';
-    else feedback = 'Pronunciation and flow require significant improvement for professional roles.';
+    if (acc >= 0.8) feedback = 'Candidate accurately articulated the expected words.';
+    else if (acc > 0.4) feedback = 'Candidate clearly expressed most of the expected phrase.';
+    else feedback = 'Candidate failed to articulate the required words or phrase appropriately.';
 
     return { score: acc, matched, feedback };
   }
@@ -193,25 +192,21 @@ export function evaluateAnswer(question, answer) {
     const coverage = keywords.length ? matchedKeywords.length / keywords.length : 1;
     
     const sim = industrySimilarity(ans, keywords.join(' '));
-    const words = ans.split(/\s+/).filter(Boolean).length;
     
-    // Variety Score: richness of used tokens vs total length
-    const uniq = new Set(ans.toLowerCase().split(/\s+/)).size;
-    const variety = Math.min(1, uniq / Math.max(20, words * 0.6));
+    // Simple Score: Based strictly on coverage and meaning similarity
+    let score = Math.max(coverage, sim);
     
-    // Final Weighted Score (Keywords 40%, Similarity 30%, Variety 20%, Length 10%)
-    let score = (coverage * 0.4) + (sim * 0.3) + (variety * 0.2) + (Math.min(1, words / 120) * 0.1);
-    
-    // Generosity curve: Reward solid effort with a boost
-    if (score > 0.45) {
-      score = Math.min(1.0, score * 1.15);
+    // Generosity curve: Answer is reasonably correct
+    if (score >= 0.6) {
+      score = 1.0;
+    } else if (score > 0.4) {
+      score = Math.min(1.0, score * 1.5);
     }
     
-    let feedback = `Keyword Alignment: ${matchedKeywords.length}/${keywords.length} core themes detected. `;
-    if (variety < 0.4) feedback += 'Frequent word repetition flagged. ';
-    if (words < 80) feedback += 'Content depth is below industry benchmark for complex roles.';
-    else if (score > 0.75) feedback += 'Comprehensive, high-quality response with professional vocabulary.';
-    else feedback += 'Satisfactory response structure.';
+    let feedback = `Theme Alignment: ${matchedKeywords.length}/${keywords.length} core themes detected. `;
+    if (score > 0.75) feedback += 'Candidate successfully addressed the core topic.';
+    else if (score > 0.4) feedback += 'Satisfactory response.';
+    else feedback += 'Candidate missed the expected core concepts.';
 
     return { 
       score, 
@@ -219,8 +214,7 @@ export function evaluateAnswer(question, answer) {
       feedback,
       details: {
         keywordCount: matchedKeywords.length,
-        totalKeywords: keywords.length,
-        variety: Math.round(variety * 100)
+        totalKeywords: keywords.length
       }
     };
   }
