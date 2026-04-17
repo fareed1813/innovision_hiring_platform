@@ -225,7 +225,14 @@ export default function CandidateFlow() {
     };
 
     const checkFS = () => {
-      const full = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+      // Check standard Fullscreen API
+      const apiFull = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+      // Check F11 / OS-level fullscreen (viewport height matches screen height)
+      // Allow 1-2px tolerance for weird OS borders
+      const isF11 = window.innerHeight >= window.screen.height - 2;
+      
+      const full = apiFull || isF11;
+
       // Proctoring check: If they exit fullscreen while in the assessment step, record a violation
       if (isFull && !full && step === 2) {
         handleViolation('fs');
@@ -249,6 +256,10 @@ export default function CandidateFlow() {
     document.addEventListener('MSFullscreenChange', checkFS);
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('blur', handleBlur);
+    window.addEventListener('resize', checkFS);
+    
+    // Initial check on load
+    checkFS();
     
     if (step === 2) {
       document.body.classList.add('hide-navbar');
@@ -263,6 +274,7 @@ export default function CandidateFlow() {
       document.removeEventListener('MSFullscreenChange', checkFS);
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('resize', checkFS);
       document.body.classList.remove('hide-navbar');
     };
   }, [isFull, step]);
