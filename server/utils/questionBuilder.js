@@ -92,7 +92,8 @@ export async function buildQuestionsForRole(role) {
   }
 
   // Fallback for other roles (e.g., helper, cleaner)
-  const ep = essayPrompts[Math.floor(Math.random() * essayPrompts.length)] || {};
+  if (essayPrompts.length === 0) return [];
+  const ep = essayPrompts[Math.floor(Math.random() * essayPrompts.length)];
   return [
     { id: ep.qid, type: 'essay', passage: ep.passage, question: `Write an essay about: ${ep.passage}`, expectedKeywords: ep.seeds || [] },
     ...shuffle([...grammarPool]).slice(0, 4).map(m => ({ id: m.qid, type: 'mcq', question: m.question, options: m.options, expectedOption: m.expectedOption }))

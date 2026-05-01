@@ -122,6 +122,7 @@ export default function CandidateFlow() {
   const [resetsRemaining, setResetsRemaining] = useState(2);
   const [violations, setViolations] = useState({ tabSwitches: 0, fullscreenExits: 0 });
   const lastViolationRef = useRef(0);
+  const handleSubmitRef = useRef(null);  // Fix #11: keeps timer closure fresh
 
   const [showResumePrompt, setShowResumePrompt] = useState(false);
 
@@ -142,10 +143,11 @@ export default function CandidateFlow() {
     const draft = localStorage.getItem('candidate_draft');
     if (draft) {
       const data = JSON.parse(draft);
+      // Restore form fields and role only — never restore questions (they may be stale/changed in DB)
       if (data.form) setForm(data.form);
       if (data.selectedRole) setSelectedRole(data.selectedRole);
-      if (data.step) setStep(data.step);
-      if (data.questions) setQuestions(data.questions);
+      // Cap at step 1: candidate re-triggers startAssessment to get a fresh question set
+      setStep(Math.min(data.step || 0, 1));
       if (data.answers) setAnswers(data.answers);
       if (data.currentQ !== undefined) setCurrentQ(data.currentQ);
     }
@@ -157,13 +159,13 @@ export default function CandidateFlow() {
     setShowResumePrompt(false);
   };
 
-  // ── OFFLINE RECOVERY: Auto-Sync ──
+  // ── OFFLINE RECOVERY: Auto-Sync (don't save questions — they'll be fetched fresh on resume) ──
   useEffect(() => {
     if (step > 0 && step < 3) {
-      const draft = { form, selectedRole, step, questions, answers, currentQ };
+      const draft = { form, selectedRole, step, answers, currentQ };
       localStorage.setItem('candidate_draft', JSON.stringify(draft));
     }
-  }, [form, selectedRole, step, questions, answers, currentQ]);
+  }, [form, selectedRole, step, answers, currentQ]);
 
   const handleReset = (qid) => {
     if (resetsRemaining <= 0) return;
@@ -296,17 +298,20 @@ export default function CandidateFlow() {
   }, [step]);
 
 
-  // Timer — run regardless of fullscreen so it counts down even on the lockout overlay
+  // Keep ref in sync so the timer's stale closure always calls the latest handleSubmit
+  useEffect(() => { handleSubmitRef.current = handleSubmit; });
+
+  // Timer — only restarts when step changes (not on every tick)
   useEffect(() => {
     if (step !== 2 || timeLeft <= 0) return;
-    const interval = setInterval(() => {
+    const id = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev <= 1) { clearInterval(interval); handleSubmit(); return 0; }
+        if (prev <= 1) { clearInterval(id); handleSubmitRef.current?.(); return 0; }
         return prev - 1;
       });
     }, 1000);
-    return () => clearInterval(interval);
-  }, [step, timeLeft]);
+    return () => clearInterval(id);
+  }, [step]); // intentionally omit timeLeft — functional update inside reads latest value
 
 
   // Exit fullscreen helper
@@ -476,39 +481,32 @@ export default function CandidateFlow() {
 
   const formatTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
-  // ── RESUME DRAFT PROMPT ──
-  {showResumePrompt && (
-    <div className="submitting-overlay">
-      <div className="submitting-card" style={{ maxWidth: '440px', padding: '40px' }}>
-        <div className="submitting-icon" style={{ color: 'var(--brand-red)' }}>
-          <RotateCcw size={64} />
-        </div>
-        <h2 className="submitting-title">Resume Previous Session?</h2>
-        <p className="submitting-text">We found a saved draft of your assessment. Would you like to continue from where you left off?</p>
-        <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
-          <button 
-            className="btn btn-primary" 
-            style={{ flex: 1 }}
-            onClick={handleResume}
-          >
-            YES, RESUME
-          </button>
-          <button 
-            className="btn btn-ghost" 
-            style={{ flex: 1 }}
-            onClick={clearDraft}
-          >
-            START NEW
-          </button>
-        </div>
-      </div>
-    </div>
-  )}
+  // (Resume prompt is rendered inline in Step 0 below — removed dead JSX block that was here)
 
   // ── STEP 0: Role Selection ──
   if (step === 0) {
     return (
       <div className="page-wrapper" style={{ paddingTop: 'calc(var(--nav-height) + 40px)' }}>
+        {/* Resume prompt overlay — shown if a saved draft is found */}
+        {showResumePrompt && (
+          <div className="submitting-overlay">
+            <div className="submitting-card" style={{ maxWidth: '440px', padding: '40px' }}>
+              <div className="submitting-icon" style={{ color: 'var(--brand-red)' }}>
+                <RotateCcw size={64} />
+              </div>
+              <h2 className="submitting-title">Resume Previous Session?</h2>
+              <p className="submitting-text">We found a saved draft of your application. Would you like to continue from where you left off? Your form answers are preserved.</p>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleResume}>
+                  YES, RESUME
+                </button>
+                <button className="btn btn-ghost" style={{ flex: 1 }} onClick={clearDraft}>
+                  START NEW
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="section" style={{ paddingTop: '40px' }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             <div className="section-tag">Step 1 of 3</div>

@@ -19,7 +19,10 @@ export default function Dashboard() {
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState('all');
   const [jobFilter, setJobFilter] = useState('all');
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
   const [selected, setSelected] = useState(null);
   const [tab, setTab] = useState('dashboard');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -56,6 +59,12 @@ export default function Dashboard() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // ── Search debounce: wait 400ms after user stops typing before firing API ──
+  useEffect(() => {
+    const t = setTimeout(() => { setSearch(searchInput); setPage(1); }, 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
   const fetchStats = useCallback(async () => {
     try {
       const res = await api.get('/candidates/stats');
@@ -64,6 +73,8 @@ export default function Dashboard() {
   }, []);
 
   const fetchCandidates = useCallback(async () => {
+    setLoadingCandidates(true);
+    setFetchError(null);
     try {
       const limit = tab === 'dashboard' ? 5 : 20;
       const params = { page, limit };
@@ -73,7 +84,12 @@ export default function Dashboard() {
       const res = await api.get('/candidates', { params });
       setCandidates(res.data.candidates);
       setTotalPages(res.data.pages);
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+      setFetchError('Failed to load candidates. Please refresh the page.');
+    } finally {
+      setLoadingCandidates(false);
+    }
   }, [page, filter, jobFilter, search, tab]);
 
   useEffect(() => { fetchStats(); }, [fetchStats]);
@@ -219,8 +235,9 @@ export default function Dashboard() {
               type="text"
               className="form-input"
               placeholder="Search by name, phone, city..."
-              value={search}
-              onChange={e => { setSearch(e.target.value); setPage(1); }}
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              style={{ paddingLeft: '36px' }}
             />
           </div>
 
@@ -280,7 +297,22 @@ export default function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {candidates.length === 0 ? (
+            {loadingCandidates ? (
+              <tr>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '48px', color: 'var(--muted)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+                    <div style={{ width: '20px', height: '20px', border: '2px solid var(--border)', borderTopColor: 'var(--brand-red)', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                    Loading candidates...
+                  </div>
+                </td>
+              </tr>
+            ) : fetchError ? (
+              <tr>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '48px', color: 'var(--danger)', fontWeight: 500 }}>
+                  {fetchError}
+                </td>
+              </tr>
+            ) : candidates.length === 0 ? (
               <tr><td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>No candidates found</td></tr>
             ) : candidates.map(c => (
               <tr key={c._id}>

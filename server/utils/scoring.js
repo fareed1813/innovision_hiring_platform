@@ -164,16 +164,21 @@ export function evaluateAnswer(question, answer) {
   // 2. Fluency (Word Match / Word Error Rate Precision)
   if (question.type === 'fluency') {
     let acc = werAccuracy(question.expectedAnswer || question.passage, ans);
-    
-    // Generosity curve: Dictation software can occasionally misinterpret thick accents
-    if (acc >= 0.60) acc = 1.0;
-    else if (acc > 0.40) acc = Math.min(1.0, acc * 1.5);
 
-    const matched = acc > 0.40;
-    
+    // Calibrated leniency curve — accounts for accent variance and STT errors
+    // while still producing meaningful score differences between candidates
+    if (acc >= 0.80)      acc = 1.0;   // Near-perfect articulation → full marks
+    else if (acc >= 0.65) acc = 0.90;  // Good → 90%
+    else if (acc >= 0.50) acc = 0.75;  // Satisfactory → 75%
+    else if (acc >= 0.40) acc = 0.60;  // Borderline → 60%
+    // Below 0.40 → raw score (no inflation for poor attempts)
+
+    const matched = acc >= 0.60;
+
     let feedback = '';
-    if (acc >= 0.8) feedback = 'Candidate accurately articulated the expected words.';
-    else if (acc > 0.4) feedback = 'Candidate clearly expressed most of the expected phrase.';
+    if (acc >= 0.90) feedback = 'Candidate accurately articulated the expected words.';
+    else if (acc >= 0.75) feedback = 'Candidate clearly expressed most of the expected phrase.';
+    else if (acc >= 0.60) feedback = 'Borderline fluency. Core words present but with significant gaps.';
     else feedback = 'Candidate failed to articulate the required words or phrase appropriately.';
 
     return { score: acc, matched, feedback };
@@ -185,27 +190,26 @@ export function evaluateAnswer(question, answer) {
     const tokens = getProcessedTokens(ans);
     const matchedKeywords = keywords.filter(k => tokens.includes(stem(k.toLowerCase())));
     const coverage = keywords.length ? matchedKeywords.length / keywords.length : 1;
-    
-    const sim = industrySimilarity(ans, keywords.join(' '));
-    
-    // Simple Score: Based strictly on coverage and meaning similarity
-    let score = Math.max(coverage, sim);
-    
-    // Generosity curve: Answer is reasonably correct
-    if (score >= 0.6) {
-      score = 1.0;
-    } else if (score > 0.4) {
-      score = Math.min(1.0, score * 1.5);
-    }
-    
-    let feedback = `Theme Alignment: ${matchedKeywords.length}/${keywords.length} core themes detected. `;
-    if (score > 0.75) feedback += 'Candidate successfully addressed the core topic.';
-    else if (score > 0.4) feedback += 'Satisfactory response.';
-    else feedback += 'Candidate missed the expected core concepts.';
 
-    return { 
-      score, 
-      matched: score > 0.4, 
+    const sim = industrySimilarity(ans, keywords.join(' '));
+
+    // Base score: best of keyword coverage or semantic similarity
+    let score = Math.max(coverage, sim);
+
+    // Calibrated curve — reward strong answers, penalise weak ones clearly
+    if (score >= 0.70)      score = 1.0;   // Strong coverage → full marks
+    else if (score >= 0.55) score = 0.85;  // Good → 85%
+    else if (score >= 0.40) score = 0.65;  // Partial → 65%
+    // Below 0.40 → raw score (no inflation)
+
+    let feedback = `Theme Alignment: ${matchedKeywords.length}/${keywords.length} core themes detected. `;
+    if (score >= 0.85)      feedback += 'Candidate successfully addressed the core topic.';
+    else if (score >= 0.65) feedback += 'Satisfactory response — key concepts partially covered.';
+    else                    feedback += 'Candidate missed the expected core concepts.';
+
+    return {
+      score,
+      matched: score >= 0.65,
       feedback,
       details: {
         keywordCount: matchedKeywords.length,

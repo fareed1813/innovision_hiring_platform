@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { randomBytes } from 'crypto';
 import Candidate from '../models/Candidate.js';
 import Question from '../models/Question.js';
 import authMiddleware from '../middleware/auth.js';
@@ -45,7 +46,7 @@ router.post('/', async (req, res) => {
     // Score the assessment server-side (tamper-proof)
     const { total, reading, voice, quality, evaluations } = scoreAssessment(questions, answers || {});
     
-    const refId = 'INV' + Date.now().toString().slice(-7);
+    const refId = 'INV' + randomBytes(4).toString('hex').toUpperCase();
 
     // Map proctoring data
     const finalProctoring = proctoring || { 
@@ -210,30 +211,45 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
 
 
-/* ─── GET /api/candidates/export/csv — CSV export ──────── */
+/* ─── GET /api/candidates/export/csv — CSV export (streamed) ──── */
 router.get('/export/csv', authMiddleware, async (req, res) => {
   try {
     const { status, job } = req.query;
     const filter = {};
     if (status && status !== 'all') filter.status = status;
     if (job && job !== 'all') filter.job = job;
-    
-    const candidates = await Candidate.find(filter).sort({ createdAt: -1 }).lean();
-    
-    const headers = ['Ref ID', 'First Name', 'Last Name', 'Phone', 'Email', 'City', 'Job', 'Source', 'Score', 'Status', 'Date'];
-    const rows = candidates.map(c => [
-      c.refId, c.firstName, c.lastName, c.phone, c.email || '', c.city,
-      c.job, c.source, c.scores?.total || 0, c.status,
-      new Date(c.createdAt).toLocaleDateString()
-    ]);
-    
-    const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(','))].join('\n');
-    
+
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename=innovision_export_${new Date().toISOString().split('T')[0]}.csv`);
-    res.send(csv);
+
+    // Write header row immediately
+    const headers = ['Ref ID', 'First Name', 'Last Name', 'Phone', 'Email', 'City', 'Job', 'Source', 'Score', 'Status', 'Date'];
+    res.write(headers.map(h => `"${h}"`).join(',') + '\n');
+
+    // Stream rows via cursor — never loads all documents into memory
+    const cursor = Candidate.find(filter)
+      .sort({ createdAt: -1 })
+      .select('-questions -answers -audioRecordings -evaluations') // exclude heavy fields
+      .lean()
+      .cursor();
+
+    for await (const c of cursor) {
+      const row = [
+        c.refId, c.firstName, c.lastName, c.phone, c.email || '', c.city,
+        c.job, c.source, c.scores?.total || 0, c.status,
+        new Date(c.createdAt).toLocaleDateString()
+      ].map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(',');
+      res.write(row + '\n');
+    }
+
+    res.end();
   } catch (err) {
-    res.status(500).json({ error: 'Failed to export.' });
+    console.error('CSV export error:', err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to export.' });
+    } else {
+      res.end();
+    }
   }
 });
 
