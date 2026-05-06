@@ -38,7 +38,7 @@ export default function AdminLogin() {
             <UserCog size={40} strokeWidth={1.5} />
           </div>
           <h2 style={{ fontSize: '28px', marginBottom: '8px' }}>Admin Sign In</h2>
-          <p className="login-sub">Innovision Overseas — Secure Dashboard</p>
+          <p className="login-sub">Innovision Global — Secure Dashboard</p>
         </div>
 
         {error && (

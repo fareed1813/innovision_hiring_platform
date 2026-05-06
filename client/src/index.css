@@ -688,7 +688,7 @@ body.hide-navbar .navbar {
 .form-label {
   font-size: 12px;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--text);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }

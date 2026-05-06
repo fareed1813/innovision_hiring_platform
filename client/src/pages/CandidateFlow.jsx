@@ -58,7 +58,7 @@ export default function CandidateFlow() {
   // Personal details
   const [form, setForm] = useState({
     firstName: '', lastName: '', phone: '', email: '', city: '',
-    experience: '', passport: '', education: '', languages: '', gulfExp: '', source: ''
+    experience: '', passport: '', education: '', languages: '', gulfExp: '', source: '', applyingCountry: ''
   });
   const [touched, setTouched] = useState({});
 
@@ -78,7 +78,7 @@ export default function CandidateFlow() {
   };
 
   const isFormValid = () => {
-    const required = ['firstName', 'lastName', 'phone', 'email', 'city', 'experience', 'passport', 'education', 'languages', 'gulfExp'];
+    const required = ['firstName', 'lastName', 'phone', 'email', 'city', 'experience', 'passport', 'education', 'languages', 'gulfExp', 'applyingCountry'];
     const hasRequired = required.every(key => form[key]?.trim().length >= 1);
     const hasNoErrors = Object.keys(VALIDATION_RULES).every(key => !getFieldError(key));
     return hasRequired && hasNoErrors;
@@ -521,7 +521,6 @@ export default function CandidateFlow() {
                 >
                   <div className="role-card-icon">{ROLES_MAP[key].icon}</div>
                   <h3>{ROLES_MAP[key].label}</h3>
-                  <div className="role-card-tag">🇦🇪 UAE Deployment</div>
                 </div>
               ))}
             </div>
@@ -560,6 +559,7 @@ export default function CandidateFlow() {
                 { key: 'education', label: 'Education *', options: ['Below 10th', '10th Pass', '12th Pass', 'Graduate', 'Post Graduate'] },
                 { key: 'languages', label: 'Languages *', type: 'text', placeholder: 'Hindi, English...' },
                 { key: 'gulfExp', label: 'Gulf Experience *', options: ['No — First time', 'Yes — UAE', 'Yes — Saudi/Qatar/Other'] },
+                { key: 'applyingCountry', label: 'Which Country Are You Applying To? *', options: ['UAE', 'Ukraine', 'Saudi Arabia'] },
               ].map(field => (
                 <div className="form-group" key={field.key}>
                   <label className="form-label">{field.label}</label>
@@ -751,7 +751,7 @@ export default function CandidateFlow() {
           <div className="test-sticky-header">
             <div className="test-header-content">
               <div className="test-info">
-                {ROLES_MAP[selectedRole]?.label} Assessment · Innovision Limited
+                {ROLES_MAP[selectedRole]?.label} Assessment · Innovision Global
               </div>
               <div className={`test-timer ${timeLeft < 60 ? 'critical' : ''}`}>
                 <span className="timer-label">Time remaining :</span>
@@ -1018,7 +1018,7 @@ export default function CandidateFlow() {
           </div>
           <h3 className="results-title">Assessment Submitted!</h3>
           <p style={{ color: 'var(--muted)', fontSize: '14px', lineHeight: '1.7', marginBottom: '24px' }}>
-            Thank you for completing the skill assessment. Your responses have been submitted and are under review by the Innovision Overseas team.
+            Thank you for completing the skill assessment. Your responses have been submitted and are under review by the Innovision Global team.
           </p>
           {result?.refId && (
             <div style={{ background: 'var(--surface2)', borderRadius: 'var(--radius-md)', padding: '16px', marginBottom: '24px' }}>

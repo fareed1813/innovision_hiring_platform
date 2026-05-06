@@ -4,17 +4,17 @@ import { Shield, Car, Sparkles, Users, Wrench, ArrowRight, CheckCircle, Globe, A
 import Footer from '../components/Footer';
 
 const ROLES = [
-  { key: 'driver', label: 'Taxi Driver', icon: <Car className="driver-icon" size={32} strokeWidth={1.5} />, desc: 'Taxi/driver role for UAE deployments. Valid UAE driving licence and safe driving practices required.' },
-  { key: 'security', label: 'Special Security Guard', icon: <Shield className="security-icon" size={32} strokeWidth={1.5} />, desc: 'Armed/unarmed security for high-security facilities, malls, and corporate premises in Dubai & Abu Dhabi.' },
-  { key: 'housekeeping', label: 'Housekeeping Staff', icon: <Sparkles className="house-icon" size={32} strokeWidth={1.5} />, desc: 'Hotel, hospital & facility cleaning staff for 3★–5★ hospitality clients in UAE.' },
-  { key: 'supervisor', label: 'Field Supervisor', icon: <Users className="super-icon" size={32} strokeWidth={1.5} />, desc: 'On-ground team lead for facility management or construction site supervision across UAE projects.' },
-  { key: 'helper', label: 'General Helper', icon: <Wrench className="helper-icon" size={32} strokeWidth={1.5} />, desc: 'Multi-skilled helper for construction, warehouse, or facility maintenance roles across UAE.' },
+  { key: 'driver', label: 'Taxi Driver', icon: <Car className="driver-icon" size={32} strokeWidth={1.5} />, desc: 'Professional driver roles across UAE and Saudi Arabia. Valid driving licence and a safe, disciplined driving record required.' },
+  { key: 'security', label: 'Special Security Guard', icon: <Shield className="security-icon" size={32} strokeWidth={1.5} />, desc: 'Armed/unarmed security personnel for high-security facilities, malls, and corporate premises across the UAE and Saudi Arabia.' },
+  { key: 'housekeeping', label: 'Housekeeping Staff', icon: <Sparkles className="house-icon" size={32} strokeWidth={1.5} />, desc: 'Hotel, hospital & facility cleaning staff for premium hospitality and healthcare clients across UAE, Ukraine, and Saudi Arabia.' },
+  { key: 'supervisor', label: 'Field Supervisor', icon: <Users className="super-icon" size={32} strokeWidth={1.5} />, desc: 'On-ground team lead for facility management, construction, and operations supervision across UAE, Ukraine, Saudi Arabia, and international projects.' },
+  { key: 'helper', label: 'General Helper', icon: <Wrench className="helper-icon" size={32} strokeWidth={1.5} />, desc: 'Multi-skilled helper for construction, warehousing, and facility maintenance roles across UAE, Saudi Arabia, and Ukraine.' },
 ];
 
 const GlowingDivider = () => (
-  <div style={{ 
-    width: '100%', 
-    height: '2px', 
+  <div style={{
+    width: '100%',
+    height: '2px',
     background: 'linear-gradient(to right, transparent, #EF2B2D, transparent)',
     boxShadow: '0 0 20px rgba(239,43,45,0.5)',
     margin: 0,
@@ -46,19 +46,18 @@ export default function Landing() {
       {/* ── Hero ── */}
       <section className="hero">
         <div className="hero-content">
-          <div className="hero-badge">🇦🇪 UAE Overseas Deployment</div>
+          <div className="hero-badge">🌍 MEA Registered Manpower Consultancy</div>
           <h1>
             Build Your Career<br />
-            With <span>Innovision</span> Overseas
+            With <span>Innovision</span> Global
           </h1>
           <p>
-            MOIA-registered manpower consultancy specializing in India-to-UAE workforce deployment.
-            Take a skill assessment and get deployed to premium facilities across Dubai & Abu Dhabi.
+            MEA-registered manpower consultancy specializing in overseas workforce deployment from India to key global markets, including the UAE, Qatar, Saudi Arabia, and Ukraine. Take a skill test with us and unlock rewarding overseas career opportunities with trusted employers.
           </p>
           <div className="hero-buttons">
-            <Link to="/apply" className="btn btn-primary btn-lg">
+            <a href="#roles" className="btn btn-primary btn-lg">
               Apply Now <ArrowRight size={16} />
-            </Link>
+            </a>
             <a href="#roles" className="btn btn-ghost-white btn-lg">
               View Open Roles
             </a>
@@ -84,18 +83,17 @@ export default function Landing() {
       <section className="section" id="roles">
         <div className="section-inner">
           <div className="section-tag">Careers</div>
-          <h2>Open Roles for UAE Deployment</h2>
+          <h2>Open Roles — Global Deployment</h2>
           <p className="section-sub">
             Select a role that matches your skills and experience. Complete the assessment to get shortlisted for deployment.
           </p>
           <div className="roles-grid">
             {ROLES.map(role => (
-              <Link to={`/apply?role=${role.key}`} key={role.key} className="role-card" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <a href={`/apply?role=${role.key}`} key={role.key} className="role-card" style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div className="role-card-icon">{role.icon}</div>
                 <h3>{role.label}</h3>
                 <p>{role.desc}</p>
-                <div className="role-card-tag">🇦🇪 UAE Deployment <ArrowRight size={12} /></div>
-              </Link>
+              </a>
             ))}
           </div>
         </div>
@@ -105,23 +103,23 @@ export default function Landing() {
       <section className="section" id="about" style={{ background: '#fdf5f5' }}>
         <div className="section-inner">
           <div className="section-tag">About Us</div>
-          <h2>Innovision Overseas Pvt. Ltd.</h2>
+          <h2>Innovision Global</h2>
           <p className="section-sub">
-            A MOIA-registered overseas manpower consultancy delivering skilled workforce solutions from India to the UAE since 2007.
+            A MEA-registered Overseas Manpower Consultancy providing skilled, unskilled & semi-skilled manpower to overseas companies since 2007.
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-              {[
-                { icon: <Globe size={24} />, title: 'MOIA Registered', desc: 'Fully registered with the Ministry of External Affairs, Government of India for overseas recruitment.' },
-                { icon: <Award size={24} />, title: 'Premium Clients', desc: 'Partnered with 5-star hotels, corporate campuses, and government facilities across Dubai and Abu Dhabi.' },
-                { icon: <CheckCircle size={24} />, title: 'End-to-End Support', desc: 'From visa processing to travel arrangements, we handle the complete deployment lifecycle for every candidate.' },
-              ].map((item, i) => (
-                <div key={i} style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '32px' }}>
-                  <div style={{ color: 'var(--brand-red)', marginBottom: '16px' }}>{item.icon}</div>
-                  <h4 style={{ fontSize: '16px', marginBottom: '8px' }}>{item.title}</h4>
-                  <p style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.7' }}>{item.desc}</p>
-                </div>
-              ))}
-            </div>
+            {[
+              { icon: <Globe size={24} />, title: 'MEA Registered', desc: 'Fully registered with the Ministry of External Affairs, Government of India for overseas recruitment.' },
+              { icon: <Award size={24} />, title: 'Premium Clients', desc: 'Partnered with 5-star hotels, corporate campuses, and government facilities across Dubai and Abu Dhabi.' },
+              { icon: <CheckCircle size={24} />, title: 'End-to-End Support', desc: 'From visa processing to travel arrangements, we handle the complete deployment lifecycle for every candidate.' },
+            ].map((item, i) => (
+              <div key={i} style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '32px' }}>
+                <div style={{ color: 'var(--brand-red)', marginBottom: '16px' }}>{item.icon}</div>
+                <h4 style={{ fontSize: '16px', marginBottom: '8px' }}>{item.title}</h4>
+                <p style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.7' }}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
