@@ -359,7 +359,7 @@ body.hide-navbar .navbar {
 ═══════════════════════════════════════════ */
 .hero {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+  background: linear-gradient(135deg, #050505 0%, #0f0f0f 50%, #1a0a0a 100%);
   display: flex;
   align-items: center;
   justify-content: center;
