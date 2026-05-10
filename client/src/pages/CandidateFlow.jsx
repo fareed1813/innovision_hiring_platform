@@ -674,7 +674,13 @@ export default function CandidateFlow() {
             )}
 
             <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'space-between' }}>
-              <button className="btn btn-ghost btn-lg" onClick={() => handleStepChange(0)}>
+              <button className="btn btn-ghost btn-lg" onClick={() => {
+                if (initialRole) {
+                  navigate('/#roles');
+                } else {
+                  handleStepChange(0);
+                }
+              }}>
                 <ChevronLeft size={16} /> Back
               </button>
               <button
