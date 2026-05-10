@@ -27,7 +27,7 @@ const DOMESTIC_ROLES = [
   {
     key: 'facility_management',
     label: 'Facility Management',
-    icon: <Building2 className="house-icon" size={32} strokeWidth={1.5} />,
+    icon: <Building2 className="security-icon" size={32} strokeWidth={1.5} />,
     desc: 'Support and facility management roles in offices, hospitals, and commercial spaces across India.',
     subRoles: [
       { key: 'pantry_boy', label: 'Pantry Boy', desc: 'Manage pantry inventory, serve beverages, and maintain cleanliness.' },
@@ -139,7 +139,7 @@ export default function Landing() {
               className={`roles-tab ${activeTab === 'domestic' ? 'active' : ''}`}
               onClick={() => handleTabChange('domestic')}
             >
-              🇮🇳 Domestic
+              IND Domestic
             </button>
           </div>
 

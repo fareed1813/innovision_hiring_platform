@@ -211,7 +211,7 @@ export default function Dashboard() {
         <div className="roles-tab-bar" style={{ marginBottom: '8px' }}>
           {[
             { key: 'international', label: '🌍 International' },
-            { key: 'domestic',      label: '🇮🇳 Domestic' },
+            { key: 'domestic',      label: 'IND Domestic' },
           ].map(t => (
             <button
               key={t.key}

@@ -672,7 +672,7 @@ export default function CandidateFlow() {
       <div className="page-wrapper" style={{ paddingTop: 'calc(var(--nav-height) + 40px)' }}>
         <div className="section" style={{ paddingTop: '40px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-            <div className="section-tag">{isDomestic ? '🇮🇳 Domestic Application' : '🌍 International Application'}</div>
+            <div className="section-tag">{isDomestic ? 'IND Domestic Application' : '🌍 International Application'}</div>
             <h2>Personal Details</h2>
             <p className="section-sub">
               Applying for: <strong>{roleLabel}{subRoleLabel ? ` — ${subRoleLabel}` : ''}</strong>
