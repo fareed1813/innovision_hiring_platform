@@ -636,7 +636,7 @@ export default function CandidateFlow() {
             <ChevronDown size={16} style={{ color: 'var(--text-secondary)', transform: openDropdown === fieldKey ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
           </div>
           {openDropdown === fieldKey && (
-            <div className="select-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 100 }}>
+            <div className="select-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 100, maxHeight: '250px', overflowY: 'auto' }}>
               <div className={`select-option ${!form[fieldKey] ? 'selected' : ''}`} onClick={() => { handleInputChange(fieldKey, ''); setOpenDropdown(null); }}>Select...</div>
               {options.map(o => (
                 <div key={o} className={`select-option ${form[fieldKey] === o ? 'selected' : ''}`} onClick={() => { handleInputChange(fieldKey, o); setOpenDropdown(null); }}>{o}</div>
