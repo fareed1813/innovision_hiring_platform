@@ -72,10 +72,12 @@ export default function Dashboard() {
 
   const fetchStats = useCallback(async () => {
     try {
-      const res = await api.get('/candidates/stats');
+      const params = {};
+      if (typeFilter && typeFilter !== 'all') params.type = typeFilter;
+      const res = await api.get('/candidates/stats', { params });
       setStats(res.data);
     } catch (err) { console.error(err); }
-  }, []);
+  }, [typeFilter]);
 
   const fetchCandidates = useCallback(async () => {
     setLoadingCandidates(true);
@@ -115,6 +117,7 @@ export default function Dashboard() {
       const params = {};
       if (filter !== 'all') params.status = filter;
       if (jobFilter !== 'all') params.job = jobFilter;
+      if (typeFilter && typeFilter !== 'all') params.type = typeFilter;
       const res = await api.get('/candidates/export/csv', { params, responseType: 'blob' });
       const url = URL.createObjectURL(res.data);
       const a = document.createElement('a');

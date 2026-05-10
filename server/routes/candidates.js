@@ -182,22 +182,36 @@ router.get('/', authMiddleware, async (req, res) => {
   try {
     const { status, job, search, page = 1, limit = 50, type } = req.query;
     const filter = {};
+    const andConditions = [];
     
     if (status && status !== 'all') filter.status = status;
     if (job && job !== 'all') filter.job = job;
-    if (type && type !== 'all') filter.type = type;
-    if (search) {
-      const regex = new RegExp(search, 'i');
-      filter.$or = [
-        { firstName: regex },
-        { lastName: regex },
-        { phone: regex },
-        { city: regex },
-        { cityVillage: regex },
-        { refId: regex }
-      ];
+    
+    if (type && type !== 'all') {
+      if (type === 'international') {
+        andConditions.push({ $or: [{ type: 'international' }, { type: { $exists: false } }] });
+      } else {
+        filter.type = type;
+      }
     }
 
+    if (search) {
+      const regex = new RegExp(search, 'i');
+      andConditions.push({
+        $or: [
+          { firstName: regex },
+          { lastName: regex },
+          { phone: regex },
+          { city: regex },
+          { cityVillage: regex },
+          { refId: regex }
+        ]
+      });
+    }
+
+    if (andConditions.length > 0) {
+      filter.$and = andConditions;
+    }
     
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
@@ -249,11 +263,22 @@ router.get('/check-duplication', async (req, res) => {
 /* ─── GET /api/candidates/stats — Dashboard stats ────── */
 router.get('/stats', authMiddleware, async (req, res) => {
   try {
+    const { type } = req.query;
+    const baseFilter = {};
+    
+    if (type && type !== 'all') {
+      if (type === 'international') {
+        baseFilter.$or = [{ type: 'international' }, { type: { $exists: false } }];
+      } else {
+        baseFilter.type = type;
+      }
+    }
+
     const [total, pending, selected, rejected] = await Promise.all([
-      Candidate.countDocuments(),
-      Candidate.countDocuments({ status: 'pending' }),
-      Candidate.countDocuments({ status: 'selected' }),
-      Candidate.countDocuments({ status: 'rejected' })
+      Candidate.countDocuments(baseFilter),
+      Candidate.countDocuments({ ...baseFilter, status: 'pending' }),
+      Candidate.countDocuments({ ...baseFilter, status: 'selected' }),
+      Candidate.countDocuments({ ...baseFilter, status: 'rejected' })
     ]);
     res.json({ total, pending, selected, rejected });
   } catch (err) {
@@ -309,10 +334,24 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 /* ─── GET /api/candidates/export/csv — CSV export (streamed) ──── */
 router.get('/export/csv', authMiddleware, async (req, res) => {
   try {
-    const { status, job } = req.query;
+    const { status, job, type } = req.query;
     const filter = {};
+    const andConditions = [];
+    
     if (status && status !== 'all') filter.status = status;
     if (job && job !== 'all') filter.job = job;
+
+    if (type && type !== 'all') {
+      if (type === 'international') {
+        andConditions.push({ $or: [{ type: 'international' }, { type: { $exists: false } }] });
+      } else {
+        filter.type = type;
+      }
+    }
+
+    if (andConditions.length > 0) {
+      filter.$and = andConditions;
+    }
 
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename=innovision_export_${new Date().toISOString().split('T')[0]}.csv`);

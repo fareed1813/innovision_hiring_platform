@@ -621,7 +621,7 @@ export default function CandidateFlow() {
   // ── STEP 1: Personal Details ──
   if (step === 1) {
     // Helper: reusable custom dropdown renderer
-    const SelectField = ({ fieldKey, label, options }) => (
+    const renderSelectField = (fieldKey, label, options) => (
       <div className="form-group" key={fieldKey}>
         <label className="form-label">{label}</label>
         <div className="custom-select-container" style={{ width: '100%', marginBottom: 0 }}>
@@ -647,7 +647,7 @@ export default function CandidateFlow() {
       </div>
     );
 
-    const TextField = ({ fieldKey, label, type = 'text', placeholder, fullWidth }) => (
+    const renderTextField = (fieldKey, label, type = 'text', placeholder = '', fullWidth = false) => (
       <div className={`form-group ${fullWidth ? 'full-width' : ''}`} key={fieldKey}>
         <label className="form-label">{label}</label>
         <input
@@ -679,20 +679,20 @@ export default function CandidateFlow() {
             </p>
 
             <div className="form-grid">
-              <TextField fieldKey="firstName" label="First Name *" placeholder="Enter first name" />
-              <TextField fieldKey="lastName"  label="Last Name *"  placeholder="Enter last name" />
-              <TextField fieldKey="phone"     label="Phone *"      type="tel" placeholder="+91 ..." />
-              <TextField fieldKey="email"     label="Email *"      type="email" placeholder="example@email.com" />
-              <TextField fieldKey="experience" label="Years of Experience *" type="number" placeholder="0" />
-              <SelectField fieldKey="education" label="Education *" options={['Below 10th','10th Pass','12th Pass','Graduate','Post Graduate']} />
-              <TextField fieldKey="languages" label="Languages Known *" placeholder="Hindi, English..." />
+              {renderTextField('firstName', 'First Name *', 'text', 'Enter first name')}
+              {renderTextField('lastName', 'Last Name *', 'text', 'Enter last name')}
+              {renderTextField('phone', 'Phone *', 'tel', '+91 ...')}
+              {renderTextField('email', 'Email *', 'email', 'example@email.com')}
+              {renderTextField('experience', 'Years of Experience *', 'number', '0')}
+              {renderSelectField('education', 'Education *', ['Below 10th','10th Pass','12th Pass','Graduate','Post Graduate'])}
+              {renderTextField('languages', 'Languages Known *', 'text', 'Hindi, English...')}
 
               {/* International-only fields */}
               {!isDomestic && <>
-                <TextField fieldKey="city" label="City / District *" placeholder="Enter your city" />
-                <SelectField fieldKey="passport"       label="Passport Status *"           options={['Valid Passport (6+ months)','Expired / Need Renewal','No Passport']} />
-                <SelectField fieldKey="gulfExp"        label="Gulf Experience *"            options={['No — First time','Yes — UAE','Yes — Saudi/Qatar/Other']} />
-                <SelectField fieldKey="applyingCountry" label="Which Country Are You Applying To? *" options={['UAE','Ukraine','Saudi Arabia']} />
+                {renderTextField('city', 'City / District *', 'text', 'Enter your city')}
+                {renderSelectField('passport', 'Passport Status *', ['Valid Passport (6+ months)','Expired / Need Renewal','No Passport'])}
+                {renderSelectField('gulfExp', 'Gulf Experience *', ['No — First time','Yes — UAE','Yes — Saudi/Qatar/Other'])}
+                {renderSelectField('applyingCountry', 'Which Country Are You Applying To? *', ['UAE','Ukraine','Saudi Arabia'])}
               </>}
 
               {/* Domestic-only: Current Location */}
@@ -703,10 +703,10 @@ export default function CandidateFlow() {
                     <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text)' }}>Current Location</span>
                   </div>
                 </div>
-                <SelectField fieldKey="state"       label="State *"        options={INDIAN_STATES} />
-                <TextField  fieldKey="district"     label="District *"     placeholder="Enter district" />
-                <TextField  fieldKey="cityVillage"  label="City / Village *" placeholder="Enter city or village" />
-                <TextField  fieldKey="pincode"      label="Pincode *"      placeholder="6-digit pincode" />
+                {renderSelectField('state', 'State *', INDIAN_STATES)}
+                {renderTextField('district', 'District *', 'text', 'Enter district')}
+                {renderTextField('cityVillage', 'City / Village *', 'text', 'Enter city or village')}
+                {renderTextField('pincode', 'Pincode *', 'text', '6-digit pincode')}
 
                 {/* Preferred Work Locations */}
                 <div className="form-group full-width" style={{ marginTop: '8px' }}>
@@ -720,9 +720,9 @@ export default function CandidateFlow() {
                   <div className="form-group full-width pref-block" key={n}>
                     <div className="pref-block-header">Preference {n}</div>
                     <div className="form-grid" style={{ marginTop: '10px' }}>
-                      <SelectField fieldKey={`pref${n}State`}    label="State *"          options={INDIAN_STATES} />
-                      <TextField  fieldKey={`pref${n}District`}  label="District *"       placeholder="Enter district" />
-                      <TextField  fieldKey={`pref${n}City`}      label="City / Village *" placeholder="Enter city or village" />
+                      {renderSelectField(`pref${n}State`, 'State *', INDIAN_STATES)}
+                      {renderTextField(`pref${n}District`, 'District *', 'text', 'Enter district')}
+                      {renderTextField(`pref${n}City`, 'City / Village *', 'text', 'Enter city or village')}
                     </div>
                     {n < 3 && form[`pref${n}City`] && form[`pref${n+1}City`] && form[`pref${n}City`].toLowerCase().trim() === form[`pref${n+1}City`].toLowerCase().trim() && (
                       <div className="error-text" style={{ marginTop: '6px' }}>
@@ -830,7 +830,7 @@ export default function CandidateFlow() {
                     disabled={!isFormValid() || submittingForm || !!dupError}
                     onClick={submitForm}
                   >
-                    {submittingForm ? 'Saving...' : 'Submit Form'} <ChevronRight size={16} />
+                    {submittingForm ? 'Saving...' : 'Submit Form'}
                   </button>
                 ) : (
                   <div style={{

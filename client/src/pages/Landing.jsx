@@ -20,17 +20,17 @@ const DOMESTIC_ROLES = [
     icon: <Shield className="security-icon" size={32} strokeWidth={1.5} />,
     desc: 'Security guard positions across facilities, corporates, malls, and residential complexes within India.',
     subRoles: [
-      { key: 'armed_security_guard',   label: 'Armed Security Guard' },
-      { key: 'unarmed_security_guard', label: 'Unarmed Security Guard' },
+      { key: 'armed_security_guard',   label: 'Armed Security Guard', desc: 'Specialized armed security for banks, ATMs, and high-value transports.' },
+      { key: 'unarmed_security_guard', label: 'Unarmed Security Guard', desc: 'Standard security monitoring for residential areas and retail spaces.' },
     ],
   },
   {
     key: 'facility_management',
     label: 'Facility Management',
-    icon: <Building2 size={32} strokeWidth={1.5} style={{ color: 'var(--brand-red)' }} />,
+    icon: <Building2 className="house-icon" size={32} strokeWidth={1.5} />,
     desc: 'Support and facility management roles in offices, hospitals, and commercial spaces across India.',
     subRoles: [
-      { key: 'pantry_boy', label: 'Pantry Boy' },
+      { key: 'pantry_boy', label: 'Pantry Boy', desc: 'Manage pantry inventory, serve beverages, and maintain cleanliness.' },
     ],
   },
   {
@@ -39,8 +39,8 @@ const DOMESTIC_ROLES = [
     icon: <Users className="super-icon" size={32} strokeWidth={1.5} />,
     desc: 'Supervisory, technical, and general manpower roles for domestic deployments across India.',
     subRoles: [
-      { key: 'supervisor', label: 'Supervisor' },
-      { key: 'tech',       label: 'Tech' },
+      { key: 'supervisor', label: 'Supervisor', desc: 'Oversee ground operations and coordinate daily workforce tasks.' },
+      { key: 'tech',       label: 'Tech', desc: 'Technical maintenance and troubleshooting for mechanical or electrical systems.' },
     ],
   },
 ];
@@ -168,7 +168,7 @@ export default function Landing() {
                 <div key={role.key} style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
                   {/* Main role card */}
                   <div
-                    className={`role-card ${expandedRole === role.key ? 'selected' : ''}`}
+                    className={`role-card domestic-role-card ${expandedRole === role.key ? 'selected' : ''}`}
                     onClick={() => setExpandedRole(prev => prev === role.key ? null : role.key)}
                     style={{ cursor: 'pointer', userSelect: 'none' }}
                   >
@@ -198,8 +198,11 @@ export default function Landing() {
                           className="subrole-item"
                           onClick={() => navigate(`/apply?type=domestic&role=${role.key}&subRole=${sub.key}`)}
                         >
-                          <ChevronRight size={15} style={{ color: 'var(--brand-red)', flexShrink: 0 }} />
-                          <span>{sub.label}</span>
+                          <ChevronRight size={15} style={{ color: 'var(--brand-red)', flexShrink: 0, alignSelf: 'flex-start', marginTop: '2px' }} />
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <span style={{ fontWeight: 700, color: 'var(--text)' }}>{sub.label}</span>
+                            <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 400, lineHeight: 1.4 }}>{sub.desc}</span>
+                          </div>
                         </button>
                       ))}
                     </div>
