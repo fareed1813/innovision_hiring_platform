@@ -545,6 +545,32 @@ body.hide-navbar .navbar {
   transform: scaleX(1);
 }
 
+/* Red arrow at bottom-right on hover / selected */
+.role-card::after {
+  content: '';
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--brand-red);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0;
+  transform: translate(4px, 4px) scale(0.8);
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 12px rgba(209, 43, 43, 0.4);
+  z-index: 2;
+}
+
+.role-card:hover::after,
+.role-card.selected::after {
+  opacity: 1;
+  transform: translate(0, 0) scale(1);
+}
+
 .role-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
