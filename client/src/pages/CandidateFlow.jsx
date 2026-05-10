@@ -738,7 +738,6 @@ export default function CandidateFlow() {
                     className="btn btn-ghost btn-lg"
                     disabled={!isFormValid() || submittingForm || !!dupError}
                     onClick={submitForm}
-                    style={{ borderColor: 'var(--brand-red)', color: 'var(--brand-red)' }}
                   >
                     {submittingForm ? 'Saving...' : 'Submit Form'} <ChevronRight size={16} />
                   </button>
