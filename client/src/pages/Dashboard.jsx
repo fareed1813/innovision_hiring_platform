@@ -337,7 +337,19 @@ export default function Dashboard() {
                   </div>
                 </td>
                 <td style={{ fontSize: '13px' }}>{ROLES[c.job] || c.job}</td>
-                <td><span className={`score-chip ${scoreClass(c.scores?.total || 0)}`}>{c.scores?.total || 0}/100</span></td>
+                <td>
+                  {c.assessmentStatus === 'form_submitted' ? (
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '5px',
+                      padding: '4px 10px', borderRadius: '20px',
+                      background: 'rgba(100,116,139,0.1)',
+                      color: '#64748b', fontSize: '11px', fontWeight: 700,
+                      border: '1px solid rgba(100,116,139,0.2)', letterSpacing: '0.04em'
+                    }}>Form Only</span>
+                  ) : (
+                    <span className={`score-chip ${scoreClass(c.scores?.total || 0)}`}>{c.scores?.total || 0}/100</span>
+                  )}
+                </td>
                 <td><span className={`status-pill status-${c.status}`}>{c.status === 'selected' ? 'Accepted' : c.status}</span></td>
                 <td style={{ fontSize: '13px', color: 'var(--muted)' }}>{new Date(c.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</td>
                 <td>
@@ -416,6 +428,7 @@ export default function Dashboard() {
                 ['Experience', `${selected.experience} yr(s)`], ['Passport', selected.passport || '—'],
                 ['Education', selected.education || '—'], ['Languages', selected.languages],
                 ['Gulf Exp.', selected.gulfExp || '—'], ['Source', selected.source], ['Status', selected.status],
+                ['Assessment', selected.assessmentStatus === 'form_submitted' ? '📋 Form Submitted (No Test)' : '✅ Assessment Completed'],
                 ['Violations', selected.proctoringViolations || 0]
               ].map(([label, value]) => (
                 <div key={label}>

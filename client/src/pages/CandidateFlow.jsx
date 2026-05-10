@@ -124,6 +124,13 @@ export default function CandidateFlow() {
   const lastViolationRef = useRef(0);
   const handleSubmitRef = useRef(null);  // Fix #11: keeps timer closure fresh
 
+  // ── Form submission state (separate from assessment) ──
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [submittingForm, setSubmittingForm] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [candidateId, setCandidateId] = useState(null);
+  const [formRefId, setFormRefId] = useState('');
+
   const [showResumePrompt, setShowResumePrompt] = useState(false);
 
   // ── OFFLINE RECOVERY: Load from LocalStorage ──
@@ -323,36 +330,58 @@ export default function CandidateFlow() {
     }
   };
 
+  // ── Submit form details to DB (separate from assessment) ──
+  const submitForm = async () => {
+    if (submittingForm || formSubmitted) return;
+    setSubmittingForm(true);
+    setFormError('');
+    try {
+      const res = await api.post('/candidates/submit-form', {
+        personal: form,
+        job: selectedRole,
+        source: form.source || 'Direct'
+      });
+      setCandidateId(res.data.candidateId);
+      setFormRefId(res.data.refId);
+      setFormSubmitted(true);
+    } catch (err) {
+      console.error(err);
+      if (err.response?.status === 409) {
+        const data = err.response.data;
+        // If they already submitted form, treat as if form is done and allow assessment
+        if (data.assessmentStatus === 'form_submitted') {
+          setCandidateId(data.candidateId);
+          setFormRefId(data.refId);
+          setFormSubmitted(true);
+          setFormError(`You already submitted this form (Ref: ${data.refId}). You can now start the assessment.`);
+        } else {
+          setDupError(`You have already completed the full assessment for ${ROLES_MAP[selectedRole]?.label}. Only one attempt per role is permitted.`);
+        }
+      } else {
+        setFormError('Failed to submit form. Please check your connection and try again.');
+      }
+    } finally {
+      setSubmittingForm(false);
+    }
+  };
+
   // Fetch questions when starting assessment
   const startAssessment = async () => {
     setValidating(true);
-    setDupError('');
     try {
-      // 1. Check Duplication first
-      const dupCheck = await api.get('/candidates/check-duplication', {
-        params: { phone: form.phone, email: form.email, job: selectedRole }
-      });
-      
-      if (dupCheck.data.isDuplicate) {
-        setDupError(`You have already completed the assessment for ${ROLES_MAP[selectedRole]?.label}. Only one attempt per role is permitted.`);
-        setValidating(false);
-        exitFS(); // Exit fullscreen if duplicate
-        return;
-      }
-
-      // 2. If not duplicate, proceed to fetch questions
+      // Fetch questions (dedup already done at form-submit stage)
       const res = await api.get('/questions', { params: { role: selectedRole } });
       setQuestions(res.data);
       const time = selectedRole === 'driver' ? 10 * 60 : 25 * 60;
       setTimeLeft(time);
       setTotalTime(time);
       
-      // 3. Change step — fullscreen is already active from the enterFS() call above
+      // Change step — fullscreen is already active from the enterFS() call
       handleStepChange(2);
     } catch (err) {
       console.error(err);
-      exitFS(); // Exit fullscreen on error
-      alert('Verification failed. Please try again.');
+      exitFS();
+      alert('Failed to load questions. Please try again.');
     } finally {
       setValidating(false);
     }
@@ -444,22 +473,20 @@ export default function CandidateFlow() {
         personal: form,
         job: selectedRole,
         source: form.source || 'Direct',
-        questions, // Send the snapshot of what was actually shown
+        questions,
         answers,
         audioRecordings,
-        proctoring: violations
+        proctoring: violations,
+        ...(candidateId ? { candidateId } : {}) // link to form-submitted record
       };
       const res = await api.post('/candidates', payload);
       setResult(res.data);
-      localStorage.removeItem('candidate_draft'); // Success path
-      
-      // Exit fullscreen after completion
+      localStorage.removeItem('candidate_draft');
       exitFS();
-      
       handleStepChange(3);
     } catch (err) {
       console.error(err);
-      exitFS(); // Also exit fullscreen on error so user isn't stuck
+      exitFS();
       if (err.response?.status === 409) {
         setSubmitError({
           title: 'Duplicate Application',
@@ -673,7 +700,27 @@ export default function CandidateFlow() {
               </div>
             )}
 
-            <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'space-between' }}>
+            {/* Form submission error (non-duplicate) */}
+            {formError && !dupError && (
+              <div style={{
+                marginTop: '16px',
+                padding: '14px 20px',
+                background: formSubmitted ? 'rgba(16,185,129,0.06)' : 'rgba(239,68,68,0.05)',
+                border: `1.5px solid ${formSubmitted ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.15)'}`,
+                borderRadius: '12px',
+                fontSize: '13px',
+                color: formSubmitted ? '#059669' : 'var(--danger)',
+                fontWeight: 500,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}>
+                <CheckCircle size={16} /> {formError}
+              </div>
+            )}
+
+            <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              {/* Back */}
               <button className="btn btn-ghost btn-lg" onClick={() => {
                 if (initialRole) {
                   navigate('/#roles');
@@ -683,16 +730,49 @@ export default function CandidateFlow() {
               }}>
                 <ChevronLeft size={16} /> Back
               </button>
-              <button
-                className="btn btn-primary btn-lg"
-                disabled={!isFormValid() || validating || !!dupError}
-                onClick={(e) => {
-                  enterFS();
-                  startAssessment();
-                }}
-              >
-                {validating ? 'Verifying...' : 'Start Assessment'} <ChevronRight size={16} />
-              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                {/* Submit Form button — hidden once submitted */}
+                {!formSubmitted ? (
+                  <button
+                    className="btn btn-ghost btn-lg"
+                    disabled={!isFormValid() || submittingForm || !!dupError}
+                    onClick={submitForm}
+                    style={{ borderColor: 'var(--brand-red)', color: 'var(--brand-red)' }}
+                  >
+                    {submittingForm ? 'Saving...' : 'Submit Form'} <ChevronRight size={16} />
+                  </button>
+                ) : (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 20px',
+                    background: 'rgba(16,185,129,0.08)',
+                    border: '1.5px solid rgba(16,185,129,0.3)',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    color: '#059669',
+                    letterSpacing: '0.04em'
+                  }}>
+                    <CheckCircle size={16} />
+                    Form Submitted · Ref: {formRefId}
+                  </div>
+                )}
+
+                {/* Start Assessment — only enabled after form submitted */}
+                <button
+                  className="btn btn-primary btn-lg"
+                  disabled={!formSubmitted || validating || !!dupError}
+                  onClick={(e) => {
+                    enterFS();
+                    startAssessment();
+                  }}
+                >
+                  {validating ? 'Loading...' : 'Start Assessment'} <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
           </div>
         </div>

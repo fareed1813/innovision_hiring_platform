@@ -10,16 +10,124 @@ const router = Router();
 
 
 
+/* ─── POST /api/candidates/submit-form — Save form details only ─── */
+router.post('/submit-form', async (req, res) => {
+  try {
+    const { personal, job, source } = req.body;
+
+    if (!personal || !job) {
+      return res.status(400).json({ error: 'Personal details and job role are required.' });
+    }
+
+    // Deduplication check
+    const existing = await Candidate.findOne({
+      job,
+      $or: [
+        { phone: personal.phone?.trim() },
+        ...(personal.email ? [{ email: personal.email.trim().toLowerCase() }] : [])
+      ]
+    });
+
+    if (existing) {
+      return res.status(409).json({
+        error: 'Application already exists.',
+        refId: existing.refId,
+        candidateId: existing._id,
+        message: 'You have already applied for this role.',
+        assessmentStatus: existing.assessmentStatus
+      });
+    }
+
+    const refId = 'INV' + randomBytes(4).toString('hex').toUpperCase();
+
+    const candidate = new Candidate({
+      refId,
+      ...personal,
+      job,
+      source: source || 'Direct',
+      assessmentStatus: 'form_submitted',
+      scores: { total: 0, reading: 0, voice: 0, quality: 0 },
+      questions: [],
+      answers: {},
+      evaluations: {},
+      audioRecordings: {},
+      proctoring: { tabSwitches: 0, fullscreenExits: 0 },
+      proctoringViolations: 0,
+      status: 'pending'
+    });
+
+    await candidate.save();
+
+    res.status(201).json({
+      refId,
+      candidateId: candidate._id,
+      message: 'Form submitted successfully.'
+    });
+  } catch (err) {
+    console.error('Form submission error:', err);
+    res.status(500).json({ error: 'Failed to submit form.' });
+  }
+});
+
+
 /* ─── POST /api/candidates — Submit assessment ──────── */
 router.post('/', async (req, res) => {
   try {
-    const { personal, job, source, answers, audioRecordings, questions: providedQuestions, proctoringViolations, proctoring } = req.body;
+    const { personal, job, source, answers, audioRecordings, questions: providedQuestions, proctoringViolations, proctoring, candidateId } = req.body;
     
     if (!personal || !job) {
       return res.status(400).json({ error: 'Personal details and job role are required.' });
     }
 
-    // Deduplication Check
+    // Build or use provided questions snapshot
+    const questions = providedQuestions || await buildQuestionsForRole(job);
+    
+    if (questions.length === 0) {
+      return res.status(400).json({ error: 'No questions configured for this role.' });
+    }
+    
+    // Score the assessment server-side (tamper-proof)
+    const { total, reading, voice, quality, evaluations } = scoreAssessment(questions, answers || {});
+
+    // Map proctoring data
+    const finalProctoring = proctoring || { 
+      tabSwitches: typeof proctoringViolations === 'number' ? proctoringViolations : 0, 
+      fullscreenExits: 0 
+    };
+    const finalViolationsCount = typeof proctoringViolations === 'number' 
+      ? proctoringViolations 
+      : ((finalProctoring?.tabSwitches || 0) + (finalProctoring?.fullscreenExits || 0));
+
+    // ── PATH A: Update existing form-submitted record ──
+    if (candidateId) {
+      const updated = await Candidate.findByIdAndUpdate(
+        candidateId,
+        {
+          questions,
+          answers: answers || {},
+          audioRecordings: audioRecordings || {},
+          evaluations,
+          scores: { total, reading, voice, quality },
+          proctoring: finalProctoring,
+          proctoringViolations: finalViolationsCount,
+          assessmentStatus: 'assessment_submitted'
+        },
+        { new: true }
+      ).lean();
+
+      if (!updated) {
+        return res.status(404).json({ error: 'Candidate record not found. Please resubmit the form.' });
+      }
+
+
+      return res.status(200).json({
+        refId: updated.refId,
+        scores: { total, reading, voice, quality },
+        message: 'Assessment submitted and scores updated.'
+      });
+    }
+
+    // ── PATH B: Legacy / fallback (no candidateId) ── 
     const existing = await Candidate.findOne({
       job,
       $or: [
@@ -36,26 +144,7 @@ router.post('/', async (req, res) => {
       });
     }
     
-    // Build or use provided questions snapshot
-    const questions = providedQuestions || await buildQuestionsForRole(job);
-    
-    if (questions.length === 0) {
-      return res.status(400).json({ error: 'No questions configured for this role.' });
-    }
-    
-    // Score the assessment server-side (tamper-proof)
-    const { total, reading, voice, quality, evaluations } = scoreAssessment(questions, answers || {});
-    
     const refId = 'INV' + randomBytes(4).toString('hex').toUpperCase();
-
-    // Map proctoring data
-    const finalProctoring = proctoring || { 
-      tabSwitches: typeof proctoringViolations === 'number' ? proctoringViolations : 0, 
-      fullscreenExits: 0 
-    };
-    const finalViolationsCount = typeof proctoringViolations === 'number' 
-      ? proctoringViolations 
-      : ((finalProctoring?.tabSwitches || 0) + (finalProctoring?.fullscreenExits || 0));
     
     const candidate = new Candidate({
       refId,
@@ -69,6 +158,7 @@ router.post('/', async (req, res) => {
       scores: { total, reading, voice, quality },
       proctoring: finalProctoring,
       proctoringViolations: finalViolationsCount,
+      assessmentStatus: 'assessment_submitted',
       status: 'pending'
     });
     

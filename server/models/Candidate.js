@@ -25,10 +25,19 @@ const candidateSchema = new mongoose.Schema({
   education:  { type: String },
   languages:  { type: String },
   gulfExp:    { type: String },
+  applyingCountry: { type: String, trim: true },
   
   // Assessment metadata
   job:        { type: String, required: true, index: true },
   source:     { type: String, default: 'Direct' },
+  
+  // Tracks whether candidate only submitted form or completed assessment
+  assessmentStatus: {
+    type: String,
+    enum: ['form_submitted', 'assessment_submitted'],
+    default: 'form_submitted',
+    index: true
+  },
   
   // Scores — computed server-side
   scores: {
