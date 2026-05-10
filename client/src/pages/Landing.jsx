@@ -1,30 +1,64 @@
-import { useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Shield, Car, Sparkles, Users, Wrench, ArrowRight, CheckCircle, Globe, Award } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Shield, Car, Sparkles, Users, Wrench, ArrowRight, CheckCircle, Globe, Award, Building2, ChevronDown, ChevronRight } from 'lucide-react';
 import Footer from '../components/Footer';
 
-const ROLES = [
-  { key: 'driver', label: 'Taxi Driver', icon: <Car className="driver-icon" size={32} strokeWidth={1.5} />, desc: 'Professional driver roles across UAE and Saudi Arabia. Valid driving licence and a safe, disciplined driving record required.' },
-  { key: 'security', label: 'Special Security Guard', icon: <Shield className="security-icon" size={32} strokeWidth={1.5} />, desc: 'Armed/unarmed security personnel for high-security facilities, malls, and corporate premises across the UAE and Saudi Arabia.' },
-  { key: 'housekeeping', label: 'Housekeeping Staff', icon: <Sparkles className="house-icon" size={32} strokeWidth={1.5} />, desc: 'Hotel, hospital & facility cleaning staff for premium hospitality and healthcare clients across UAE, Ukraine, and Saudi Arabia.' },
-  { key: 'supervisor', label: 'Field Supervisor', icon: <Users className="super-icon" size={32} strokeWidth={1.5} />, desc: 'On-ground team lead for facility management, construction, and operations supervision across UAE, Ukraine, Saudi Arabia, and international projects.' },
-  { key: 'helper', label: 'General Helper', icon: <Wrench className="helper-icon" size={32} strokeWidth={1.5} />, desc: 'Multi-skilled helper for construction, warehousing, and facility maintenance roles across UAE, Saudi Arabia, and Ukraine.' },
+/* ─── International Roles ─── */
+const INTL_ROLES = [
+  { key: 'driver',       label: 'Taxi Driver',        icon: <Car       className="driver-icon"    size={32} strokeWidth={1.5} />, desc: 'Professional driver roles across UAE and Saudi Arabia. Valid driving licence and a safe, disciplined driving record required.' },
+  { key: 'security',     label: 'Special Security Guard', icon: <Shield className="security-icon" size={32} strokeWidth={1.5} />, desc: 'Armed/unarmed security personnel for high-security facilities, malls, and corporate premises across the UAE and Saudi Arabia.' },
+  { key: 'housekeeping', label: 'Housekeeping Staff', icon: <Sparkles  className="house-icon"     size={32} strokeWidth={1.5} />, desc: 'Hotel, hospital & facility cleaning staff for premium hospitality and healthcare clients across UAE, Ukraine, and Saudi Arabia.' },
+  { key: 'supervisor',   label: 'Field Supervisor',   icon: <Users     className="super-icon"     size={32} strokeWidth={1.5} />, desc: 'On-ground team lead for facility management, construction, and operations supervision across UAE, Ukraine, Saudi Arabia.' },
+  { key: 'helper',       label: 'General Helper',     icon: <Wrench    className="helper-icon"    size={32} strokeWidth={1.5} />, desc: 'Multi-skilled helper for construction, warehousing, and facility maintenance roles across UAE, Saudi Arabia, and Ukraine.' },
+];
+
+/* ─── Domestic Roles with Sub-roles ─── */
+const DOMESTIC_ROLES = [
+  {
+    key: 'security_domestic',
+    label: 'Security Guard',
+    icon: <Shield className="security-icon" size={32} strokeWidth={1.5} />,
+    desc: 'Security guard positions across facilities, corporates, malls, and residential complexes within India.',
+    subRoles: [
+      { key: 'armed_security_guard',   label: 'Armed Security Guard' },
+      { key: 'unarmed_security_guard', label: 'Unarmed Security Guard' },
+    ],
+  },
+  {
+    key: 'facility_management',
+    label: 'Facility Management',
+    icon: <Building2 size={32} strokeWidth={1.5} style={{ color: 'var(--brand-red)' }} />,
+    desc: 'Support and facility management roles in offices, hospitals, and commercial spaces across India.',
+    subRoles: [
+      { key: 'pantry_boy', label: 'Pantry Boy' },
+    ],
+  },
+  {
+    key: 'other_manpower',
+    label: 'Other Man Power',
+    icon: <Users className="super-icon" size={32} strokeWidth={1.5} />,
+    desc: 'Supervisory, technical, and general manpower roles for domestic deployments across India.',
+    subRoles: [
+      { key: 'supervisor', label: 'Supervisor' },
+      { key: 'tech',       label: 'Tech' },
+    ],
+  },
 ];
 
 const GlowingDivider = () => (
   <div style={{
-    width: '100%',
-    height: '2px',
+    width: '100%', height: '2px',
     background: 'linear-gradient(to right, transparent, #EF2B2D, transparent)',
     boxShadow: '0 0 20px rgba(239,43,45,0.5)',
-    margin: 0,
-    zIndex: 10,
-    position: 'relative'
+    margin: 0, zIndex: 10, position: 'relative'
   }} />
 );
 
 export default function Landing() {
-  const location = useLocation();
+  const location  = useLocation();
+  const navigate  = useNavigate();
+  const [activeTab,    setActiveTab]    = useState('international');
+  const [expandedRole, setExpandedRole] = useState(null);
 
   useEffect(() => {
     if (location.hash) {
@@ -40,6 +74,11 @@ export default function Landing() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [location.hash, location.key]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setExpandedRole(null);
+  };
 
   return (
     <div className="page-wrapper">
@@ -83,19 +122,92 @@ export default function Landing() {
       <section className="section" id="roles">
         <div className="section-inner">
           <div className="section-tag">Careers</div>
-          <h2>Open Roles — Global Deployment</h2>
+          <h2>Open Roles — Select Your Category</h2>
           <p className="section-sub">
-            Select a role that matches your skills and experience. Complete the assessment to get shortlisted for deployment.
+            Choose international or domestic roles. Select a role that matches your skills and experience.
           </p>
-          <div className="roles-grid">
-            {ROLES.map(role => (
-              <a href={`/apply?role=${role.key}`} key={role.key} className="role-card" style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div className="role-card-icon">{role.icon}</div>
-                <h3>{role.label}</h3>
-                <p>{role.desc}</p>
-              </a>
-            ))}
+
+          {/* Tab Bar */}
+          <div className="roles-tab-bar">
+            <button
+              className={`roles-tab ${activeTab === 'international' ? 'active' : ''}`}
+              onClick={() => handleTabChange('international')}
+            >
+              🌍 International
+            </button>
+            <button
+              className={`roles-tab ${activeTab === 'domestic' ? 'active' : ''}`}
+              onClick={() => handleTabChange('domestic')}
+            >
+              🇮🇳 Domestic
+            </button>
           </div>
+
+          {/* International Roles Grid */}
+          {activeTab === 'international' && (
+            <div className="roles-grid" style={{ animation: 'fade-in-page 0.35s ease' }}>
+              {INTL_ROLES.map(role => (
+                <a
+                  href={`/apply?role=${role.key}`}
+                  key={role.key}
+                  className="role-card"
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <div className="role-card-icon">{role.icon}</div>
+                  <h3>{role.label}</h3>
+                  <p>{role.desc}</p>
+                </a>
+              ))}
+            </div>
+          )}
+
+          {/* Domestic Roles Grid — expandable */}
+          {activeTab === 'domestic' && (
+            <div className="roles-grid" style={{ animation: 'fade-in-page 0.35s ease' }}>
+              {DOMESTIC_ROLES.map(role => (
+                <div key={role.key} style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                  {/* Main role card */}
+                  <div
+                    className={`role-card ${expandedRole === role.key ? 'selected' : ''}`}
+                    onClick={() => setExpandedRole(prev => prev === role.key ? null : role.key)}
+                    style={{ cursor: 'pointer', userSelect: 'none' }}
+                  >
+                    <div className="role-card-icon">{role.icon}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <h3 style={{ margin: 0 }}>{role.label}</h3>
+                      <ChevronDown
+                        size={18}
+                        style={{
+                          color: 'var(--brand-red)',
+                          transform: expandedRole === role.key ? 'rotate(180deg)' : 'none',
+                          transition: 'transform 0.25s ease',
+                          flexShrink: 0,
+                          marginTop: '2px'
+                        }}
+                      />
+                    </div>
+                    <p style={{ marginTop: '8px' }}>{role.desc}</p>
+                  </div>
+
+                  {/* Sub-roles list */}
+                  {expandedRole === role.key && (
+                    <div className="subrole-list">
+                      {role.subRoles.map(sub => (
+                        <button
+                          key={sub.key}
+                          className="subrole-item"
+                          onClick={() => navigate(`/apply?type=domestic&role=${role.key}&subRole=${sub.key}`)}
+                        >
+                          <ChevronRight size={15} style={{ color: 'var(--brand-red)', flexShrink: 0 }} />
+                          <span>{sub.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -124,7 +236,6 @@ export default function Landing() {
       </section>
 
       <GlowingDivider />
-
       <Footer />
     </div>
   );

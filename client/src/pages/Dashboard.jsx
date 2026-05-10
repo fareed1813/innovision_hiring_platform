@@ -8,7 +8,11 @@ const ROLES = {
   security: 'Security Guard',
   housekeeping: 'Housekeeping',
   supervisor: 'Field Supervisor',
-  helper: 'General Helper'
+  helper: 'General Helper',
+  // Domestic
+  security_domestic:   'Security Guard (Domestic)',
+  facility_management: 'Facility Management',
+  other_manpower:      'Other Man Power',
 };
 
 export default function Dashboard() {
@@ -17,8 +21,9 @@ export default function Dashboard() {
   const [candidates, setCandidates] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [filter, setFilter] = useState('all');
-  const [jobFilter, setJobFilter] = useState('all');
+  const [filter, setFilter]         = useState('all');
+  const [jobFilter, setJobFilter]   = useState('all');
+  const [typeFilter, setTypeFilter] = useState('international'); // 'international' | 'domestic'
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [loadingCandidates, setLoadingCandidates] = useState(false);
@@ -81,6 +86,7 @@ export default function Dashboard() {
       if (filter !== 'all') params.status = filter;
       if (jobFilter !== 'all') params.job = jobFilter;
       if (search) params.search = search;
+      if (typeFilter !== 'all') params.type = typeFilter;
       const res = await api.get('/candidates', { params });
       setCandidates(res.data.candidates);
       setTotalPages(res.data.pages);
@@ -90,7 +96,7 @@ export default function Dashboard() {
     } finally {
       setLoadingCandidates(false);
     }
-  }, [page, filter, jobFilter, search, tab]);
+  }, [page, filter, jobFilter, search, tab, typeFilter]);
 
   useEffect(() => { fetchStats(); }, [fetchStats]);
   useEffect(() => { fetchCandidates(); }, [fetchCandidates]);
@@ -196,6 +202,22 @@ export default function Dashboard() {
           <button onClick={exportCSV} className="btn btn-ghost btn-sm">
             <Download size={14} /> Export CSV
           </button>
+        </div>
+
+        {/* International / Domestic Type Tabs */}
+        <div className="roles-tab-bar" style={{ marginBottom: '8px' }}>
+          {[
+            { key: 'international', label: '🌍 International' },
+            { key: 'domestic',      label: '🇮🇳 Domestic' },
+          ].map(t => (
+            <button
+              key={t.key}
+              className={`roles-tab ${typeFilter === t.key ? 'active' : ''}`}
+              onClick={() => { setTypeFilter(t.key); setPage(1); setJobFilter('all'); }}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
 
         {/* Stats */}
@@ -338,7 +360,15 @@ export default function Dashboard() {
                 </td>
                 <td style={{ fontSize: '13px' }}>{ROLES[c.job] || c.job}</td>
                 <td>
-                  {c.assessmentStatus === 'form_submitted' ? (
+                  {c.type === 'domestic' ? (
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '5px',
+                      padding: '4px 10px', borderRadius: '20px',
+                      background: 'rgba(16,185,129,0.08)',
+                      color: '#059669', fontSize: '11px', fontWeight: 700,
+                      border: '1px solid rgba(16,185,129,0.2)', letterSpacing: '0.04em'
+                    }}>✓ Form Submitted</span>
+                  ) : c.assessmentStatus === 'form_submitted' ? (
                     <span style={{
                       display: 'inline-flex', alignItems: 'center', gap: '5px',
                       padding: '4px 10px', borderRadius: '20px',

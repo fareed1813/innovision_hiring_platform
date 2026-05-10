@@ -1,64 +1,86 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
-import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, ShieldCheck, Car, Sparkles, Users, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle } from 'lucide-react';
+import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, ShieldCheck, Car, Sparkles, Users, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle, MapPin } from 'lucide-react';
 import Footer from '../components/Footer';
 
 const ROLES_MAP = {
-  driver: { label: 'Taxi Driver', icon: <Car className="driver-icon" size={32} strokeWidth={1.5} /> },
-  security: { label: 'Security Guard', icon: <Shield className="security-icon" size={32} strokeWidth={1.5} /> },
-  housekeeping: { label: 'Housekeeping', icon: <Sparkles className="house-icon" size={32} strokeWidth={1.5} /> },
-  supervisor: { label: 'Supervisor', icon: <Users className="super-icon" size={32} strokeWidth={1.5} /> },
-  helper: { label: 'General Helper', icon: <Wrench className="helper-icon" size={32} strokeWidth={1.5} /> },
+  driver:       { label: 'Taxi Driver',     icon: <Car      className="driver-icon"   size={32} strokeWidth={1.5} /> },
+  security:     { label: 'Security Guard',  icon: <Shield   className="security-icon" size={32} strokeWidth={1.5} /> },
+  housekeeping: { label: 'Housekeeping',    icon: <Sparkles className="house-icon"    size={32} strokeWidth={1.5} /> },
+  supervisor:   { label: 'Supervisor',      icon: <Users    className="super-icon"    size={32} strokeWidth={1.5} /> },
+  helper:       { label: 'General Helper',  icon: <Wrench   className="helper-icon"   size={32} strokeWidth={1.5} /> },
 };
 const ROLE_KEYS = Object.keys(ROLES_MAP);
 
+const DOMESTIC_ROLES_MAP = {
+  security_domestic:   { label: 'Security Guard' },
+  facility_management: { label: 'Facility Management' },
+  other_manpower:      { label: 'Other Man Power' },
+};
+
 const SOURCES = ['Direct / Walk-in', 'Job Portal', 'Social Media', 'Referral', 'Agent', 'WhatsApp'];
 
+const INDIAN_STATES = [
+  'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat',
+  'Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh',
+  'Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab',
+  'Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh',
+  'Uttarakhand','West Bengal',
+  // Union Territories
+  'Andaman and Nicobar Islands','Chandigarh',
+  'Dadra and Nagar Haveli and Daman and Diu','Delhi',
+  'Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry',
+];
+
 const VALIDATION_RULES = {
-  firstName: { regex: /^[A-Za-z\s]{2,30}$/, error: "Please enter a valid name." },
-  lastName: { regex: /^[A-Za-z\s]{2,30}$/, error: "Please enter a valid name." },
-  phone: { regex: /^[\+\-\s0-9]{10,18}$/, error: "Please enter a valid phone." },
-  email: { regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, error: "Please enter a valid email." },
-  city: { regex: /^[A-Za-z0-9\s\-\,]{2,50}$/, error: "Please enter a valid city." },
-  experience: { regex: /^[0-9]{1,2}$/, error: "Please enter numbers only." }
+  firstName:  { regex: /^[A-Za-z\s]{2,30}$/,      error: 'Please enter a valid name.' },
+  lastName:   { regex: /^[A-Za-z\s]{2,30}$/,      error: 'Please enter a valid name.' },
+  phone:      { regex: /^[\+\-\s0-9]{10,18}$/,    error: 'Please enter a valid phone.' },
+  email:      { regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, error: 'Please enter a valid email.' },
+  city:       { regex: /^[A-Za-z0-9\s\-\,]{2,50}$/, error: 'Please enter a valid city.' },
+  experience: { regex: /^[0-9]{1,2}$/,             error: 'Please enter numbers only.' },
+  pincode:    { regex: /^[0-9]{6}$/,               error: 'Enter a valid 6-digit pincode.' },
 };
 
 export default function CandidateFlow() {
   const [params] = useSearchParams();
-  const navigate = useNavigate();
-  
-  // If role is pre-selected via URL from the Landing page, jump straight to the Form (Step 1)
-  const initialRole = params.get('role') || '';
+  const navigate  = useNavigate();
+
+  const initialRole    = params.get('role')    || '';
+  const initialType    = params.get('type')    || 'international';
+  const initialSubRole = params.get('subRole') || '';
+
+  const isDomestic = initialType === 'domestic';
+
   const [step, setStep] = useState(initialRole ? 1 : 0);
 
   const handleStepChange = (newStep) => {
-    if (!document.startViewTransition) {
-      setStep(newStep);
-      window.scrollTo(0, 0);
-      return;
-    }
-    document.startViewTransition(() => {
-      setStep(newStep);
-      window.scrollTo(0, 0);
-    });
+    if (!document.startViewTransition) { setStep(newStep); window.scrollTo(0, 0); return; }
+    document.startViewTransition(() => { setStep(newStep); window.scrollTo(0, 0); });
   };
 
   const handleQChange = (newQ) => {
-    if (!document.startViewTransition) {
-      setCurrentQ(newQ);
-      return;
-    }
+    if (!document.startViewTransition) { setCurrentQ(newQ); return; }
     document.startViewTransition(() => setCurrentQ(newQ));
   };
-  
-  // Role selection
+
   const [selectedRole, setSelectedRole] = useState(initialRole);
-  
-  // Personal details
+  const [selectedSubRole]               = useState(initialSubRole);
+
+  // Personal details (international + domestic fields combined)
   const [form, setForm] = useState({
-    firstName: '', lastName: '', phone: '', email: '', city: '',
-    experience: '', passport: '', education: '', languages: '', gulfExp: '', source: '', applyingCountry: ''
+    // shared
+    firstName: '', lastName: '', phone: '', email: '',
+    experience: '', education: '', languages: '', source: '',
+    // international-only
+    city: '', passport: '', gulfExp: '', applyingCountry: '',
+    // domestic location
+    state: '', district: '', cityVillage: '', pincode: '',
+    // domestic preferences
+    pref1State: '', pref1District: '', pref1City: '',
+    pref2State: '', pref2District: '', pref2City: '',
+    pref3State: '', pref3District: '', pref3City: '',
   });
   const [touched, setTouched] = useState({});
 
@@ -78,7 +100,24 @@ export default function CandidateFlow() {
   };
 
   const isFormValid = () => {
-    const required = ['firstName', 'lastName', 'phone', 'email', 'city', 'experience', 'passport', 'education', 'languages', 'gulfExp', 'applyingCountry'];
+    if (isDomestic) {
+      const required = [
+        'firstName','lastName','phone','email','experience','education','languages',
+        'state','district','cityVillage','pincode',
+        'pref1State','pref1District','pref1City',
+        'pref2State','pref2District','pref2City',
+        'pref3State','pref3District','pref3City',
+      ];
+      const hasRequired = required.every(k => form[k]?.trim().length >= 1);
+      const baseErrors = ['firstName','lastName','phone','email','experience','pincode']
+        .every(k => !getFieldError(k));
+      // All 3 preferred cities must be different
+      const cities = [form.pref1City, form.pref2City, form.pref3City].map(c => c?.toLowerCase().trim()).filter(Boolean);
+      const hasUniqueCities = new Set(cities).size === 3;
+      return hasRequired && baseErrors && hasUniqueCities;
+    }
+    // International
+    const required = ['firstName','lastName','phone','email','city','experience','passport','education','languages','gulfExp','applyingCountry'];
     const hasRequired = required.every(key => form[key]?.trim().length >= 1);
     const hasNoErrors = Object.keys(VALIDATION_RULES).every(key => !getFieldError(key));
     return hasRequired && hasNoErrors;
@@ -336,26 +375,42 @@ export default function CandidateFlow() {
     setSubmittingForm(true);
     setFormError('');
     try {
+      // Build personal object with domestic fields if applicable
+      const personal = {
+        ...form,
+        ...(isDomestic ? {
+          subRole: selectedSubRole,
+          preferences: [
+            { state: form.pref1State, district: form.pref1District, cityVillage: form.pref1City },
+            { state: form.pref2State, district: form.pref2District, cityVillage: form.pref2City },
+            { state: form.pref3State, district: form.pref3District, cityVillage: form.pref3City },
+          ]
+        } : {})
+      };
       const res = await api.post('/candidates/submit-form', {
-        personal: form,
+        personal,
         job: selectedRole,
-        source: form.source || 'Direct'
+        source: form.source || 'Direct',
+        type: isDomestic ? 'domestic' : 'international',
       });
       setCandidateId(res.data.candidateId);
       setFormRefId(res.data.refId);
       setFormSubmitted(true);
+      setResult({ refId: res.data.refId });
+      // Domestic → go directly to success screen
+      if (isDomestic) handleStepChange(3);
     } catch (err) {
       console.error(err);
       if (err.response?.status === 409) {
         const data = err.response.data;
-        // If they already submitted form, treat as if form is done and allow assessment
         if (data.assessmentStatus === 'form_submitted') {
           setCandidateId(data.candidateId);
           setFormRefId(data.refId);
           setFormSubmitted(true);
-          setFormError(`You already submitted this form (Ref: ${data.refId}). You can now start the assessment.`);
+          setFormError(`You already submitted this form (Ref: ${data.refId}). ${isDomestic ? '' : 'You can now start the assessment.'}`);
+          if (isDomestic) { setResult({ refId: data.refId }); handleStepChange(3); }
         } else {
-          setDupError(`You have already completed the full assessment for ${ROLES_MAP[selectedRole]?.label}. Only one attempt per role is permitted.`);
+          setDupError(`You have already applied for this role. Only one attempt is permitted.`);
         }
       } else {
         setFormError('Failed to submit form. Please check your connection and try again.');
@@ -565,94 +620,130 @@ export default function CandidateFlow() {
 
   // ── STEP 1: Personal Details ──
   if (step === 1) {
+    // Helper: reusable custom dropdown renderer
+    const SelectField = ({ fieldKey, label, options }) => (
+      <div className="form-group" key={fieldKey}>
+        <label className="form-label">{label}</label>
+        <div className="custom-select-container" style={{ width: '100%', marginBottom: 0 }}>
+          <div
+            className={`form-input select-trigger ${openDropdown === fieldKey ? 'active' : ''}`}
+            onClick={() => setOpenDropdown(prev => prev === fieldKey ? null : fieldKey)}
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', height: '46px' }}
+          >
+            <span style={{ color: form[fieldKey] ? 'var(--text)' : 'var(--muted2)' }}>
+              {form[fieldKey] || 'Select...'}
+            </span>
+            <ChevronDown size={16} style={{ color: 'var(--text-secondary)', transform: openDropdown === fieldKey ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+          </div>
+          {openDropdown === fieldKey && (
+            <div className="select-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 100 }}>
+              <div className={`select-option ${!form[fieldKey] ? 'selected' : ''}`} onClick={() => { handleInputChange(fieldKey, ''); setOpenDropdown(null); }}>Select...</div>
+              {options.map(o => (
+                <div key={o} className={`select-option ${form[fieldKey] === o ? 'selected' : ''}`} onClick={() => { handleInputChange(fieldKey, o); setOpenDropdown(null); }}>{o}</div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+
+    const TextField = ({ fieldKey, label, type = 'text', placeholder, fullWidth }) => (
+      <div className={`form-group ${fullWidth ? 'full-width' : ''}`} key={fieldKey}>
+        <label className="form-label">{label}</label>
+        <input
+          className={`form-input ${touched[fieldKey] && getFieldError(fieldKey) ? 'invalid' : ''}`}
+          type={type} placeholder={placeholder}
+          value={form[fieldKey]}
+          onChange={e => handleInputChange(fieldKey, e.target.value)}
+          onBlur={() => setTouched(prev => ({ ...prev, [fieldKey]: true }))}
+        />
+        {touched[fieldKey] && getFieldError(fieldKey) && (
+          <div className="error-text"><AlertCircle size={12} /> {getFieldError(fieldKey)}</div>
+        )}
+      </div>
+    );
+
+    const roleLabel = isDomestic
+      ? (DOMESTIC_ROLES_MAP[selectedRole]?.label || selectedRole)
+      : (ROLES_MAP[selectedRole]?.label || selectedRole);
+    const subRoleLabel = selectedSubRole ? selectedSubRole.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : '';
+
     return (
       <div className="page-wrapper" style={{ paddingTop: 'calc(var(--nav-height) + 40px)' }}>
         <div className="section" style={{ paddingTop: '40px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-            <div className="section-tag">Step 2 of 3</div>
+            <div className="section-tag">{isDomestic ? '🇮🇳 Domestic Application' : '🌍 International Application'}</div>
             <h2>Personal Details</h2>
-            <p className="section-sub">Fill in your information. This will be used for your deployment profile.</p>
+            <p className="section-sub">
+              Applying for: <strong>{roleLabel}{subRoleLabel ? ` — ${subRoleLabel}` : ''}</strong>
+            </p>
+
             <div className="form-grid">
-              {/* Error display moved to bottom */}
+              <TextField fieldKey="firstName" label="First Name *" placeholder="Enter first name" />
+              <TextField fieldKey="lastName"  label="Last Name *"  placeholder="Enter last name" />
+              <TextField fieldKey="phone"     label="Phone *"      type="tel" placeholder="+91 ..." />
+              <TextField fieldKey="email"     label="Email *"      type="email" placeholder="example@email.com" />
+              <TextField fieldKey="experience" label="Years of Experience *" type="number" placeholder="0" />
+              <SelectField fieldKey="education" label="Education *" options={['Below 10th','10th Pass','12th Pass','Graduate','Post Graduate']} />
+              <TextField fieldKey="languages" label="Languages Known *" placeholder="Hindi, English..." />
 
-              {[
-                { key: 'firstName', label: 'First Name *', type: 'text', placeholder: 'Enter first name' },
-                { key: 'lastName', label: 'Last Name *', type: 'text', placeholder: 'Enter last name' },
-                { key: 'phone', label: 'Phone *', type: 'tel', placeholder: '+91 ...' },
-                { key: 'email', label: 'Email *', type: 'email', placeholder: 'example@email.com' },
-                { key: 'city', label: 'City / District *', type: 'text', placeholder: 'Enter your city' },
-                { key: 'experience', label: 'Years of Experience *', type: 'number', placeholder: '0' },
-                { key: 'passport', label: 'Passport Status *', options: ['Valid Passport (6+ months)', 'Expired / Need Renewal', 'No Passport'] },
-                { key: 'education', label: 'Education *', options: ['Below 10th', '10th Pass', '12th Pass', 'Graduate', 'Post Graduate'] },
-                { key: 'languages', label: 'Languages *', type: 'text', placeholder: 'Hindi, English...' },
-                { key: 'gulfExp', label: 'Gulf Experience *', options: ['No — First time', 'Yes — UAE', 'Yes — Saudi/Qatar/Other'] },
-                { key: 'applyingCountry', label: 'Which Country Are You Applying To? *', options: ['UAE', 'Ukraine', 'Saudi Arabia'] },
-              ].map(field => (
-                <div className="form-group" key={field.key}>
-                  <label className="form-label">{field.label}</label>
-                  {field.options ? (
-                    <div className="custom-select-container" style={{ width: '100%', marginBottom: 0 }}>
-                      <div 
-                        className={`form-input select-trigger ${openDropdown === field.key ? 'active' : ''}`} 
-                        onClick={() => setOpenDropdown(prev => prev === field.key ? null : field.key)}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', height: '46px', border: touched[field.key] && getFieldError(field.key) ? '1px solid var(--danger)' : '' }}
-                      >
-                        <span style={{ color: form[field.key] ? 'var(--text)' : 'var(--muted2)' }}>
-                          {form[field.key] || 'Select...'}
-                        </span>
-                        <ChevronDown size={16} style={{ color: 'var(--text-secondary)', transform: openDropdown === field.key ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-                      </div>
+              {/* International-only fields */}
+              {!isDomestic && <>
+                <TextField fieldKey="city" label="City / District *" placeholder="Enter your city" />
+                <SelectField fieldKey="passport"       label="Passport Status *"           options={['Valid Passport (6+ months)','Expired / Need Renewal','No Passport']} />
+                <SelectField fieldKey="gulfExp"        label="Gulf Experience *"            options={['No — First time','Yes — UAE','Yes — Saudi/Qatar/Other']} />
+                <SelectField fieldKey="applyingCountry" label="Which Country Are You Applying To? *" options={['UAE','Ukraine','Saudi Arabia']} />
+              </>}
 
-                      {openDropdown === field.key && (
-                        <div className="select-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 100 }}>
-                          <div 
-                            className={`select-option ${!form[field.key] ? 'selected' : ''}`}
-                            onClick={() => { handleInputChange(field.key, ''); setOpenDropdown(null); }}
-                          >
-                            Select...
-                          </div>
-                          {field.options.map(o => (
-                            <div 
-                              key={o} 
-                              className={`select-option ${form[field.key] === o ? 'selected' : ''}`}
-                              onClick={() => { handleInputChange(field.key, o); setOpenDropdown(null); }}
-                            >
-                              {o}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <>
-                      <input
-                        className={`form-input ${touched[field.key] && getFieldError(field.key) ? 'invalid' : ''}`}
-                        type={field.type}
-                        placeholder={field.placeholder}
-                        value={form[field.key]}
-                        onChange={e => handleInputChange(field.key, e.target.value)}
-                        onBlur={() => setTouched(prev => ({ ...prev, [field.key]: true }))}
-                      />
-                      {touched[field.key] && getFieldError(field.key) && (
-                        <div className="error-text">
-                          <AlertCircle size={12} /> {getFieldError(field.key)}
-                        </div>
-                      )}
-                    </>
-                  )}
+              {/* Domestic-only: Current Location */}
+              {isDomestic && <>
+                <div className="form-group full-width" style={{ marginTop: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', padding: '10px 16px', background: 'rgba(239,43,45,0.04)', borderRadius: '10px', border: '1px solid rgba(239,43,45,0.12)' }}>
+                    <MapPin size={16} style={{ color: 'var(--brand-red)' }} />
+                    <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text)' }}>Current Location</span>
+                  </div>
                 </div>
-              ))}
+                <SelectField fieldKey="state"       label="State *"        options={INDIAN_STATES} />
+                <TextField  fieldKey="district"     label="District *"     placeholder="Enter district" />
+                <TextField  fieldKey="cityVillage"  label="City / Village *" placeholder="Enter city or village" />
+                <TextField  fieldKey="pincode"      label="Pincode *"      placeholder="6-digit pincode" />
+
+                {/* Preferred Work Locations */}
+                <div className="form-group full-width" style={{ marginTop: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', padding: '10px 16px', background: 'rgba(239,43,45,0.04)', borderRadius: '10px', border: '1px solid rgba(239,43,45,0.12)' }}>
+                    <MapPin size={16} style={{ color: 'var(--brand-red)' }} />
+                    <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text)' }}>Preferred Work Locations</span>
+                    <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '4px' }}>(All 3 must be different)</span>
+                  </div>
+                </div>
+                {[1, 2, 3].map(n => (
+                  <div className="form-group full-width pref-block" key={n}>
+                    <div className="pref-block-header">Preference {n}</div>
+                    <div className="form-grid" style={{ marginTop: '10px' }}>
+                      <SelectField fieldKey={`pref${n}State`}    label="State *"          options={INDIAN_STATES} />
+                      <TextField  fieldKey={`pref${n}District`}  label="District *"       placeholder="Enter district" />
+                      <TextField  fieldKey={`pref${n}City`}      label="City / Village *" placeholder="Enter city or village" />
+                    </div>
+                    {n < 3 && form[`pref${n}City`] && form[`pref${n+1}City`] && form[`pref${n}City`].toLowerCase().trim() === form[`pref${n+1}City`].toLowerCase().trim() && (
+                      <div className="error-text" style={{ marginTop: '6px' }}>
+                        <AlertCircle size={12} /> Preference {n} and {n+1} cities must be different.
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </>}
+
+              {/* Source */}
               <div className="form-group full-width">
                 <label className="form-label">How did you hear about us?</label>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {SOURCES.map(s => (
-                    <button key={s} className={`btn btn-sm ${form.source === s ? 'btn-primary' : 'btn-ghost'}`} type="button" onClick={() => setForm(f => ({ ...f, source: s }))}>
-                      {s}
-                    </button>
+                    <button key={s} className={`btn btn-sm ${form.source === s ? 'btn-primary' : 'btn-ghost'}`} type="button" onClick={() => setForm(f => ({ ...f, source: s }))}>{s}</button>
                   ))}
                 </div>
               </div>
             </div>
+
 
             {/* NEAT BOTTOM ERROR UI */}
             {dupError && (
@@ -760,17 +851,19 @@ export default function CandidateFlow() {
                   </div>
                 )}
 
-                {/* Start Assessment — only enabled after form submitted */}
-                <button
-                  className="btn btn-primary btn-lg"
-                  disabled={!formSubmitted || validating || !!dupError}
-                  onClick={(e) => {
-                    enterFS();
-                    startAssessment();
-                  }}
-                >
-                  {validating ? 'Loading...' : 'Start Assessment'} <ChevronRight size={16} />
-                </button>
+                {/* Start Assessment — only for international, only enabled after form submitted */}
+                {!isDomestic && (
+                  <button
+                    className="btn btn-primary btn-lg"
+                    disabled={!formSubmitted || validating || !!dupError}
+                    onClick={(e) => {
+                      enterFS();
+                      startAssessment();
+                    }}
+                  >
+                    {validating ? 'Loading...' : 'Start Assessment'} <ChevronRight size={16} />
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -1099,11 +1192,13 @@ export default function CandidateFlow() {
       <div className="section" style={{ paddingTop: '40px' }}>
         <div className="results-card">
           <div className="results-icon-container">
-            <ShieldCheck size={72} strokeWidth={2.5} className="success-pulse-icon" />
+            <CheckCircle size={72} strokeWidth={2.5} className="success-pulse-icon" style={{ color: 'var(--success)' }} />
           </div>
-          <h3 className="results-title">Assessment Submitted!</h3>
+          <h3 className="results-title">{isDomestic ? 'Application Submitted! 🎉' : 'Assessment Submitted!'}</h3>
           <p style={{ color: 'var(--muted)', fontSize: '14px', lineHeight: '1.7', marginBottom: '24px' }}>
-            Thank you for completing the skill assessment. Your responses have been submitted and are under review by the Innovision Global team.
+            {isDomestic
+              ? 'Thank you for submitting your application. Our team will review your details and reach out to you shortly.'
+              : 'Thank you for completing the skill assessment. Your responses have been submitted and are under review by the Innovision Global team.'}
           </p>
           {result?.refId && (
             <div style={{ background: 'var(--surface2)', borderRadius: 'var(--radius-md)', padding: '16px', marginBottom: '24px' }}>

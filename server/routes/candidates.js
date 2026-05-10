@@ -13,7 +13,7 @@ const router = Router();
 /* ─── POST /api/candidates/submit-form — Save form details only ─── */
 router.post('/submit-form', async (req, res) => {
   try {
-    const { personal, job, source } = req.body;
+    const { personal, job, source, type } = req.body;
 
     if (!personal || !job) {
       return res.status(400).json({ error: 'Personal details and job role are required.' });
@@ -45,6 +45,7 @@ router.post('/submit-form', async (req, res) => {
       ...personal,
       job,
       source: source || 'Direct',
+      type: type || 'international',
       assessmentStatus: 'form_submitted',
       scores: { total: 0, reading: 0, voice: 0, quality: 0 },
       questions: [],
@@ -55,6 +56,7 @@ router.post('/submit-form', async (req, res) => {
       proctoringViolations: 0,
       status: 'pending'
     });
+
 
     await candidate.save();
 
@@ -178,11 +180,12 @@ router.post('/', async (req, res) => {
 /* ─── GET /api/candidates — List all (admin) ─────────── */
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const { status, job, search, page = 1, limit = 50 } = req.query;
+    const { status, job, search, page = 1, limit = 50, type } = req.query;
     const filter = {};
     
     if (status && status !== 'all') filter.status = status;
     if (job && job !== 'all') filter.job = job;
+    if (type && type !== 'all') filter.type = type;
     if (search) {
       const regex = new RegExp(search, 'i');
       filter.$or = [
@@ -190,9 +193,11 @@ router.get('/', authMiddleware, async (req, res) => {
         { lastName: regex },
         { phone: regex },
         { city: regex },
+        { cityVillage: regex },
         { refId: regex }
       ];
     }
+
     
     const skip = (parseInt(page) - 1) * parseInt(limit);
     

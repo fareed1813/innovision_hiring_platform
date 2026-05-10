@@ -7,6 +7,12 @@ const evaluationSchema = new mongoose.Schema({
   details: { type: mongoose.Schema.Types.Mixed, default: null }
 }, { _id: false });
 
+const preferenceSchema = new mongoose.Schema({
+  state:       { type: String, trim: true },
+  district:    { type: String, trim: true },
+  cityVillage: { type: String, trim: true }
+}, { _id: false });
+
 const candidateSchema = new mongoose.Schema({
   refId: {
     type: String,
@@ -14,31 +20,49 @@ const candidateSchema = new mongoose.Schema({
     unique: true,
     index: true
   },
-  // Personal details
+
+  // International / Domestic
+  type: {
+    type: String,
+    enum: ['international', 'domestic'],
+    default: 'international',
+    index: true
+  },
+
+  // Personal details (shared)
   firstName:  { type: String, required: true, trim: true },
   lastName:   { type: String, required: true, trim: true },
   phone:      { type: String, required: true, trim: true },
   email:      { type: String, trim: true, lowercase: true },
-  city:       { type: String, trim: true },
   experience: { type: String },
-  passport:   { type: String, trim: true },
   education:  { type: String },
   languages:  { type: String },
-  gulfExp:    { type: String },
-  applyingCountry: { type: String, trim: true },
-  
-  // Assessment metadata
-  job:        { type: String, required: true, index: true },
   source:     { type: String, default: 'Direct' },
-  
-  // Tracks whether candidate only submitted form or completed assessment
+
+  // International-only fields
+  city:            { type: String, trim: true },
+  passport:        { type: String, trim: true },
+  gulfExp:         { type: String },
+  applyingCountry: { type: String, trim: true },
+
+  // Domestic-only fields
+  subRole:     { type: String, trim: true },
+  state:       { type: String, trim: true },
+  district:    { type: String, trim: true },
+  cityVillage: { type: String, trim: true },
+  pincode:     { type: String, trim: true },
+  preferences: { type: [preferenceSchema], default: [] },
+
+  // Assessment metadata
+  job: { type: String, required: true, index: true },
+
   assessmentStatus: {
     type: String,
     enum: ['form_submitted', 'assessment_submitted'],
     default: 'form_submitted',
     index: true
   },
-  
+
   // Scores — computed server-side
   scores: {
     total:   { type: Number, default: 0 },
@@ -46,40 +70,31 @@ const candidateSchema = new mongoose.Schema({
     voice:   { type: Number, default: 0 },
     quality: { type: Number, default: 0 }
   },
-  
-  // Questions served to this candidate (snapshot)
-  questions: [{ type: mongoose.Schema.Types.Mixed }],
-  
-  // Answers keyed by question ID
-  answers: { type: Map, of: String, default: {} },
-  
-  // Per-question evaluation results
-  evaluations: { type: Map, of: evaluationSchema, default: {} },
-  
-  // Audio recordings (Base64 data URIs keyed by questionId_audio)
+
+  questions:       [{ type: mongoose.Schema.Types.Mixed }],
+  answers:         { type: Map, of: String, default: {} },
+  evaluations:     { type: Map, of: evaluationSchema, default: {} },
   audioRecordings: { type: Map, of: String, default: {} },
-  
-  // Workflow
+
   status: {
     type: String,
     enum: ['pending', 'selected', 'rejected'],
     default: 'pending',
     index: true
   },
-  
-  // Integrity
+
   proctoring: {
-    tabSwitches: { type: Number, default: 0 },
+    tabSwitches:     { type: Number, default: 0 },
     fullscreenExits: { type: Number, default: 0 }
   },
   proctoringViolations: { type: Number, default: 0 }
+
 }, { timestamps: true });
 
-// Compound index for dashboard queries
 candidateSchema.index({ status: 1, createdAt: -1 });
 candidateSchema.index({ job: 1, status: 1 });
+candidateSchema.index({ type: 1, status: 1, createdAt: -1 });
 
-// Safety net: Unique index to prevent duplicates at DB level
 candidateSchema.index({ phone: 1, job: 1 }, { unique: true });
 candidateSchema.index({ email: 1, job: 1 }, { unique: true, sparse: true });
 
