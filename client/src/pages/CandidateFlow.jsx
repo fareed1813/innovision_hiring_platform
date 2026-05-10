@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, ShieldCheck, Car, Sparkles, Users, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle, MapPin } from 'lucide-react';
 import Footer from '../components/Footer';
+import { COUNTRY_CODES } from '../utils/countryCodes';
 
 const ROLES_MAP = {
   driver:       { label: 'Taxi Driver',     icon: <Car      className="driver-icon"   size={32} strokeWidth={1.5} /> },
@@ -71,7 +72,7 @@ export default function CandidateFlow() {
   // Personal details (international + domestic fields combined)
   const [form, setForm] = useState({
     // shared
-    firstName: '', lastName: '', phone: '', email: '',
+    firstName: '', lastName: '', countryCode: '+91', phone: '', email: '',
     experience: '', education: '', languages: '', source: '',
     // international-only
     city: '', passport: '', gulfExp: '', applyingCountry: '',
@@ -378,6 +379,7 @@ export default function CandidateFlow() {
       // Build personal object with domestic fields if applicable
       const personal = {
         ...form,
+        phone: `${form.countryCode} ${form.phone}`,
         ...(isDomestic ? {
           subRole: selectedSubRole,
           preferences: [
@@ -663,6 +665,52 @@ export default function CandidateFlow() {
       </div>
     );
 
+    const renderPhoneField = (fieldKey, label) => (
+      <div className="form-group" key={fieldKey}>
+        <label className="form-label">{label}</label>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {/* Country Code Dropdown */}
+          <div className="custom-select-container" style={{ width: '130px', marginBottom: 0 }}>
+            <div
+              className={`form-input select-trigger ${openDropdown === 'countryCode' ? 'active' : ''}`}
+              onClick={() => setOpenDropdown(prev => prev === 'countryCode' ? null : 'countryCode')}
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', height: '46px', padding: '0 12px' }}
+            >
+              <span style={{ color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '14px' }}>
+                {(() => {
+                  const c = COUNTRY_CODES.find(x => x.code === form.countryCode);
+                  return c ? `${c.flag} ${c.code}` : form.countryCode;
+                })()}
+              </span>
+              <ChevronDown size={14} style={{ color: 'var(--text-secondary)', transform: openDropdown === 'countryCode' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
+            </div>
+            {openDropdown === 'countryCode' && (
+              <div className="select-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, width: '280px', zIndex: 100, maxHeight: '250px', overflowY: 'auto' }}>
+                {COUNTRY_CODES.map(c => (
+                  <div key={c.cca2 + c.code} className={`select-option ${form.countryCode === c.code ? 'selected' : ''}`} onClick={() => { handleInputChange('countryCode', c.code); setOpenDropdown(null); }}>
+                    {c.flag} {c.name} ({c.code})
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Phone Input */}
+          <input
+            style={{ flex: 1 }}
+            className={`form-input ${touched[fieldKey] && getFieldError(fieldKey) ? 'invalid' : ''}`}
+            type="tel" placeholder="Enter phone number"
+            value={form[fieldKey]}
+            onChange={e => handleInputChange(fieldKey, e.target.value.replace(/[^\d\s\-\+]/g, ''))}
+            onBlur={() => setTouched(prev => ({ ...prev, [fieldKey]: true }))}
+          />
+        </div>
+        {touched[fieldKey] && getFieldError(fieldKey) && (
+          <div className="error-text"><AlertCircle size={12} /> {getFieldError(fieldKey)}</div>
+        )}
+      </div>
+    );
+
     const roleLabel = isDomestic
       ? (DOMESTIC_ROLES_MAP[selectedRole]?.label || selectedRole)
       : (ROLES_MAP[selectedRole]?.label || selectedRole);
@@ -681,7 +729,7 @@ export default function CandidateFlow() {
             <div className="form-grid">
               {renderTextField('firstName', 'First Name *', 'text', 'Enter first name')}
               {renderTextField('lastName', 'Last Name *', 'text', 'Enter last name')}
-              {renderTextField('phone', 'Phone *', 'tel', '+91 ...')}
+              {renderPhoneField('phone', 'Phone *')}
               {renderTextField('email', 'Email *', 'email', 'example@email.com')}
               {renderTextField('experience', 'Years of Experience *', 'number', '0')}
               {renderSelectField('education', 'Education *', ['Below 10th','10th Pass','12th Pass','Graduate','Post Graduate'])}
