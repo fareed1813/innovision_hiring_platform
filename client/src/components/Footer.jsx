@@ -26,7 +26,7 @@ export default function Footer() {
 
   return (
     <footer id="contact" style={{ background: 'linear-gradient(to bottom, #0b0b0d, #111113, #000000)', color: '#e5e5e5', paddingTop: '80px', paddingBottom: '30px', borderTop: 'none', marginTop: 'auto' }}>
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 48px', display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '60px' }}>
+      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '0 48px', display: 'flex', gap: '80px', alignItems: 'flex-start' }}>
         
         {/* Column 1: Logo + Description + Social */}
         <div style={{ paddingRight: '20px' }}>
