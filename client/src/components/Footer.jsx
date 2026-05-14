@@ -49,26 +49,29 @@ export default function Footer() {
         {/* Column 2: Contact */}
         <div>
           <h4 style={columnTitleStyle}>CONTACT</h4>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <li style={{ display: 'flex', gap: '16px', fontSize: '14px', color: '#bbbbbb', lineHeight: '1.5' }}>
-              <div style={{ background: 'transparent', width: '24px', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+            {/* Row 1: Phone + Mail side by side */}
+            <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
+              {/* Phone */}
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: '14px', color: '#bbbbbb', lineHeight: '1.5' }}>
                 <Phone size={18} color="#e11d48" style={{ marginTop: '2px', flexShrink: 0 }} />
+                <div style={{ fontWeight: 400 }}>0124-4387354<br/>0124-2341602</div>
               </div>
-              <div style={{ fontWeight: 400 }}>0124-4387354<br/>0124-2341602</div>
-            </li>
-            <li style={{ display: 'flex', gap: '16px', fontSize: '14px', color: '#bbbbbb', lineHeight: '1.5' }}>
-              <div style={{ background: 'transparent', width: '24px', display: 'flex', justifyContent: 'center' }}>
+              {/* Mail */}
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: '14px', color: '#bbbbbb', lineHeight: '1.5' }}>
                 <Mail size={18} color="#e11d48" style={{ marginTop: '2px', flexShrink: 0 }} />
+                <div style={{ fontWeight: 400, marginTop: '2px' }}>contact@innovision.co.in</div>
               </div>
-              <div style={{ fontWeight: 400, marginTop: '2px' }}>contact@innovision.co.in</div>
-            </li>
-            <li style={{ display: 'flex', gap: '16px', fontSize: '14px', color: '#bbbbbb', lineHeight: '1.6' }}>
-              <div style={{ background: 'transparent', width: '24px', display: 'flex', justifyContent: 'center' }}>
-                <MapPin size={18} color="#e11d48" style={{ marginTop: '2px', flexShrink: 0 }} />
-              </div>
-              <div style={{ fontWeight: 400 }}>Plot no. 251, Udyog<br/>Vihar, Phase IV,<br/>Sector 18, Gurgaon,<br/>Haryana - 122015</div>
-            </li>
-          </ul>
+            </div>
+
+            {/* Row 2: Address */}
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', fontSize: '14px', color: '#bbbbbb', lineHeight: '1.6' }}>
+              <MapPin size={18} color="#e11d48" style={{ marginTop: '2px', flexShrink: 0 }} />
+              <div style={{ fontWeight: 400 }}>Plot no. 251, Udyog Vihar, Phase IV,<br/>Sector 18, Gurgaon, Haryana - 122015</div>
+            </div>
+
+          </div>
         </div>
 
 
