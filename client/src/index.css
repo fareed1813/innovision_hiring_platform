@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700;800;900&family=Roboto+Slab:wght@400;600;700;800;900&display=swap');
+/* Times New Roman is a system font — no external import needed */
 
 /* ═══════════════════════════════════════════
    DESIGN SYSTEM — Innovision Overseas
@@ -54,9 +54,9 @@
   --shadow-card: 0 2px 8px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.03);
 
   /* Typography */
-  --font-body: Helvetica, "Helvetica Neue", Arial, Inter, sans-serif;
-  --font-heading: 'Roboto Slab', serif;
-  --font-logo: 'Archivo Black', 'Inter', sans-serif;
+  --font-body: 'Times New Roman', Times, serif;
+  --font-heading: 'Times New Roman', Times, serif;
+  --font-logo: 'Times New Roman', Times, serif;
 
   /* Nav height */
   --nav-height: 72px;
@@ -1107,7 +1107,7 @@ textarea.form-input { min-height: 120px; resize: vertical; }
 }
 
 .timer-value {
-  font-family: 'Archivo Black', sans-serif;
+  font-family: 'Times New Roman', Times, serif;
   font-size: 24px;
   font-weight: 900;
   color: var(--brand-red);
