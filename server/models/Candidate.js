@@ -7,12 +7,6 @@ const evaluationSchema = new mongoose.Schema({
   details: { type: mongoose.Schema.Types.Mixed, default: null }
 }, { _id: false });
 
-const preferenceSchema = new mongoose.Schema({
-  state:       { type: String, trim: true },
-  district:    { type: String, trim: true },
-  cityVillage: { type: String, trim: true }
-}, { _id: false });
-
 const candidateSchema = new mongoose.Schema({
   refId: {
     type: String,
@@ -21,15 +15,15 @@ const candidateSchema = new mongoose.Schema({
     index: true
   },
 
-  // International / Domestic
+  // Always international
   type: {
     type: String,
-    enum: ['international', 'domestic'],
+    enum: ['international'],
     default: 'international',
     index: true
   },
 
-  // Personal details (shared)
+  // Personal details
   firstName:  { type: String, required: true, trim: true },
   lastName:   { type: String, required: true, trim: true },
   phone:      { type: String, required: true, trim: true },
@@ -39,19 +33,11 @@ const candidateSchema = new mongoose.Schema({
   languages:  { type: String },
   source:     { type: String, default: 'Direct' },
 
-  // International-only fields
+  // International fields
   city:            { type: String, trim: true },
   passport:        { type: String, trim: true },
   gulfExp:         { type: String },
   applyingCountry: { type: String, trim: true },
-
-  // Domestic-only fields
-  subRole:     { type: String, trim: true },
-  state:       { type: String, trim: true },
-  district:    { type: String, trim: true },
-  cityVillage: { type: String, trim: true },
-  pincode:     { type: String, trim: true },
-  preferences: { type: [preferenceSchema], default: [] },
 
   // Assessment metadata
   job: { type: String, required: true, index: true },
@@ -93,7 +79,6 @@ const candidateSchema = new mongoose.Schema({
 
 candidateSchema.index({ status: 1, createdAt: -1 });
 candidateSchema.index({ job: 1, status: 1 });
-candidateSchema.index({ type: 1, status: 1, createdAt: -1 });
 
 candidateSchema.index({ phone: 1, job: 1 }, { unique: true });
 candidateSchema.index({ email: 1, job: 1 }, { unique: true, sparse: true });

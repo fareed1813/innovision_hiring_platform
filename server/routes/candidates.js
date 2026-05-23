@@ -13,7 +13,7 @@ const router = Router();
 /* ─── POST /api/candidates/submit-form — Save form details only ─── */
 router.post('/submit-form', async (req, res) => {
   try {
-    const { personal, job, source, type } = req.body;
+    const { personal, job, source } = req.body;
 
     if (!personal || !job) {
       return res.status(400).json({ error: 'Personal details and job role are required.' });
@@ -45,7 +45,7 @@ router.post('/submit-form', async (req, res) => {
       ...personal,
       job,
       source: source || 'Direct',
-      type: type || 'international',
+      type: 'international',
       assessmentStatus: 'form_submitted',
       scores: { total: 0, reading: 0, voice: 0, quality: 0 },
       questions: [],
@@ -153,6 +153,7 @@ router.post('/', async (req, res) => {
       ...personal,
       job,
       source: source || 'Direct',
+      type: 'international',
       questions,
       answers: answers || {},
       audioRecordings: audioRecordings || {},
@@ -180,20 +181,12 @@ router.post('/', async (req, res) => {
 /* ─── GET /api/candidates — List all (admin) ─────────── */
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const { status, job, search, page = 1, limit = 50, type } = req.query;
+    const { status, job, search, page = 1, limit = 50 } = req.query;
     const filter = {};
     const andConditions = [];
     
     if (status && status !== 'all') filter.status = status;
     if (job && job !== 'all') filter.job = job;
-    
-    if (type && type !== 'all') {
-      if (type === 'international') {
-        andConditions.push({ $or: [{ type: 'international' }, { type: { $exists: false } }] });
-      } else {
-        filter.type = type;
-      }
-    }
 
     if (search) {
       const regex = new RegExp(search, 'i');
@@ -203,7 +196,6 @@ router.get('/', authMiddleware, async (req, res) => {
           { lastName: regex },
           { phone: regex },
           { city: regex },
-          { cityVillage: regex },
           { refId: regex }
         ]
       });
@@ -239,7 +231,6 @@ router.get('/check-duplication', async (req, res) => {
       return res.status(400).json({ error: 'Phone and job are required for duplication check.' });
     }
     
-    // Check if a candidate exists with (this phone OR this email) AND this job
     const query = {
       $and: [
         { job },
@@ -263,22 +254,11 @@ router.get('/check-duplication', async (req, res) => {
 /* ─── GET /api/candidates/stats — Dashboard stats ────── */
 router.get('/stats', authMiddleware, async (req, res) => {
   try {
-    const { type } = req.query;
-    const baseFilter = {};
-    
-    if (type && type !== 'all') {
-      if (type === 'international') {
-        baseFilter.$or = [{ type: 'international' }, { type: { $exists: false } }];
-      } else {
-        baseFilter.type = type;
-      }
-    }
-
     const [total, pending, selected, rejected] = await Promise.all([
-      Candidate.countDocuments(baseFilter),
-      Candidate.countDocuments({ ...baseFilter, status: 'pending' }),
-      Candidate.countDocuments({ ...baseFilter, status: 'selected' }),
-      Candidate.countDocuments({ ...baseFilter, status: 'rejected' })
+      Candidate.countDocuments({}),
+      Candidate.countDocuments({ status: 'pending' }),
+      Candidate.countDocuments({ status: 'selected' }),
+      Candidate.countDocuments({ status: 'rejected' })
     ]);
     res.json({ total, pending, selected, rejected });
   } catch (err) {
@@ -334,30 +314,17 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 /* ─── GET /api/candidates/export/csv — CSV export (streamed) ──── */
 router.get('/export/csv', authMiddleware, async (req, res) => {
   try {
-    const { status, job, type } = req.query;
+    const { status, job } = req.query;
     const filter = {};
-    const andConditions = [];
     
     if (status && status !== 'all') filter.status = status;
     if (job && job !== 'all') filter.job = job;
-
-    if (type && type !== 'all') {
-      if (type === 'international') {
-        andConditions.push({ $or: [{ type: 'international' }, { type: { $exists: false } }] });
-      } else {
-        filter.type = type;
-      }
-    }
-
-    if (andConditions.length > 0) {
-      filter.$and = andConditions;
-    }
 
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename=innovision_export_${new Date().toISOString().split('T')[0]}.csv`);
 
     // Write header row immediately
-    const headers = ['Ref ID', 'First Name', 'Last Name', 'Phone', 'Email', 'City', 'Job', 'Source', 'Score', 'Status', 'Date'];
+    const headers = ['Ref ID', 'First Name', 'Last Name', 'Phone', 'Email', 'City', 'Applying Country', 'Passport', 'Job', 'Source', 'Score', 'Status', 'Date'];
     res.write(headers.map(h => `"${h}"`).join(',') + '\n');
 
     // Stream rows via cursor — never loads all documents into memory
@@ -369,7 +336,8 @@ router.get('/export/csv', authMiddleware, async (req, res) => {
 
     for await (const c of cursor) {
       const row = [
-        c.refId, c.firstName, c.lastName, c.phone, c.email || '', c.city,
+        c.refId, c.firstName, c.lastName, c.phone, c.email || '', c.city || '',
+        c.applyingCountry || '', c.passport || '',
         c.job, c.source, c.scores?.total || 0, c.status,
         new Date(c.createdAt).toLocaleDateString()
       ].map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(',');

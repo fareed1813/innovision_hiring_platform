@@ -4,15 +4,11 @@ import api from '../utils/api';
 import { Users, Clock, CheckCircle, XCircle, Search, Download, Eye, Check, X, ChevronLeft, ChevronRight, LogOut, ChevronDown, ShieldCheck, Info } from 'lucide-react';
 
 const ROLES = {
-  driver: 'Taxi Driver',
-  security: 'Security Guard',
-  housekeeping: 'Housekeeping',
-  supervisor: 'Field Supervisor',
-  helper: 'General Helper',
-  // Domestic
-  security_domestic:   'Security Guard (Domestic)',
-  facility_management: 'Facility Management',
-  other_manpower:      'Other Man Power',
+  driver:       'Taxi Driver',
+  security:     'Special Security Guard',
+  housekeeping: 'Housekeeping Staff',
+  supervisor:   'Field Supervisor',
+  helper:       'General Helper',
 };
 
 export default function Dashboard() {
@@ -23,7 +19,7 @@ export default function Dashboard() {
   const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter]         = useState('all');
   const [jobFilter, setJobFilter]   = useState('all');
-  const [typeFilter, setTypeFilter] = useState('international'); // 'international' | 'domestic'
+
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [loadingCandidates, setLoadingCandidates] = useState(false);
@@ -72,12 +68,10 @@ export default function Dashboard() {
 
   const fetchStats = useCallback(async () => {
     try {
-      const params = {};
-      if (typeFilter && typeFilter !== 'all') params.type = typeFilter;
-      const res = await api.get('/candidates/stats', { params });
+      const res = await api.get('/candidates/stats');
       setStats(res.data);
     } catch (err) { console.error(err); }
-  }, [typeFilter]);
+  }, []);
 
   const fetchCandidates = useCallback(async () => {
     setLoadingCandidates(true);
@@ -88,7 +82,6 @@ export default function Dashboard() {
       if (filter !== 'all') params.status = filter;
       if (jobFilter !== 'all') params.job = jobFilter;
       if (search) params.search = search;
-      if (typeFilter !== 'all') params.type = typeFilter;
       const res = await api.get('/candidates', { params });
       setCandidates(res.data.candidates);
       setTotalPages(res.data.pages);
@@ -98,7 +91,7 @@ export default function Dashboard() {
     } finally {
       setLoadingCandidates(false);
     }
-  }, [page, filter, jobFilter, search, tab, typeFilter]);
+  }, [page, filter, jobFilter, search, tab]);
 
   useEffect(() => { fetchStats(); }, [fetchStats]);
   useEffect(() => { fetchCandidates(); }, [fetchCandidates]);
@@ -117,7 +110,6 @@ export default function Dashboard() {
       const params = {};
       if (filter !== 'all') params.status = filter;
       if (jobFilter !== 'all') params.job = jobFilter;
-      if (typeFilter && typeFilter !== 'all') params.type = typeFilter;
       const res = await api.get('/candidates/export/csv', { params, responseType: 'blob' });
       const url = URL.createObjectURL(res.data);
       const a = document.createElement('a');
@@ -199,7 +191,7 @@ export default function Dashboard() {
               {tab === 'dashboard' ? 'Dashboard' : tab === 'all' ? 'All Candidates' : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--muted)' }}>
-              Welcome back, {user?.displayName}. Manage UAE deployment candidates.
+              Welcome back, {user?.displayName}. Manage international deployment candidates.
             </p>
           </div>
           <button onClick={exportCSV} className="btn btn-ghost btn-sm">
@@ -207,21 +199,7 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* International / Domestic Type Tabs */}
-        <div className="roles-tab-bar" style={{ marginBottom: '8px' }}>
-          {[
-            { key: 'international', label: '🌍 International' },
-            { key: 'domestic',      label: 'IND Domestic' },
-          ].map(t => (
-            <button
-              key={t.key}
-              className={`roles-tab ${typeFilter === t.key ? 'active' : ''}`}
-              onClick={() => { setTypeFilter(t.key); setPage(1); setJobFilter('all'); }}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+
 
         {/* Stats */}
         {tab === 'dashboard' && (
@@ -229,7 +207,7 @@ export default function Dashboard() {
             {[
               { label: 'Total Candidates', value: stats.total, icon: <Users size={18} />, key: 'all' },
               { label: 'Pending Review', value: stats.pending, icon: <Clock size={18} />, color: '#d97706', key: 'pending' },
-              { label: 'Selected for UAE', value: stats.selected, icon: <CheckCircle size={18} />, color: '#059669', key: 'selected' },
+              { label: 'Selected', value: stats.selected, icon: <CheckCircle size={18} />, color: '#059669', key: 'selected' },
               { label: 'Rejected', value: stats.rejected, icon: <XCircle size={18} />, color: '#dc2626', key: 'rejected' },
             ].map((s, i) => (
               <div 
@@ -363,15 +341,7 @@ export default function Dashboard() {
                 </td>
                 <td style={{ fontSize: '13px' }}>{ROLES[c.job] || c.job}</td>
                 <td>
-                  {c.type === 'domestic' ? (
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', gap: '5px',
-                      padding: '4px 10px', borderRadius: '20px',
-                      background: 'rgba(16,185,129,0.08)',
-                      color: '#059669', fontSize: '11px', fontWeight: 700,
-                      border: '1px solid rgba(16,185,129,0.2)', letterSpacing: '0.04em'
-                    }}>✓ Form Submitted</span>
-                  ) : c.assessmentStatus === 'form_submitted' ? (
+                  {c.assessmentStatus === 'form_submitted' ? (
                     <span style={{
                       display: 'inline-flex', alignItems: 'center', gap: '5px',
                       padding: '4px 10px', borderRadius: '20px',
@@ -548,7 +518,7 @@ export default function Dashboard() {
                   style={{ width: 'auto', padding: '0 24px', height: '44px', gap: '8px' }}
                   onClick={() => { updateStatus(selected._id, 'selected'); setSelected(null); }}
                 >
-                  <Check size={18} /> SELECT FOR UAE
+                  <Check size={18} /> SELECT
                 </button>
                 <button 
                   className="btn-action-x" 

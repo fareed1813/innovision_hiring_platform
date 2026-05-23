@@ -583,12 +583,9 @@ body.hide-navbar .navbar {
   box-shadow: 0 0 0 1px var(--brand-red), var(--shadow-md);
 }
 
-/* Hide arrow for domestic main role cards */
-.role-card.domestic-role-card::after {
-  display: none !important;
-}
 
-/* ── International / Domestic Tab Bar ── */
+
+/* ── Role Tab Bar ── */
 .roles-tab-bar {
   display: flex;
   gap: 8px;
@@ -624,83 +621,7 @@ body.hide-navbar .navbar {
   color: var(--brand-red);
 }
 
-/* ── Domestic Subroles ── */
-.subrole-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-top: none;
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  padding: 8px 12px 12px;
-  animation: slide-up 0.2s ease;
-}
 
-.subrole-item {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 16px;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: left;
-  transition: border-color 0.2s, background 0.2s, color 0.2s;
-}
-
-/* Arrow for subroles */
-.subrole-item::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: 16px;
-  width: 24px;
-  height: 24px;
-  margin-top: -12px;
-  border-radius: 50%;
-  background: var(--brand-red);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-  opacity: 0;
-  transform: translateX(-8px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  box-shadow: 0 2px 8px rgba(209, 43, 43, 0.4);
-}
-
-.subrole-item:hover::after {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.subrole-item:hover {
-  border-color: var(--brand-red);
-  background: var(--brand-red-light);
-  color: var(--brand-red);
-}
-
-/* ── Domestic Preference Blocks ── */
-.pref-block {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 16px 20px 20px;
-  margin-top: 8px !important;
-}
-
-.pref-block-header {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--brand-red);
-}
 
 .role-card-icon {
   width: 64px;

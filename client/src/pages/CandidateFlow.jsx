@@ -1,38 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
-import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, ShieldCheck, Car, Sparkles, Users, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle, MapPin } from 'lucide-react';
+import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, ShieldCheck, Car, Sparkles, Users, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle } from 'lucide-react';
 import Footer from '../components/Footer';
 import { COUNTRY_CODES } from '../utils/countryCodes';
 
 const ROLES_MAP = {
   driver:       { label: 'Taxi Driver',     icon: <Car      className="driver-icon"   size={32} strokeWidth={1.5} /> },
-  security:     { label: 'Security Guard',  icon: <Shield   className="security-icon" size={32} strokeWidth={1.5} /> },
-  housekeeping: { label: 'Housekeeping',    icon: <Sparkles className="house-icon"    size={32} strokeWidth={1.5} /> },
-  supervisor:   { label: 'Supervisor',      icon: <Users    className="super-icon"    size={32} strokeWidth={1.5} /> },
+  security:     { label: 'Special Security Guard',  icon: <Shield   className="security-icon" size={32} strokeWidth={1.5} /> },
+  housekeeping: { label: 'Housekeeping Staff',    icon: <Sparkles className="house-icon"    size={32} strokeWidth={1.5} /> },
+  supervisor:   { label: 'Field Supervisor',      icon: <Users    className="super-icon"    size={32} strokeWidth={1.5} /> },
   helper:       { label: 'General Helper',  icon: <Wrench   className="helper-icon"   size={32} strokeWidth={1.5} /> },
 };
 const ROLE_KEYS = Object.keys(ROLES_MAP);
 
-const DOMESTIC_ROLES_MAP = {
-  security_domestic:   { label: 'Security Guard' },
-  facility_management: { label: 'Facility Management' },
-  other_manpower:      { label: 'Other Man Power' },
-};
-
 const SOURCES = ['Direct / Walk-in', 'Job Portal', 'Social Media', 'Referral', 'Agent', 'WhatsApp'];
-
-const INDIAN_STATES = [
-  'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat',
-  'Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh',
-  'Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab',
-  'Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh',
-  'Uttarakhand','West Bengal',
-  // Union Territories
-  'Andaman and Nicobar Islands','Chandigarh',
-  'Dadra and Nagar Haveli and Daman and Diu','Delhi',
-  'Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry',
-];
 
 const VALIDATION_RULES = {
   firstName:  { regex: /^[A-Za-z\s]{2,30}$/,      error: 'Please enter a valid name.' },
@@ -41,18 +23,13 @@ const VALIDATION_RULES = {
   email:      { regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, error: 'Please enter a valid email.' },
   city:       { regex: /^[A-Za-z0-9\s\-\,]{2,50}$/, error: 'Please enter a valid city.' },
   experience: { regex: /^[0-9]{1,2}$/,             error: 'Please enter numbers only.' },
-  pincode:    { regex: /^[0-9]{6}$/,               error: 'Enter a valid 6-digit pincode.' },
 };
 
 export default function CandidateFlow() {
   const [params] = useSearchParams();
   const navigate  = useNavigate();
 
-  const initialRole    = params.get('role')    || '';
-  const initialType    = params.get('type')    || 'international';
-  const initialSubRole = params.get('subRole') || '';
-
-  const isDomestic = initialType === 'domestic';
+  const initialRole = params.get('role') || '';
 
   const [step, setStep] = useState(initialRole ? 1 : 0);
 
@@ -67,21 +44,13 @@ export default function CandidateFlow() {
   };
 
   const [selectedRole, setSelectedRole] = useState(initialRole);
-  const [selectedSubRole]               = useState(initialSubRole);
 
-  // Personal details (international + domestic fields combined)
+  // Personal details (international fields)
   const [form, setForm] = useState({
-    // shared
     firstName: '', lastName: '', countryCode: '+91', phone: '', email: '',
     experience: '', education: '', languages: '', source: '',
-    // international-only
+    // international fields
     city: '', passport: '', gulfExp: '', applyingCountry: '',
-    // domestic location
-    state: '', district: '', cityVillage: '', pincode: '',
-    // domestic preferences
-    pref1State: '', pref1District: '', pref1City: '',
-    pref2State: '', pref2District: '', pref2City: '',
-    pref3State: '', pref3District: '', pref3City: '',
   });
   const [touched, setTouched] = useState({});
 
@@ -92,7 +61,7 @@ export default function CandidateFlow() {
 
   const getFieldError = (key) => {
     const value = form[key];
-    if (!value && !['firstName', 'lastName', 'phone', 'city'].includes(key)) return null; // Only check required fields for empty errors if needed, but here we focus on regex
+    if (!value && !['firstName', 'lastName', 'phone', 'city'].includes(key)) return null;
     const rule = VALIDATION_RULES[key];
     if (rule && value && !rule.regex.test(value)) {
       return rule.error;
@@ -101,23 +70,6 @@ export default function CandidateFlow() {
   };
 
   const isFormValid = () => {
-    if (isDomestic) {
-      const required = [
-        'firstName','lastName','phone','email','experience','education','languages',
-        'state','district','cityVillage','pincode',
-        'pref1State','pref1District','pref1City',
-        'pref2State','pref2District','pref2City',
-        'pref3State','pref3District','pref3City',
-      ];
-      const hasRequired = required.every(k => form[k]?.trim().length >= 1);
-      const baseErrors = ['firstName','lastName','phone','email','experience','pincode']
-        .every(k => !getFieldError(k));
-      // All 3 preferred cities must be different
-      const cities = [form.pref1City, form.pref2City, form.pref3City].map(c => c?.toLowerCase().trim()).filter(Boolean);
-      const hasUniqueCities = new Set(cities).size === 3;
-      return hasRequired && baseErrors && hasUniqueCities;
-    }
-    // International
     const required = ['firstName','lastName','phone','email','city','experience','passport','education','languages','gulfExp','applyingCountry'];
     const hasRequired = required.every(key => form[key]?.trim().length >= 1);
     const hasNoErrors = Object.keys(VALIDATION_RULES).every(key => !getFieldError(key));
@@ -162,7 +114,7 @@ export default function CandidateFlow() {
   const [resetsRemaining, setResetsRemaining] = useState(2);
   const [violations, setViolations] = useState({ tabSwitches: 0, fullscreenExits: 0 });
   const lastViolationRef = useRef(0);
-  const handleSubmitRef = useRef(null);  // Fix #11: keeps timer closure fresh
+  const handleSubmitRef = useRef(null);
 
   // ── Form submission state (separate from assessment) ──
   const [formSubmitted, setFormSubmitted] = useState(false);
@@ -190,10 +142,8 @@ export default function CandidateFlow() {
     const draft = localStorage.getItem('candidate_draft');
     if (draft) {
       const data = JSON.parse(draft);
-      // Restore form fields and role only — never restore questions (they may be stale/changed in DB)
       if (data.form) setForm(data.form);
       if (data.selectedRole) setSelectedRole(data.selectedRole);
-      // Cap at step 1: candidate re-triggers startAssessment to get a fresh question set
       setStep(Math.min(data.step || 0, 1));
       if (data.answers) setAnswers(data.answers);
       if (data.currentQ !== undefined) setCurrentQ(data.currentQ);
@@ -206,7 +156,7 @@ export default function CandidateFlow() {
     setShowResumePrompt(false);
   };
 
-  // ── OFFLINE RECOVERY: Auto-Sync (don't save questions — they'll be fetched fresh on resume) ──
+  // ── OFFLINE RECOVERY: Auto-Sync ──
   useEffect(() => {
     if (step > 0 && step < 3) {
       const draft = { form, selectedRole, step, answers, currentQ };
@@ -217,7 +167,6 @@ export default function CandidateFlow() {
   const handleReset = (qid) => {
     if (resetsRemaining <= 0) return;
 
-    // Stop active recording if it matches this question
     if (speechRecRef.current) {
       try { speechRecRef.current.stop(); } catch(e){}
     }
@@ -226,7 +175,6 @@ export default function CandidateFlow() {
     }
     setIsRecording(false);
 
-    // Reset the internal memory so active recording drops prior text but keeps listening
     activeVoiceStateRef.current = { baseText: '', accumulated: '' };
 
     setAnswers(prev => {
@@ -274,15 +222,10 @@ export default function CandidateFlow() {
     };
 
     const checkFS = () => {
-      // Check standard Fullscreen API
       const apiFull = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
-      // Check F11 / OS-level fullscreen (viewport height matches screen height)
-      // Allow 1-2px tolerance for weird OS borders
       const isF11 = window.innerHeight >= window.screen.height - 2;
-      
       const full = apiFull || isF11;
 
-      // Proctoring check: If they exit fullscreen while in the assessment step, record a violation
       if (isFull && !full && step === 2) {
         handleViolation('fs');
       }
@@ -290,8 +233,6 @@ export default function CandidateFlow() {
     };
     
     const handleBlur = () => {
-      // Focus lost (tab switched or app minimized)
-      // Use document.hidden as a more reliable check for tab switching
       if (step === 2 && document.hidden) handleViolation('tab');
     };
     
@@ -307,7 +248,6 @@ export default function CandidateFlow() {
     window.addEventListener('blur', handleBlur);
     window.addEventListener('resize', checkFS);
     
-    // Initial check on load
     checkFS();
     
     if (step === 2) {
@@ -344,11 +284,10 @@ export default function CandidateFlow() {
     }
   }, [step]);
 
-
   // Keep ref in sync so the timer's stale closure always calls the latest handleSubmit
   useEffect(() => { handleSubmitRef.current = handleSubmit; });
 
-  // Timer — only restarts when step changes (not on every tick)
+  // Timer — only restarts when step changes
   useEffect(() => {
     if (step !== 2 || timeLeft <= 0) return;
     const id = setInterval(() => {
@@ -358,8 +297,7 @@ export default function CandidateFlow() {
       });
     }, 1000);
     return () => clearInterval(id);
-  }, [step]); // intentionally omit timeLeft — functional update inside reads latest value
-
+  }, [step]);
 
   // Exit fullscreen helper
   const exitFS = () => {
@@ -370,37 +308,26 @@ export default function CandidateFlow() {
     }
   };
 
-  // ── Submit form details to DB (separate from assessment) ──
+  // ── Submit form details to DB ──
   const submitForm = async () => {
     if (submittingForm || formSubmitted) return;
     setSubmittingForm(true);
     setFormError('');
     try {
-      // Build personal object with domestic fields if applicable
       const personal = {
         ...form,
         phone: `${form.countryCode} ${form.phone}`,
-        ...(isDomestic ? {
-          subRole: selectedSubRole,
-          preferences: [
-            { state: form.pref1State, district: form.pref1District, cityVillage: form.pref1City },
-            { state: form.pref2State, district: form.pref2District, cityVillage: form.pref2City },
-            { state: form.pref3State, district: form.pref3District, cityVillage: form.pref3City },
-          ]
-        } : {})
       };
       const res = await api.post('/candidates/submit-form', {
         personal,
         job: selectedRole,
         source: form.source || 'Direct',
-        type: isDomestic ? 'domestic' : 'international',
+        type: 'international',
       });
       setCandidateId(res.data.candidateId);
       setFormRefId(res.data.refId);
       setFormSubmitted(true);
       setResult({ refId: res.data.refId });
-      // Domestic → go directly to success screen
-      if (isDomestic) handleStepChange(3);
     } catch (err) {
       console.error(err);
       if (err.response?.status === 409) {
@@ -409,8 +336,7 @@ export default function CandidateFlow() {
           setCandidateId(data.candidateId);
           setFormRefId(data.refId);
           setFormSubmitted(true);
-          setFormError(`You already submitted this form (Ref: ${data.refId}). ${isDomestic ? '' : 'You can now start the assessment.'}`);
-          if (isDomestic) { setResult({ refId: data.refId }); handleStepChange(3); }
+          setFormError(`You already submitted this form (Ref: ${data.refId}). You can now start the assessment.`);
         } else {
           setDupError(`You have already applied for this role. Only one attempt is permitted.`);
         }
@@ -426,14 +352,11 @@ export default function CandidateFlow() {
   const startAssessment = async () => {
     setValidating(true);
     try {
-      // Fetch questions (dedup already done at form-submit stage)
       const res = await api.get('/questions', { params: { role: selectedRole } });
       setQuestions(res.data);
       const time = selectedRole === 'driver' ? 10 * 60 : 25 * 60;
       setTimeLeft(time);
       setTotalTime(time);
-      
-      // Change step — fullscreen is already active from the enterFS() call
       handleStepChange(2);
     } catch (err) {
       console.error(err);
@@ -444,18 +367,15 @@ export default function CandidateFlow() {
     }
   };
 
-
   // Voice recording toggle
   const toggleVoice = useCallback((qid) => {
     if (isRecording) {
-      // Stop
       speechRecRef.current?.stop();
       if (mediaRecRef.current?.state === 'recording') mediaRecRef.current.stop();
       setIsRecording(false);
       return;
     }
 
-    // Start MediaRecorder (parallel audio capture)
     if (audioStreamRef.current) {
       try {
         const mr = new MediaRecorder(audioStreamRef.current, { mimeType: 'audio/webm;codecs=opus' });
@@ -474,14 +394,13 @@ export default function CandidateFlow() {
       } catch (e) { console.warn('MediaRecorder failed:', e); }
     }
 
-    // Start SpeechRecognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
     
     const rec = new SpeechRecognition();
     rec.continuous = true;
     rec.interimResults = true;
-    rec.lang = 'en-IN'; // Optimized for Indian English
+    rec.lang = 'en-IN';
     rec.maxAlternatives = 3;
     
     activeVoiceStateRef.current = { baseText: answers[qid] || '', accumulated: '' };
@@ -534,7 +453,7 @@ export default function CandidateFlow() {
         answers,
         audioRecordings,
         proctoring: violations,
-        ...(candidateId ? { candidateId } : {}) // link to form-submitted record
+        ...(candidateId ? { candidateId } : {})
       };
       const res = await api.post('/candidates', payload);
       setResult(res.data);
@@ -565,13 +484,11 @@ export default function CandidateFlow() {
 
   const formatTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
-  // (Resume prompt is rendered inline in Step 0 below — removed dead JSX block that was here)
-
   // ── STEP 0: Role Selection ──
   if (step === 0) {
     return (
       <div className="page-wrapper" style={{ paddingTop: 'calc(var(--nav-height) + 40px)' }}>
-        {/* Resume prompt overlay — shown if a saved draft is found */}
+        {/* Resume prompt overlay */}
         {showResumePrompt && (
           <div className="submitting-overlay">
             <div className="submitting-card" style={{ maxWidth: '440px', padding: '40px' }}>
@@ -595,7 +512,7 @@ export default function CandidateFlow() {
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             <div className="section-tag">Step 1 of 3</div>
             <h2>Select Your Role</h2>
-            <p className="section-sub">Choose the role you're applying for. This determines the questions in your assessment.</p>
+            <p className="section-sub">Choose the international role you're applying for. This determines the questions in your assessment.</p>
             <div className="roles-grid">
               {ROLE_KEYS.map(key => (
                 <div
@@ -622,7 +539,6 @@ export default function CandidateFlow() {
 
   // ── STEP 1: Personal Details ──
   if (step === 1) {
-    // Helper: reusable custom dropdown renderer
     const renderSelectField = (fieldKey, label, options) => (
       <div className="form-group" key={fieldKey}>
         <label className="form-label">{label}</label>
@@ -711,19 +627,16 @@ export default function CandidateFlow() {
       </div>
     );
 
-    const roleLabel = isDomestic
-      ? (DOMESTIC_ROLES_MAP[selectedRole]?.label || selectedRole)
-      : (ROLES_MAP[selectedRole]?.label || selectedRole);
-    const subRoleLabel = selectedSubRole ? selectedSubRole.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : '';
+    const roleLabel = ROLES_MAP[selectedRole]?.label || selectedRole;
 
     return (
       <div className="page-wrapper" style={{ paddingTop: 'calc(var(--nav-height) + 40px)' }}>
         <div className="section" style={{ paddingTop: '40px' }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-            <div className="section-tag">{isDomestic ? 'IND Domestic Application' : '🌍 International Application'}</div>
+            <div className="section-tag">🌍 International Application</div>
             <h2>Personal Details</h2>
             <p className="section-sub">
-              Applying for: <strong>{roleLabel}{subRoleLabel ? ` — ${subRoleLabel}` : ''}</strong>
+              Applying for: <strong>{roleLabel}</strong>
             </p>
 
             <div className="form-grid">
@@ -735,51 +648,11 @@ export default function CandidateFlow() {
               {renderSelectField('education', 'Education *', ['Below 10th','10th Pass','12th Pass','Graduate','Post Graduate'])}
               {renderTextField('languages', 'Languages Known *', 'text', 'Hindi, English...')}
 
-              {/* International-only fields */}
-              {!isDomestic && <>
-                {renderTextField('city', 'City / District *', 'text', 'Enter your city')}
-                {renderSelectField('passport', 'Passport Status *', ['Valid Passport (6+ months)','Expired / Need Renewal','No Passport'])}
-                {renderSelectField('gulfExp', 'Gulf Experience *', ['No — First time','Yes — UAE','Yes — Saudi/Qatar/Other'])}
-                {renderSelectField('applyingCountry', 'Which Country Are You Applying To? *', ['UAE','Ukraine','Saudi Arabia'])}
-              </>}
-
-              {/* Domestic-only: Current Location */}
-              {isDomestic && <>
-                <div className="form-group full-width" style={{ marginTop: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', padding: '10px 16px', background: 'rgba(239,43,45,0.04)', borderRadius: '10px', border: '1px solid rgba(239,43,45,0.12)' }}>
-                    <MapPin size={16} style={{ color: 'var(--brand-red)' }} />
-                    <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text)' }}>Current Location</span>
-                  </div>
-                </div>
-                {renderSelectField('state', 'State *', INDIAN_STATES)}
-                {renderTextField('district', 'District *', 'text', 'Enter district')}
-                {renderTextField('cityVillage', 'City / Village *', 'text', 'Enter city or village')}
-                {renderTextField('pincode', 'Pincode *', 'text', '6-digit pincode')}
-
-                {/* Preferred Work Locations */}
-                <div className="form-group full-width" style={{ marginTop: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', padding: '10px 16px', background: 'rgba(239,43,45,0.04)', borderRadius: '10px', border: '1px solid rgba(239,43,45,0.12)' }}>
-                    <MapPin size={16} style={{ color: 'var(--brand-red)' }} />
-                    <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text)' }}>Preferred Work Locations</span>
-                    <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '4px' }}>(All 3 must be different)</span>
-                  </div>
-                </div>
-                {[1, 2, 3].map(n => (
-                  <div className="form-group full-width pref-block" key={n}>
-                    <div className="pref-block-header">Preference {n}</div>
-                    <div className="form-grid" style={{ marginTop: '10px' }}>
-                      {renderSelectField(`pref${n}State`, 'State *', INDIAN_STATES)}
-                      {renderTextField(`pref${n}District`, 'District *', 'text', 'Enter district')}
-                      {renderTextField(`pref${n}City`, 'City / Village *', 'text', 'Enter city or village')}
-                    </div>
-                    {n < 3 && form[`pref${n}City`] && form[`pref${n+1}City`] && form[`pref${n}City`].toLowerCase().trim() === form[`pref${n+1}City`].toLowerCase().trim() && (
-                      <div className="error-text" style={{ marginTop: '6px' }}>
-                        <AlertCircle size={12} /> Preference {n} and {n+1} cities must be different.
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </>}
+              {/* International fields */}
+              {renderTextField('city', 'City / District *', 'text', 'Enter your city')}
+              {renderSelectField('passport', 'Passport Status *', ['Valid Passport (6+ months)','Expired / Need Renewal','No Passport'])}
+              {renderSelectField('gulfExp', 'Gulf Experience *', ['No — First time','Yes — UAE','Yes — Saudi/Qatar/Other'])}
+              {renderSelectField('applyingCountry', 'Which Country Are You Applying To? *', ['UAE','Ukraine','Saudi Arabia'])}
 
               {/* Source */}
               <div className="form-group full-width">
@@ -792,8 +665,7 @@ export default function CandidateFlow() {
               </div>
             </div>
 
-
-            {/* NEAT BOTTOM ERROR UI */}
+            {/* Duplicate error */}
             {dupError && (
               <div style={{ 
                 marginTop: '32px',
@@ -839,7 +711,7 @@ export default function CandidateFlow() {
               </div>
             )}
 
-            {/* Form submission error (non-duplicate) */}
+            {/* Form submission error */}
             {formError && !dupError && (
               <div style={{
                 marginTop: '16px',
@@ -871,7 +743,7 @@ export default function CandidateFlow() {
               </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                {/* Submit Form button — hidden once submitted */}
+                {/* Submit Form button */}
                 {!formSubmitted ? (
                   <button
                     className="btn btn-ghost btn-lg"
@@ -899,19 +771,17 @@ export default function CandidateFlow() {
                   </div>
                 )}
 
-                {/* Start Assessment — only for international, only enabled after form submitted */}
-                {!isDomestic && (
-                  <button
-                    className="btn btn-primary btn-lg"
-                    disabled={!formSubmitted || validating || !!dupError}
-                    onClick={(e) => {
-                      enterFS();
-                      startAssessment();
-                    }}
-                  >
-                    {validating ? 'Loading...' : 'Start Assessment'} <ChevronRight size={16} />
-                  </button>
-                )}
+                {/* Start Assessment — only enabled after form submitted */}
+                <button
+                  className="btn btn-primary btn-lg"
+                  disabled={!formSubmitted || validating || !!dupError}
+                  onClick={(e) => {
+                    enterFS();
+                    startAssessment();
+                  }}
+                >
+                  {validating ? 'Loading...' : 'Start Assessment'} <ChevronRight size={16} />
+                </button>
               </div>
             </div>
           </div>
@@ -933,7 +803,7 @@ export default function CandidateFlow() {
 
     return (
       <div style={{ background: 'var(--surface)', minHeight: '100vh' }}>
-        {/* Fullscreen Lockdown Overlay - AT ROOT to prevent z-index/transform bugs */}
+        {/* Fullscreen Lockdown Overlay */}
         {!isFull && (
           <div className="fullscreen-lockout">
             <div className="lockout-card">
@@ -971,7 +841,7 @@ export default function CandidateFlow() {
           </div>
         )}
 
-        {/* Hide the test completely if they are not in fullscreen */}
+        {/* Hide the test completely if not in fullscreen */}
         <div style={{ display: isFull ? 'block' : 'none' }}>
           {/* Consolidated Sticky Header */}
           <div className="test-sticky-header">
@@ -1242,11 +1112,9 @@ export default function CandidateFlow() {
           <div className="results-icon-container">
             <CheckCircle size={72} strokeWidth={2.5} className="success-pulse-icon" style={{ color: 'var(--success)' }} />
           </div>
-          <h3 className="results-title">{isDomestic ? 'Application Submitted! 🎉' : 'Assessment Submitted!'}</h3>
+          <h3 className="results-title">Assessment Submitted! 🎉</h3>
           <p style={{ color: 'var(--muted)', fontSize: '14px', lineHeight: '1.7', marginBottom: '24px' }}>
-            {isDomestic
-              ? 'Thank you for submitting your application. Our team will review your details and reach out to you shortly.'
-              : 'Thank you for completing the skill assessment. Your responses have been submitted and are under review by the Innovision Global team.'}
+            Thank you for completing the skill assessment. Your responses have been submitted and are under review by the Innovision Global team.
           </p>
           {result?.refId && (
             <div style={{ background: 'var(--surface2)', borderRadius: 'var(--radius-md)', padding: '16px', marginBottom: '24px' }}>
