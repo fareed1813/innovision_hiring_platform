@@ -1,16 +1,21 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Shield, Car, Sparkles, Users, Wrench, ArrowRight, CheckCircle, Globe, Award } from 'lucide-react';
+import { Shield, Car, Sparkles, Users, Wrench, ArrowRight, CheckCircle, Globe, Award, ChevronLeft, ChevronRight, Zap, Cog, HardHat, Briefcase } from 'lucide-react';
 import Footer from '../components/Footer';
+import api from '../utils/api';
 
-/* ─── International Roles ─── */
-const INTL_ROLES = [
-  { key: 'driver',       label: 'Taxi Driver',            icon: <Car       className="driver-icon"   size={32} strokeWidth={1.5} />, desc: 'Professional driver roles across UAE and Saudi Arabia. Valid driving licence and a safe, disciplined driving record required.' },
-  { key: 'security',     label: 'Special Security Guard', icon: <Shield    className="security-icon" size={32} strokeWidth={1.5} />, desc: 'Armed/unarmed security personnel for high-security facilities, malls, and corporate premises across the UAE and Saudi Arabia.' },
-  { key: 'housekeeping', label: 'Housekeeping Staff',     icon: <Sparkles  className="house-icon"    size={32} strokeWidth={1.5} />, desc: 'Hotel, hospital & facility cleaning staff for premium hospitality and healthcare clients across UAE, Ukraine, and Saudi Arabia.' },
-  { key: 'supervisor',   label: 'Field Supervisor',       icon: <Users     className="super-icon"    size={32} strokeWidth={1.5} />, desc: 'On-ground team lead for facility management, construction, and operations supervision across UAE, Ukraine, Saudi Arabia.' },
-  { key: 'helper',       label: 'General Helper',         icon: <Wrench    className="helper-icon"   size={32} strokeWidth={1.5} />, desc: 'Multi-skilled helper for construction, warehousing, and facility maintenance roles across UAE, Saudi Arabia, and Ukraine.' },
-];
+/* ─── Icon map for dynamic roles ─── */
+const ICON_MAP = {
+  driver:       <Car       className="driver-icon"   size={32} strokeWidth={1.5} />,
+  security:     <Shield    className="security-icon" size={32} strokeWidth={1.5} />,
+  housekeeping: <Sparkles  className="house-icon"    size={32} strokeWidth={1.5} />,
+  supervisor:   <Users     className="super-icon"    size={32} strokeWidth={1.5} />,
+  helper:       <Wrench    className="helper-icon"   size={32} strokeWidth={1.5} />,
+  electrician:  <Zap       className="helper-icon"   size={32} strokeWidth={1.5} />,
+  mechanic:     <Cog       className="helper-icon"   size={32} strokeWidth={1.5} />,
+  construction: <HardHat   className="helper-icon"   size={32} strokeWidth={1.5} />,
+};
+const getIcon = (iconKey) => ICON_MAP[iconKey] || <Briefcase className="helper-icon" size={32} strokeWidth={1.5} />;
 
 const GlowingDivider = () => (
   <div style={{
@@ -21,9 +26,110 @@ const GlowingDivider = () => (
   }} />
 );
 
+/* ─── Job Carousel Component ─── */
+function JobCarousel({ roles }) {
+  const [current, setCurrent] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const timerRef = useRef(null);
+
+  const goTo = (idx) => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setCurrent(idx);
+    setTimeout(() => setIsAnimating(false), 400);
+  };
+
+  const next = () => goTo((current + 1) % roles.length);
+  const prev = () => goTo((current - 1 + roles.length) % roles.length);
+
+  // Auto-advance every 3.5 seconds
+  useEffect(() => {
+    if (roles.length <= 1) return;
+    timerRef.current = setInterval(next, 3500);
+    return () => clearInterval(timerRef.current);
+  }, [current, roles.length]);
+
+  if (!roles.length) return null;
+
+  // Show up to 3 visible cards on desktop
+  const visibleCount = Math.min(3, roles.length);
+  const visibleRoles = [];
+  for (let i = 0; i < visibleCount; i++) {
+    visibleRoles.push(roles[(current + i) % roles.length]);
+  }
+
+  return (
+    <div className="job-carousel-wrapper">
+      {roles.length > 1 && (
+        <button className="carousel-nav-btn carousel-prev" onClick={prev} aria-label="Previous">
+          <ChevronLeft size={20} />
+        </button>
+      )}
+
+      <div className="job-carousel-track">
+        {visibleRoles.map((role, i) => (
+          <a
+            key={role._id + '-' + i}
+            href={`/apply?role=${role._id}`}
+            className={`job-carousel-slide ${i === 0 ? 'slide-active' : ''}`}
+            style={{ textDecoration: 'none', color: 'inherit' }}
+          >
+            <div className="carousel-slide-icon">{getIcon(role.iconKey)}</div>
+            <div className="carousel-slide-badge">Now Hiring</div>
+            <h4 className="carousel-slide-title">{role.name}</h4>
+            {role.description && (
+              <p className="carousel-slide-desc">{role.description}</p>
+            )}
+            <span className="carousel-slide-cta">
+              Apply Now <ArrowRight size={13} style={{ display: 'inline', verticalAlign: 'middle' }} />
+            </span>
+          </a>
+        ))}
+      </div>
+
+      {roles.length > 1 && (
+        <button className="carousel-nav-btn carousel-next" onClick={next} aria-label="Next">
+          <ChevronRight size={20} />
+        </button>
+      )}
+
+      {/* Dot indicators */}
+      {roles.length > 1 && (
+        <div className="carousel-dots">
+          {roles.map((_, idx) => (
+            <button
+              key={idx}
+              className={`carousel-dot ${idx === current ? 'active' : ''}`}
+              onClick={() => goTo(idx)}
+              aria-label={`Slide ${idx + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Landing() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [roles, setRoles] = useState([]);
+  const [rolesLoading, setRolesLoading] = useState(true);
+
+  // Fetch dynamic roles from API
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const res = await api.get('/roles');
+        setRoles(res.data);
+      } catch (err) {
+        console.error('Failed to fetch roles:', err);
+      } finally {
+        setRolesLoading(false);
+      }
+    };
+    fetchRoles();
+  }, []);
 
   useEffect(() => {
     if (location.hash) {
@@ -87,21 +193,46 @@ export default function Landing() {
             Select the role that matches your skills and experience to begin your international career assessment.
           </p>
 
-          {/* International Roles Grid */}
-          <div className="roles-grid">
-            {INTL_ROLES.map(role => (
-              <a
-                href={`/apply?role=${role.key}`}
-                key={role.key}
-                className="role-card"
-                style={{ textDecoration: 'none', color: 'inherit' }}
-              >
-                <div className="role-card-icon">{role.icon}</div>
-                <h3>{role.label}</h3>
-                <p>{role.desc}</p>
-              </a>
-            ))}
-          </div>
+          {/* Dynamic Roles Grid */}
+          {rolesLoading ? (
+            <div style={{ textAlign: 'center', padding: '60px', color: 'var(--muted)' }}>
+              <div style={{ width: '32px', height: '32px', border: '3px solid var(--border)', borderTopColor: 'var(--brand-red)', borderRadius: '50%', animation: 'spin 0.6s linear infinite', margin: '0 auto 16px' }} />
+              Loading available roles...
+            </div>
+          ) : roles.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px', color: 'var(--muted)' }}>
+              No roles currently available. Please check back soon.
+            </div>
+          ) : (
+            <div className="roles-grid">
+              {roles.map(role => (
+                <a
+                  href={`/apply?role=${role._id}`}
+                  key={role._id}
+                  className="role-card"
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <div className="role-card-icon">{getIcon(role.iconKey)}</div>
+                  <h3>{role.name}</h3>
+                  {role.description && <p>{role.description}</p>}
+                </a>
+              ))}
+            </div>
+          )}
+
+          {/* ── Latest Openings Carousel ── */}
+          {roles.length > 0 && (
+            <div style={{ marginTop: '64px' }}>
+              <div className="section-tag" style={{ marginBottom: '8px' }}>🆕 Latest Openings</div>
+              <h3 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '8px', color: 'var(--text)' }}>
+                Newly Added Opportunities
+              </h3>
+              <p className="section-sub" style={{ marginBottom: '32px' }}>
+                Fresh job openings — be among the first to apply.
+              </p>
+              <JobCarousel roles={roles} />
+            </div>
+          )}
         </div>
       </section>
 
@@ -111,7 +242,7 @@ export default function Landing() {
           <div className="section-tag">About Us</div>
           <h2>Innovision Global</h2>
           <p className="section-sub">
-            A MEA-registered Overseas Manpower Consultancy providing skilled, unskilled & semi-skilled manpower to overseas companies since 2007.
+            A MEA-registered Overseas Manpower Consultancy providing skilled, unskilled &amp; semi-skilled manpower to overseas companies since 2007.
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
             {[

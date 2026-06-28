@@ -1,18 +1,23 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
-import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, ShieldCheck, Car, Sparkles, Users, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle } from 'lucide-react';
+import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, ShieldCheck, Car, Sparkles, Users, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle, HardHat, Zap, Cog } from 'lucide-react';
 import Footer from '../components/Footer';
 import { COUNTRY_CODES } from '../utils/countryCodes';
 
-const ROLES_MAP = {
-  driver:       { label: 'Taxi Driver',     icon: <Car      className="driver-icon"   size={32} strokeWidth={1.5} /> },
-  security:     { label: 'Special Security Guard',  icon: <Shield   className="security-icon" size={32} strokeWidth={1.5} /> },
-  housekeeping: { label: 'Housekeeping Staff',    icon: <Sparkles className="house-icon"    size={32} strokeWidth={1.5} /> },
-  supervisor:   { label: 'Field Supervisor',      icon: <Users    className="super-icon"    size={32} strokeWidth={1.5} /> },
-  helper:       { label: 'General Helper',  icon: <Wrench   className="helper-icon"   size={32} strokeWidth={1.5} /> },
+// Icon map for built-in roles (dynamic roles from DB fall back to Wrench)
+const ICON_MAP = {
+  driver:       <Car      className="driver-icon"   size={32} strokeWidth={1.5} />,
+  security:     <Shield   className="security-icon" size={32} strokeWidth={1.5} />,
+  housekeeping: <Sparkles className="house-icon"    size={32} strokeWidth={1.5} />,
+  supervisor:   <Users    className="super-icon"    size={32} strokeWidth={1.5} />,
+  helper:       <Wrench   className="helper-icon"   size={32} strokeWidth={1.5} />,
+  electrician:  <Zap      className="helper-icon"   size={32} strokeWidth={1.5} />,
+  mechanic:     <Cog      className="helper-icon"   size={32} strokeWidth={1.5} />,
+  construction: <HardHat  className="helper-icon"   size={32} strokeWidth={1.5} />,
 };
-const ROLE_KEYS = Object.keys(ROLES_MAP);
+
+const getIcon = (iconKey) => ICON_MAP[iconKey] || <Wrench className="helper-icon" size={32} strokeWidth={1.5} />;
 
 const SOURCES = ['Direct / Walk-in', 'Job Portal', 'Social Media', 'Referral', 'Agent', 'WhatsApp'];
 
@@ -44,13 +49,15 @@ export default function CandidateFlow() {
   };
 
   const [selectedRole, setSelectedRole] = useState(initialRole);
+  const [dynamicRoles, setDynamicRoles] = useState([]); // fetched from /api/roles
+  const [rolesLoading, setRolesLoading] = useState(true);
 
   // Personal details (international fields)
   const [form, setForm] = useState({
     firstName: '', lastName: '', countryCode: '+91', phone: '', email: '',
     experience: '', education: '', languages: '', source: '',
     // international fields
-    city: '', passport: '', gulfExp: '', applyingCountry: '',
+    city: '', passport: '', gulfExp: '', applyingCountry: '', dob: '', height: '',
   });
   const [touched, setTouched] = useState({});
 
@@ -70,7 +77,7 @@ export default function CandidateFlow() {
   };
 
   const isFormValid = () => {
-    const required = ['firstName','lastName','phone','email','city','experience','passport','education','languages','gulfExp','applyingCountry'];
+    const required = ['firstName','lastName','phone','email','city','experience','passport','education','languages','gulfExp','applyingCountry','dob','height'];
     const hasRequired = required.every(key => form[key]?.trim().length >= 1);
     const hasNoErrors = Object.keys(VALIDATION_RULES).every(key => !getFieldError(key));
     return hasRequired && hasNoErrors;
@@ -78,6 +85,22 @@ export default function CandidateFlow() {
   
   // Custom dropdown state
   const [openDropdown, setOpenDropdown] = useState(null);
+
+  // Fetch dynamic roles from API
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const res = await api.get('/roles');
+        setDynamicRoles(res.data);
+      } catch (err) {
+        console.error('Failed to fetch roles:', err);
+      } finally {
+        setRolesLoading(false);
+      }
+    };
+    fetchRoles();
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest('.custom-select-container')) {
@@ -352,9 +375,11 @@ export default function CandidateFlow() {
   const startAssessment = async () => {
     setValidating(true);
     try {
-      const res = await api.get('/questions', { params: { role: selectedRole } });
+      const roleName = dynamicRoles.find(r => r._id === selectedRole)?.name?.toLowerCase() || selectedRole;
+      const res = await api.get('/questions', { params: { role: selectedRole, roleName } });
       setQuestions(res.data);
-      const time = selectedRole === 'driver' ? 10 * 60 : 25 * 60;
+      // Shorter time for driver roles
+      const time = roleName.includes('driver') ? 10 * 60 : 25 * 60;
       setTimeLeft(time);
       setTotalTime(time);
       handleStepChange(2);
@@ -514,14 +539,19 @@ export default function CandidateFlow() {
             <h2>Select Your Role</h2>
             <p className="section-sub">Choose the international role you're applying for. This determines the questions in your assessment.</p>
             <div className="roles-grid">
-              {ROLE_KEYS.map(key => (
+              {rolesLoading ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>Loading roles...</div>
+              ) : dynamicRoles.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>No roles available. Please contact support.</div>
+              ) : dynamicRoles.map(role => (
                 <div
-                  key={key}
-                  className={`role-card ${selectedRole === key ? 'selected' : ''}`}
-                  onClick={() => setSelectedRole(key)}
+                  key={role._id}
+                  className={`role-card ${selectedRole === role._id ? 'selected' : ''}`}
+                  onClick={() => setSelectedRole(role._id)}
                 >
-                  <div className="role-card-icon">{ROLES_MAP[key].icon}</div>
-                  <h3>{ROLES_MAP[key].label}</h3>
+                  <div className="role-card-icon">{getIcon(role.iconKey)}</div>
+                  <h3>{role.name}</h3>
+                  {role.description && <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px', lineHeight: '1.5' }}>{role.description}</p>}
                 </div>
               ))}
             </div>
@@ -627,7 +657,8 @@ export default function CandidateFlow() {
       </div>
     );
 
-    const roleLabel = ROLES_MAP[selectedRole]?.label || selectedRole;
+    const roleLabel = dynamicRoles.find(r => r._id === selectedRole || r.name.toLowerCase().replace(/\s+/g, '_') === selectedRole)?.name
+      || selectedRole;
 
     return (
       <div className="page-wrapper" style={{ paddingTop: 'calc(var(--nav-height) + 40px)' }}>
@@ -650,9 +681,15 @@ export default function CandidateFlow() {
 
               {/* International fields */}
               {renderTextField('city', 'City / District *', 'text', 'Enter your city')}
-              {renderSelectField('passport', 'Passport Status *', ['Valid Passport (6+ months)','Expired / Need Renewal','No Passport'])}
-              {renderSelectField('gulfExp', 'Gulf Experience *', ['No — First time','Yes — UAE','Yes — Saudi/Qatar/Other'])}
+              {renderSelectField('passport', 'Passport Status *', [
+                'ECR (Emigration Check Required)',
+                'ECNR (Emigration Check Not Required)',
+                'No Passport / In Process'
+              ])}
+              {renderTextField('gulfExp', 'Overseas Experience *', 'text', 'e.g. 2 years in UAE as driver')}
               {renderSelectField('applyingCountry', 'Which Country Are You Applying To? *', ['UAE','Ukraine','Saudi Arabia'])}
+              {renderTextField('dob', 'Date of Birth *', 'date', '')}
+              {renderTextField('height', 'Height *', 'text', "e.g. 5'8\" or 173 cm")}
 
               {/* Source */}
               <div className="form-group full-width">
@@ -847,7 +884,7 @@ export default function CandidateFlow() {
           <div className="test-sticky-header">
             <div className="test-header-content">
               <div className="test-info">
-                {ROLES_MAP[selectedRole]?.label} Assessment · Innovision Global
+                {(dynamicRoles.find(r => r._id === selectedRole)?.name || selectedRole)} Assessment · Innovision Global
               </div>
               <div className={`test-timer ${timeLeft < 60 ? 'critical' : ''}`}>
                 <span className="timer-label">Time remaining :</span>

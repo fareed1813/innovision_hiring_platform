@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import candidateRoutes from './routes/candidates.js';
 import questionRoutes from './routes/questions.js';
+import roleRoutes from './routes/roles.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,13 +21,14 @@ app.use(cors({
   origin: '*', // Allow all origins in production for simplicity, or refine based on your Render URL
   credentials: true
 }));
-app.use(express.json({ limit: '50mb' }));   // Large limit for audio Base64
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '100mb' }));   // Large limit for audio + PDF Base64
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 /* ─── API Routes ─────────────────────────────────────── */
 app.use('/api/auth', authRoutes);
 app.use('/api/candidates', candidateRoutes);
 app.use('/api/questions', questionRoutes);
+app.use('/api/roles', roleRoutes);
 
 /* ─── Health Check ───────────────────────────────────── */
 app.get('/api/health', (req, res) => {

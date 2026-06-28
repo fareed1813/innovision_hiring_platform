@@ -38,6 +38,8 @@ const candidateSchema = new mongoose.Schema({
   passport:        { type: String, trim: true },
   gulfExp:         { type: String },
   applyingCountry: { type: String, trim: true },
+  dob:             { type: String, trim: true }, // Date of birth (stored as string e.g. '1995-08-15')
+  height:          { type: String, trim: true }, // Free-text height (e.g. "5'8" / 173 cm")
 
   // Assessment metadata
   job: { type: String, required: true, index: true },
