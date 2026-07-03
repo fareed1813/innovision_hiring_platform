@@ -665,7 +665,7 @@ export default function CandidateFlow() {
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: '10px', color: form.applyingCountry ? 'var(--text)' : 'var(--muted2)', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {selected ? (
-                  <><span style={{ fontSize: '20px', lineHeight: 1 }}>{selected.flag}</span>{selected.name}</>
+                  <><img src={`https://flagcdn.com/w20/${selected.cca2.toLowerCase()}.png`} width="20" alt={selected.name} style={{ borderRadius: '2px', objectFit: 'cover' }} />{selected.name}</>
                 ) : 'Select a country...'}
               </span>
               <ChevronDown size={16} style={{ color: 'var(--text-secondary)', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
@@ -695,7 +695,7 @@ export default function CandidateFlow() {
                       onClick={() => { handleInputChange('applyingCountry', c.name); setOpenDropdown(null); setCountrySearch(''); }}
                       style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', margin: '0 4px', borderRadius: '6px' }}
                     >
-                      <span style={{ fontSize: '22px', lineHeight: 1, flexShrink: 0 }}>{c.flag}</span>
+                      <img src={`https://flagcdn.com/w20/${c.cca2.toLowerCase()}.png`} width="20" alt={c.name} style={{ borderRadius: '2px', objectFit: 'cover', flexShrink: 0 }} />
                       <span style={{ fontSize: '14px', color: 'var(--text)', flex: 1, fontWeight: form.applyingCountry === c.name ? 600 : 400 }}>{c.name}</span>
                       <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 500, letterSpacing: '0.05em' }}>{c.cca2}</span>
                     </div>
@@ -745,10 +745,10 @@ export default function CandidateFlow() {
               onClick={() => setOpenDropdown(prev => prev === 'countryCode' ? null : 'countryCode')}
               style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', height: '46px', padding: '0 12px' }}
             >
-              <span style={{ color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '14px' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '14px' }}>
                 {(() => {
                   const c = COUNTRY_CODES.find(x => x.code === form.countryCode);
-                  return c ? `${c.flag} ${c.code}` : form.countryCode;
+                  return c ? <><img src={`https://flagcdn.com/w20/${c.cca2.toLowerCase()}.png`} width="20" alt={c.name} style={{ borderRadius: '2px' }} /> {c.code}</> : form.countryCode;
                 })()}
               </span>
               <ChevronDown size={14} style={{ color: 'var(--text-secondary)', transform: openDropdown === 'countryCode' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
@@ -756,8 +756,8 @@ export default function CandidateFlow() {
             {openDropdown === 'countryCode' && (
               <div className="select-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, width: '280px', zIndex: 100, maxHeight: '250px', overflowY: 'auto' }}>
                 {COUNTRY_CODES.map(c => (
-                  <div key={c.cca2 + c.code} className={`select-option ${form.countryCode === c.code ? 'selected' : ''}`} onClick={() => { handleInputChange('countryCode', c.code); setOpenDropdown(null); }}>
-                    {c.flag} {c.name} ({c.code})
+                  <div key={c.cca2 + c.code} className={`select-option ${form.countryCode === c.code ? 'selected' : ''}`} onClick={() => { handleInputChange('countryCode', c.code); setOpenDropdown(null); }} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <img src={`https://flagcdn.com/w20/${c.cca2.toLowerCase()}.png`} width="20" alt={c.name} style={{ borderRadius: '2px', flexShrink: 0 }} /> {c.name} ({c.code})
                   </div>
                 ))}
               </div>
