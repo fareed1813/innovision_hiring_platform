@@ -693,10 +693,11 @@ export default function CandidateFlow() {
                       key={c.cca2}
                       className={`select-option ${form.applyingCountry === c.name ? 'selected' : ''}`}
                       onClick={() => { handleInputChange('applyingCountry', c.name); setOpenDropdown(null); setCountrySearch(''); }}
-                      style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', margin: '0 4px', borderRadius: '6px' }}
                     >
                       <span style={{ fontSize: '22px', lineHeight: 1, flexShrink: 0 }}>{c.flag}</span>
-                      <span style={{ fontSize: '14px', color: 'var(--text)' }}>{c.name}</span>
+                      <span style={{ fontSize: '14px', color: 'var(--text)', flex: 1, fontWeight: form.applyingCountry === c.name ? 600 : 400 }}>{c.name}</span>
+                      <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 500, letterSpacing: '0.05em' }}>{c.cca2}</span>
                     </div>
                   ))}
                 </div>
@@ -707,21 +708,31 @@ export default function CandidateFlow() {
       );
     };
 
-    const renderTextField = (fieldKey, label, type = 'text', placeholder = '', fullWidth = false) => (
-      <div className={`form-group ${fullWidth ? 'full-width' : ''}`} key={fieldKey}>
-        <label className="form-label">{label}</label>
-        <input
-          className={`form-input ${touched[fieldKey] && getFieldError(fieldKey) ? 'invalid' : ''}`}
-          type={type} placeholder={placeholder}
-          value={form[fieldKey]}
-          onChange={e => handleInputChange(fieldKey, e.target.value)}
-          onBlur={() => setTouched(prev => ({ ...prev, [fieldKey]: true }))}
-        />
-        {touched[fieldKey] && getFieldError(fieldKey) && (
-          <div className="error-text"><AlertCircle size={12} /> {getFieldError(fieldKey)}</div>
-        )}
-      </div>
-    );
+    const renderTextField = (fieldKey, label, type = 'text', placeholder = '', fullWidth = false) => {
+      const isDate = type === 'date';
+      return (
+        <div className={`form-group ${fullWidth ? 'full-width' : ''}`} key={fieldKey}>
+          <label className="form-label">{label}</label>
+          <input
+            className={`form-input ${touched[fieldKey] && getFieldError(fieldKey) ? 'invalid' : ''}`}
+            type={type} placeholder={placeholder}
+            value={form[fieldKey]}
+            max={isDate ? new Date().toISOString().split('T')[0] : undefined}
+            onClick={isDate ? (e) => {
+              if (e.target.showPicker) {
+                try { e.target.showPicker(); } catch (err) { /* ignore */ }
+              }
+            } : undefined}
+            onChange={e => handleInputChange(fieldKey, e.target.value)}
+            onBlur={() => setTouched(prev => ({ ...prev, [fieldKey]: true }))}
+            style={isDate ? { cursor: 'pointer', paddingRight: '12px' } : undefined}
+          />
+          {touched[fieldKey] && getFieldError(fieldKey) && (
+            <div className="error-text"><AlertCircle size={12} /> {getFieldError(fieldKey)}</div>
+          )}
+        </div>
+      );
+    };
 
     const renderPhoneField = (fieldKey, label) => (
       <div className="form-group" key={fieldKey}>
