@@ -1,6 +1,6 @@
 /**
  * questionbank.js — Question Bank Management
- * Innovision Overseas UAE Hiring Platform v1.0.0
+ * Innovision Overseas International Hiring Platform v1.0.0
  */
 
 'use strict';
@@ -393,7 +393,7 @@ function downloadTemplate(role) {
   const roleName = ROLES[role]?.label || role;
   const header = 'type,question,passage\n';
   const rows = [
-    `situational,"Describe how you would handle a difficult situation at a UAE workplace.",`,
+    `situational,"Describe how you would handle a difficult situation at an overseas workplace.",`,
     `comprehension,"What would you do if a colleague asks you to ignore a safety rule?",`,
     `reading,"What does the passage say about the correct procedure?","All workers must sign in at the security gate and wear full PPE before entering the site. Failure to comply will result in immediate removal from the premises."`
   ].join('\n');

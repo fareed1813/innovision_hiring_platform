@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="Innovision Overseas Pvt. Ltd. — Apply for UAE overseas deployment jobs. Skill assessment platform for manpower recruitment."/>
-  <meta name="keywords" content="Innovision Overseas, UAE jobs, overseas manpower, recruitment India, Gulf jobs, Dubai jobs"/>
-  <meta name="author" content="Innovision Overseas Pvt. Ltd."/>
-  <meta property="og:title" content="Innovision Overseas — UAE Hiring Platform"/>
-  <meta property="og:description" content="Apply for UAE deployment. Innovision Overseas Pvt. Ltd. — MOIA Registered Manpower Consultancy."/>
+  <meta name="description" content="Innovision Global Pvt. Ltd. – Apply for international overseas deployment jobs. Skill assessment platform for global manpower recruitment."/>
+  <meta name="keywords" content="Innovision Global, overseas jobs, international manpower, recruitment India, global jobs, abroad jobs"/>
+  <meta name="author" content="Innovision Global Pvt. Ltd."/>
+  <meta property="og:title" content="Innovision Global – International Hiring Platform"/>
+  <meta property="og:description" content="Apply for international overseas deployment. Innovision Global Pvt. Ltd. – MOIA Registered Manpower Consultancy."/>
   <meta property="og:type" content="website"/>
-  <title>Innovision Overseas — UAE Hiring & Assessment Platform</title>
+  <title>Innovision Global – International Hiring & Assessment Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet"/>
@@ -18,9 +18,9 @@
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════
+<!-- â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• 
      ADMIN LOGIN PAGE
-═══════════════════════════════════════════ -->
+â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â•  -->
 <div id="page-admin-login" class="page" style="background:var(--bg);min-height:100vh;">
   <div class="login-page">
     <div class="login-card">
@@ -29,15 +29,15 @@
           <img class="login-logo-img" src="assets/logo.png" alt="Innovision logo"/>
         </div>
         <div class="login-logo-text">
-          <span class="login-logo-main">Innovision Overseas</span>
-          <span class="login-logo-sub">Admin Portal · UAE Recruitment</span>
+          <span class="login-logo-main">Innovision Global</span>
+          <span class="login-logo-sub">Admin Portal · International Recruitment</span>
         </div>
       </div>
       <div class="login-title">Admin Sign In</div>
-      <div class="login-sub">Access the recruitment dashboard to manage candidates, review assessments, and make UAE deployment decisions.</div>
+      <div class="login-sub">Access the recruitment dashboard to manage candidates, review assessments, and make overseas deployment decisions.</div>
 
       <div id="login-error" class="login-error hidden">
-        <span>⚠</span>
+        <span>âš </span>
         <span id="login-error-text">Invalid credentials. Please try again.</span>
       </div>
 
@@ -53,7 +53,7 @@
           <input class="login-input has-icon" id="login-password" type="password"
             placeholder="Enter your password" autocomplete="current-password"
             onkeydown="if(event.key==='Enter')doLogin()"/>
-          <button class="login-eye" onclick="togglePwd()" id="eye-btn" title="Show/hide password">👁</button>
+          <button class="login-eye" onclick="togglePwd()" id="eye-btn" title="Show/hide password">ðŸ‘ </button>
         </div>
       </div>
 
@@ -61,17 +61,17 @@
 
 
       <div class="login-footer">
-        Innovision Overseas Pvt. Ltd. · MOIA Registered · UAE Deployment Partner<br/>
+        Innovision Global Pvt. Ltd. · MOIA Registered · International Deployment Partner<br/>
         <span style="color:var(--border2);">Not an admin? </span>
-        <span style="color:var(--primary);cursor:pointer;" onclick="goToCandidate()">Apply as a candidate →</span>
+        <span style="color:var(--primary);cursor:pointer;" onclick="goToCandidate()">Apply as a candidate â†’</span>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
+<!-- â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• 
      MAIN APP SHELL (shown after login / candidate entry)
-═══════════════════════════════════════════ -->
+â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â•  -->
 <div id="app-shell">
 
   <!-- NAVIGATION -->
@@ -81,8 +81,8 @@
         <img class="nav-logo-img" src="assets/logo.png" alt="Innovision logo"/>
       </div>
       <div class="nav-logo-text">
-        <span class="nav-logo-main">Innovision Overseas</span>
-        <span class="nav-logo-sub">Manpower Consultancy · UAE Deployment</span>
+        <span class="nav-logo-main">Innovision Global</span>
+        <span class="nav-logo-sub">Manpower Consultancy · Overseas Deployment</span>
       </div>
     </div>
     <div class="nav-tabs">
@@ -90,27 +90,27 @@
       <button class="nav-tab" id="tab-admin" onclick="requireAdminLogin(this)">Admin Dashboard</button>
     </div>
     <div class="nav-right">
-      <div class="uae-flag">🇦🇪 Deploying to UAE</div>
+      <div class="uae-flag">🌐 Deploying Overseas</div>
       <div class="admin-user-badge hidden" id="admin-badge">
-        👤 <span id="admin-username-display">Admin</span>
+        ðŸ‘¤ <span id="admin-username-display">Admin</span>
       </div>
       <button class="btn-logout hidden" id="logout-btn" onclick="doLogout()">Sign Out</button>
     </div>
   </nav>
 
-  <!-- ─────────────────────────────────────
+  <!-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
        CANDIDATE PORTAL
-  ───────────────────────────────────── -->
+  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
   <div id="page-candidate" class="page active">
 
     <!-- STEP 0: HERO / LANDING -->
     <div id="step-0">
       <div class="hero">
-        <div class="hero-eyebrow">🇦🇪 UAE Overseas Deployment — Now Open</div>
-        <h1>Build Your Future<br/>in the <em>UAE</em></h1>
-        <p class="hero-tagline">Innovision Overseas Pvt. Ltd. bridges skilled Indian professionals with leading employers across the United Arab Emirates.</p>
+        <div class="hero-eyebrow">🌐 International Overseas Deployment â€” Now Open</div>
+        <h1>Build Your Future<br/>with <em>Innovision</em></h1>
+        <p class="hero-tagline">Innovision Global Pvt. Ltd. bridges skilled Indian professionals with leading employers across the United Arab Emirates.</p>
         <div class="hero-company-note">
-          <strong>Innovision Overseas Pvt. Ltd.</strong> is a licensed overseas manpower recruitment consultancy headquartered in India. We specialise in sourcing, screening, and deploying qualified candidates to UAE-based employers across sectors including hospitality, construction, security, facilities management, and logistics. All placements comply with MOIA guidelines and UAE Labour Law.
+          <strong>Innovision Global Pvt. Ltd.</strong> is a licensed overseas manpower recruitment consultancy headquartered in India. We specialise in sourcing, screening, and deploying qualified candidates to international employers across sectors including hospitality, construction, security, facilities management, and logistics. All placements comply with MOIA guidelines and local labour laws.
         </div>
         <div class="source-title">How did you reach us?</div>
         <div class="source-row">
@@ -155,7 +155,7 @@
             Direct
           </div>
         </div>
-        <button class="btn-primary" onclick="goStep(1)">Begin Application →</button>
+        <button class="btn-primary" onclick="goStep(1)">Begin Application â†’</button>
       </div>
     </div>
 
@@ -165,7 +165,7 @@
       <div class="step-header">
         <div class="step-eyebrow">Step 1 of 4</div>
         <div class="step-title">Your Personal Details</div>
-        <div class="step-sub">All information is used exclusively for UAE visa and deployment processing by Innovision Overseas.</div>
+        <div class="step-sub">All information is used exclusively for overseas visa and deployment processing by Innovision Global.</div>
       </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">First Name *</label><input class="form-input" id="fname" placeholder="Rajesh" autocomplete="given-name"/></div>
@@ -181,17 +181,17 @@
         <div class="form-group">
           <label class="form-label">Passport Status *</label>
           <select class="form-input" id="passport">
-            <option value="">— Select —</option>
+            <option value="">â€” Select â€”</option>
             <option>Valid Passport (6+ months)</option>
             <option>Valid Passport (less than 6 months)</option>
-            <option>Applied — awaiting</option>
+            <option>Applied â€” awaiting</option>
             <option>No Passport</option>
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">Highest Education</label>
           <select class="form-input" id="education">
-            <option value="">— Select —</option>
+            <option value="">â€” Select â€”</option>
             <option>10th Pass</option>
             <option>12th Pass</option>
             <option>ITI / Diploma</option>
@@ -205,18 +205,17 @@
         <input class="form-input" id="langs" placeholder="Hindi, English, Punjabi, Arabic (basic)"/>
       </div>
       <div class="form-group">
-        <label class="form-label">Have you worked in UAE / GCC before?</label>
+        <label class="form-label">Have you worked overseas / internationally before?</label>
         <select class="form-input" id="gulf_exp">
-          <option value="">— Select —</option>
-          <option>Yes — UAE</option>
-          <option>Yes — Saudi Arabia</option>
-          <option>Yes — Other GCC</option>
-          <option>No — First time</option>
+          <option value="">â€” Select â€”</option>
+          <option>Yes – International (Middle East)</option>
+          <option>Yes – International (Other Region)</option>
+          <option>No â€” First time</option>
         </select>
       </div>
       <div class="step-footer step-footer-between">
-        <button class="btn-outline" onclick="goStep(0)">← Back</button>
-        <button class="btn-primary" onclick="validateStep1()">Next: Choose Role →</button>
+        <button class="btn-outline" onclick="goStep(0)">â†  Back</button>
+        <button class="btn-primary" onclick="validateStep1()">Next: Choose Role â†’</button>
       </div>
     </div>
 
@@ -225,13 +224,13 @@
       <div class="prog-bar"><div class="prog-fill" style="width:50%"></div></div>
       <div class="step-header">
         <div class="step-eyebrow">Step 2 of 4</div>
-        <div class="step-title">Select Deployment Role</div>
-        <div class="step-sub">Choose the role you are applying for. All positions are for deployment in the United Arab Emirates.</div>
+        <div class="step-title">Select Your Category &amp; Role</div>
+        <div class="step-sub">Choose a category, then select the specific role you are applying for at an international overseas posting.</div>
       </div>
       <div class="job-grid" id="job-grid-container"></div>
       <div class="step-footer step-footer-between">
-        <button class="btn-outline" onclick="goStep(1)">← Back</button>
-        <button class="btn-primary" onclick="validateStep2()">Start Assessment →</button>
+        <button class="btn-outline" onclick="goStep(1)">â†  Back</button>
+        <button class="btn-primary" onclick="validateStep2()">Start Assessment â†’</button>
       </div>
     </div>
 
@@ -239,7 +238,7 @@
     <div id="step-3" class="step-wrap step-wrap-wide hidden">
       <!-- Fullscreen Enforcer Overlay -->
       <div id="fs-enforcer" class="hidden">
-        <div class="result-icon">🚫</div>
+        <div class="result-icon">ðŸš«</div>
         <h2>Fullscreen Required</h2>
         <p>To ensure assessment integrity, you must remain in fullscreen mode. Any attempt to exit or switch tabs is recorded for review.</p>
         <button class="btn-primary" onclick="enterAssessmentFullscreen()">Re-enter Full Screen</button>
@@ -277,10 +276,10 @@
 
       <div class="step-footer step-footer-between">
         <div class="nav-controls">
-          <button class="btn-outline" id="btn-prev-q" onclick="prevQuestion()">← Previous</button>
-          <button class="btn-outline" id="btn-review-q" onclick="toggleMarkForReview()">☆ Mark for Review</button>
+          <button class="btn-outline" id="btn-prev-q" onclick="prevQuestion()">â†  Previous</button>
+          <button class="btn-outline" id="btn-review-q" onclick="toggleMarkForReview()">â˜† Mark for Review</button>
         </div>
-        <button class="btn-primary" id="btn-next-q" onclick="nextQuestion()">Next Question →</button>
+        <button class="btn-primary" id="btn-next-q" onclick="nextQuestion()">Next Question â†’</button>
       </div>
 
       <!-- INLINE SUMMARY VIEW (Initially Hidden) -->
@@ -293,19 +292,19 @@
           
           <div class="summary-stats">
             <div class="stat-card">
-              <div class="stat-num" id="sum-total">—</div>
+              <div class="stat-num" id="sum-total">â€”</div>
               <div class="stat-label">Total Questions</div>
             </div>
             <div class="stat-card">
-              <div class="stat-num attempted" id="sum-done">—</div>
+              <div class="stat-num attempted" id="sum-done">â€”</div>
               <div class="stat-label">Attempted</div>
             </div>
             <div class="stat-card">
-              <div class="stat-num review" id="sum-review">—</div>
+              <div class="stat-num review" id="sum-review">â€”</div>
               <div class="stat-label">To Review</div>
             </div>
             <div class="stat-card">
-              <div class="stat-num pending" id="sum-missed">—</div>
+              <div class="stat-num pending" id="sum-missed">â€”</div>
               <div class="stat-label">Remaining</div>
             </div>
           </div>
@@ -316,7 +315,7 @@
 
           <div class="step-footer step-footer-between">
             <button class="btn-outline" onclick="hideSummary()">Back to Questions</button>
-            <button class="btn-primary" onclick="submitAssessment()">Confirm & Submit Assessment →</button>
+            <button class="btn-primary" onclick="submitAssessment()">Confirm & Submit Assessment â†’</button>
           </div>
         </div>
       </div>
@@ -363,7 +362,7 @@
                 <div class="t-icon">2</div>
                 <div class="t-info">
                   <div class="t-label">Admin Document Review</div>
-                  <div class="t-desc">Our team will verify your UAE visa eligibility. (3–5 Working Days)</div>
+                  <div class="t-desc">Our team will verify your visa eligibility for overseas deployment. (3–5 Working Days)</div>
                 </div>
               </div>
               <!-- Step 3: FUTURE -->
@@ -380,11 +379,11 @@
 
         <div class="conf-footer-text">
           <img src="https://img.icons8.com/ios-filled/50/000000/guarantee.png" alt="security" style="width:14px; opacity:0.6; margin-right:5px; vertical-align:middle; filter: invert(1);">
-          Innovision Overseas Pvt. Ltd. · MOIA Registered · UAE Manpower Partner
+          Innovision Global Pvt. Ltd. · MOIA Registered · International Manpower Partner
         </div>
 
         <div class="step-footer" style="justify-content:center; margin-top:32px;">
-          <button class="btn-primary" onclick="goToHomePage()">Return to Home Page →</button>
+          <button class="btn-primary" onclick="goToHomePage()">Return to Home Page â†’</button>
         </div>
       </div>
 
@@ -402,16 +401,16 @@
 
   </div><!-- /page-candidate -->
 
-  <!-- ─────────────────────────────────────
+  <!-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
        ADMIN DASHBOARD
-  ───────────────────────────────────── -->
+  â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
   <div id="page-admin" class="page">
     <div class="admin-shell">
 
       <!-- SIDEBAR -->
       <aside class="sidebar" role="navigation" aria-label="Admin navigation">
         <div class="sidebar-top">
-          <div class="sidebar-company">Innovision Overseas Pvt. Ltd.</div>
+          <div class="sidebar-company">Innovision Global Pvt. Ltd.</div>
           <div class="sidebar-role" id="sidebar-role-label">Recruitment Admin</div>
         </div>
         <div class="sidebar-section">Candidates</div>
@@ -463,14 +462,14 @@
           <div class="admin-hdr-flex">
             <div>
               <div class="admin-page-title">Recruitment Dashboard</div>
-              <div class="admin-page-sub">Innovision Overseas — UAE Deployment Pipeline</div>
+              <div class="admin-page-sub">Innovision Global – International Deployment Pipeline</div>
             </div>
-            <button class="btn-primary btn-sm" onclick="downloadCandidatesCSV('dash')">⬇ Download CSV File</button>
+            <button class="btn-primary btn-sm" onclick="downloadCandidatesCSV('dash')">â¬‡ Download CSV File</button>
           </div>
           <div class="stats-row">
             <div class="stat-box"><div class="stat-val" id="s-total">0</div><div class="stat-lbl">Total Applicants</div></div>
             <div class="stat-box"><div class="stat-val" id="s-pending">0</div><div class="stat-lbl">Pending Review</div></div>
-            <div class="stat-box"><div class="stat-val" id="s-selected">0</div><div class="stat-lbl">Selected for UAE</div></div>
+            <div class="stat-box"><div class="stat-val" id="s-selected">0</div><div class="stat-lbl">Selected for Overseas</div></div>
             <div class="stat-box"><div class="stat-val" id="s-rejected">0</div><div class="stat-lbl">Rejected</div></div>
           </div>
           <div class="tbl-toolbar">
@@ -490,7 +489,7 @@
             <button type="button" class="filter-btn filter-role" data-role="helper" onclick="filterTable('helper',this,'dash')">
               <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg> Helper
             </button>
-            <input type="search" class="search-box" placeholder="Search name, phone…" oninput="searchTable(this.value,'dash')" aria-label="Search candidates"/>
+            <input type="search" class="search-box" placeholder="Search name, phoneâ€¦" oninput="searchTable(this.value,'dash')" aria-label="Search candidates"/>
           </div>
           <div class="tbl-wrap">
             <table role="grid">
@@ -506,9 +505,9 @@
           <div class="admin-hdr-flex">
             <div>
               <div class="admin-page-title">All Candidates</div>
-              <div class="admin-page-sub">Complete applicant list — all statuses</div>
+              <div class="admin-page-sub">Complete applicant list â€” all statuses</div>
             </div>
-            <button class="btn-primary btn-sm" onclick="downloadCandidatesCSV('all')">⬇ Download CSV File</button>
+            <button class="btn-primary btn-sm" onclick="downloadCandidatesCSV('all')">â¬‡ Download CSV File</button>
           </div>
           <div class="tbl-toolbar">
             <button type="button" class="filter-btn filter-all active" data-role="all" onclick="filterTable('all',this,'all')">All</button>
@@ -527,7 +526,7 @@
             <button type="button" class="filter-btn filter-role" data-role="helper" onclick="filterTable('helper',this,'all')">
               <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg> Helper
             </button>
-            <input type="search" class="search-box" placeholder="Search…" oninput="searchTable(this.value,'all')" aria-label="Search"/>
+            <input type="search" class="search-box" placeholder="Searchâ€¦" oninput="searchTable(this.value,'all')" aria-label="Search"/>
           </div>
           <div class="tbl-wrap">
             <table role="grid">
@@ -543,9 +542,9 @@
           <div class="admin-hdr-flex">
             <div>
               <div class="admin-page-title">Selected Candidates</div>
-              <div class="admin-page-sub">Candidates approved for UAE deployment</div>
+              <div class="admin-page-sub">Candidates approved for overseas deployment</div>
             </div>
-            <button class="btn-primary btn-sm" onclick="downloadCandidatesCSV('selected')">⬇ Download CSV File</button>
+            <button class="btn-primary btn-sm" onclick="downloadCandidatesCSV('selected')">â¬‡ Download CSV File</button>
           </div>
           <div class="tbl-wrap">
             <table role="grid">
@@ -563,7 +562,7 @@
               <div class="admin-page-title">Rejected Candidates</div>
               <div class="admin-page-sub">Candidates not proceeding at this time</div>
             </div>
-            <button class="btn-primary btn-sm" onclick="downloadCandidatesCSV('rejected')">⬇ Download CSV File</button>
+            <button class="btn-primary btn-sm" onclick="downloadCandidatesCSV('rejected')">â¬‡ Download CSV File</button>
           </div>
           <div class="tbl-wrap">
             <table role="grid">
@@ -581,7 +580,7 @@
               <div class="admin-page-title">Pending Review</div>
               <div class="admin-page-sub">Candidates awaiting admin decision</div>
             </div>
-            <button class="btn-primary btn-sm" onclick="downloadCandidatesCSV('pending-review')">⬇ Download CSV File</button>
+            <button class="btn-primary btn-sm" onclick="downloadCandidatesCSV('pending-review')">â¬‡ Download CSV File</button>
           </div>
           <div class="tbl-wrap">
             <table role="grid">
@@ -601,29 +600,29 @@
 
         <!-- VIEW: ABOUT -->
         <div id="view-about" class="admin-view">
-          <div class="admin-page-title">About Innovision Overseas</div>
+          <div class="admin-page-title">About Innovision Global</div>
           <div class="admin-page-sub">Company profile and deployment information</div>
           <div class="about-grid">
             <div class="stat-box about-hero-box">
-              <div class="about-company-name">Innovision Overseas Pvt. Ltd.</div>
-              <p class="about-desc">A Ministry of External Affairs (India) registered overseas manpower recruitment consultancy. Innovision Overseas specialises in sourcing, skill-testing, documentation, visa processing, and deploying qualified Indian workers to the <strong style="color:var(--text);">United Arab Emirates</strong>. We work with verified UAE employers across Dubai, Abu Dhabi, Sharjah, and Ajman in sectors including facilities management, hospitality, logistics, construction, and security.</p>
+              <div class="about-company-name">Innovision Global Pvt. Ltd.</div>
+              <p class="about-desc">A Ministry of External Affairs (India) registered overseas manpower recruitment consultancy. Innovision Global specialises in sourcing, skill-testing, documentation, visa processing, and deploying qualified Indian workers to <strong style="color:var(--text);">international markets globally</strong>. We work with verified employers across multiple regions in sectors including facilities management, hospitality, logistics, construction, and security.</p>
             </div>
             <div class="stat-box"><div class="about-lbl">Registration</div><div class="about-val">MOIA Registered Recruitment Agency</div></div>
-            <div class="stat-box"><div class="about-lbl">Deployment Country</div><div class="about-val">🇦🇪 United Arab Emirates (UAE)</div></div>
-            <div class="stat-box"><div class="about-lbl">Sectors</div><div class="about-val">Security · Hospitality · Logistics · FM · Construction</div></div>
-            <div class="stat-box"><div class="about-lbl">Platform Purpose</div><div class="about-val">Lead Conversion → Skill Assessment → UAE Deployment</div></div>
+            <div class="stat-box"><div class="about-lbl">Deployment Region</div><div class="about-val">🌐 International Markets (Global)</div></div>
+            <div class="stat-box"><div class="about-lbl">Sectors</div><div class="about-val">Security Â· Hospitality Â· Logistics Â· FM Â· Construction</div></div>
+            <div class="stat-box"><div class="about-lbl">Platform Purpose</div><div class="about-val">Lead Conversion → Skill Assessment → Overseas Deployment</div></div>
             <div class="stat-box about-journey-box">
               <div class="about-lbl">Candidate Journey</div>
               <div class="journey-steps">
                 <span class="journey-step step-gold">1. Social Media Lead</span>
-                <span class="journey-arrow">→</span>
+                <span class="journey-arrow">â†’</span>
                 <span class="journey-step step-blue">2. Online Application</span>
-                <span class="journey-arrow">→</span>
+                <span class="journey-arrow">â†’</span>
                 <span class="journey-step step-green">3. Skill Assessment</span>
-                <span class="journey-arrow">→</span>
+                <span class="journey-arrow">â†’</span>
                 <span class="journey-step step-gold">4. Admin Review</span>
-                <span class="journey-arrow">→</span>
-                <span class="journey-step step-blue">5. UAE Deployment</span>
+                <span class="journey-arrow">â†’</span>
+                <span class="journey-step step-blue">5. Overseas Deployment</span>
               </div>
             </div>
           </div>
@@ -635,23 +634,23 @@
 
 </div><!-- /app-shell -->
 
-<!-- ═══════════════════════════════════════════
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      CANDIDATE DETAIL MODAL
-═══════════════════════════════════════════ -->
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="m-name">
   <div class="modal-box">
     <div class="modal-hdr">
       <div>
-        <div class="modal-name" id="m-name">—</div>
-        <div class="modal-meta" id="m-meta">—</div>
+        <div class="modal-name" id="m-name">â€”</div>
+        <div class="modal-meta" id="m-meta">â€”</div>
       </div>
-      <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">âœ•</button>
     </div>
     <div class="detail-grid" id="m-details"></div>
     <hr class="divider"/>
     <div class="modal-score-row">
       <div class="modal-score-block">
-        <div class="modal-score-num" id="m-score">—</div>
+        <div class="modal-score-num" id="m-score">â€”</div>
         <div class="modal-score-lbl">Proficiency Score</div>
       </div>
       <div class="modal-breakdown" id="m-breakdown"></div>
@@ -683,3 +682,4 @@
 
 </body>
 </html>
+

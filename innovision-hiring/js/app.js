@@ -1,6 +1,6 @@
 /**
  * app.js — Application Initialisation & Shared Utilities
- * Innovision Overseas UAE Hiring Platform v1.0.0
+ * Innovision Overseas International Hiring Platform v1.0.0
  */
 
 'use strict';
@@ -100,31 +100,133 @@ function goStep(n) {
   }
 }
 
-/* ── BUILD JOB GRID ──────────────────────────────── */
+/* ── BUILD JOB GRID (Category + Sub-role accordion) ─── */
+let selectedSubRole = S?.subRole || '';
+
 function buildJobGrid() {
   const grid = document.getElementById('job-grid-container');
   if (!grid) return;
   grid.innerHTML = '';
 
   Object.entries(ROLES).forEach(([key, r]) => {
-    const d = document.createElement('div');
-    d.className = 'job-card role-' + key + (S.job === key ? ' selected' : '');
-    d.id = 'job-' + key;
-    d.setAttribute('role', 'button');
-    d.setAttribute('tabindex', '0');
-    d.setAttribute('aria-label', 'Select role: ' + r.label);
-    d.onclick = () => selectJob(key);
-    d.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') selectJob(key); };
-    d.innerHTML = `
-      <div class="job-check"><div class="job-check-inner"></div></div>
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display:flex;flex-direction:column;gap:0;';
+
+    // Category card
+    const card = document.createElement('div');
+    const isExpanded = S.job === key;
+    card.className = 'job-card role-' + key + (isExpanded ? ' selected' : '');
+    card.id = 'job-' + key;
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', 'Select category: ' + r.label);
+    card.style.cssText = 'cursor:pointer;user-select:none;border-bottom-left-radius:' + (isExpanded ? '0' : '') + ';border-bottom-right-radius:' + (isExpanded ? '0' : '') + ';';
+    card.innerHTML = `
       <div class="job-icon">${r.icon}</div>
-      <h3>${r.label}</h3>
-      <p>${r.desc}</p>
-      <div class="uae-tag">🇦🇪 UAE Deployment</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <h3 style="margin:0">${r.label}</h3>
+        <svg id="chevron-${key}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--brand-red);flex-shrink:0;margin-top:2px;transition:transform 0.25s ease;transform:${isExpanded ? 'rotate(180deg)' : 'none'}"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </div>
+      <p style="margin-top:8px;font-size:13px;color:var(--muted)">${r.desc}</p>
     `;
-    grid.appendChild(d);
+
+    card.onclick = () => toggleJobCategory(key);
+    card.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') toggleJobCategory(key); };
+
+    wrapper.appendChild(card);
+
+    // Sub-role list (shown when this category is selected/expanded)
+    if (r.subRoles && r.subRoles.length) {
+      const subList = document.createElement('div');
+      subList.id = 'subrole-list-' + key;
+      subList.className = 'subrole-list-vanilla';
+      subList.style.cssText = `
+        display: ${isExpanded ? 'block' : 'none'};
+        border: 1px solid var(--brand-red);
+        border-top: none;
+        border-radius: 0 0 12px 12px;
+        background: var(--white);
+        overflow: hidden;
+        animation: slide-down 0.22s ease;
+      `;
+      r.subRoles.forEach((sub, idx) => {
+        const item = document.createElement('button');
+        item.className = 'subrole-item-vanilla' + (selectedSubRole === sub.key ? ' active' : '');
+        item.style.cssText = `
+          width:100%;display:flex;align-items:center;gap:10px;padding:13px 20px;
+          background:${selectedSubRole === sub.key ? 'var(--brand-red-light, #fef2f2)' : 'transparent'};
+          border:none;border-top:${idx > 0 ? '1px solid var(--border)' : 'none'};
+          cursor:pointer;text-align:left;font-family:inherit;
+        `;
+        item.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:var(--brand-red);flex-shrink:0">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+          <span style="font-weight:700;color:var(--text);font-size:14px">${sub.label}</span>
+        `;
+        item.onclick = (e) => {
+          e.stopPropagation();
+          selectSubRole(key, sub.key);
+        };
+        subList.appendChild(item);
+      });
+      wrapper.appendChild(subList);
+    }
+
+    grid.appendChild(wrapper);
   });
 }
+
+function toggleJobCategory(key) {
+  const wasSelected = S.job === key;
+  // Collapse all
+  Object.keys(ROLES).forEach(k => {
+    const c = document.getElementById('job-' + k);
+    const l = document.getElementById('subrole-list-' + k);
+    const ch = document.getElementById('chevron-' + k);
+    if (c) { c.classList.remove('selected'); c.style.borderBottomLeftRadius = ''; c.style.borderBottomRightRadius = ''; }
+    if (l) l.style.display = 'none';
+    if (ch) ch.style.transform = 'none';
+  });
+  if (!wasSelected) {
+    S.job = key;
+    selectedSubRole = '';
+    const c = document.getElementById('job-' + key);
+    const l = document.getElementById('subrole-list-' + key);
+    const ch = document.getElementById('chevron-' + key);
+    if (c) { c.classList.add('selected'); c.style.borderBottomLeftRadius = '0'; c.style.borderBottomRightRadius = '0'; }
+    if (l) l.style.display = 'block';
+    if (ch) ch.style.transform = 'rotate(180deg)';
+  } else {
+    S.job = '';
+    selectedSubRole = '';
+  }
+  updateContinueBtn();
+}
+
+function selectSubRole(roleKey, subKey) {
+  S.job = roleKey;
+  S.subRole = subKey;
+  selectedSubRole = subKey;
+  // Highlight selected sub-role
+  const list = document.getElementById('subrole-list-' + roleKey);
+  if (list) {
+    list.querySelectorAll('.subrole-item-vanilla').forEach(item => {
+      item.style.background = 'transparent';
+    });
+    const items = list.querySelectorAll('.subrole-item-vanilla');
+    const subRoles = ROLES[roleKey]?.subRoles || [];
+    const idx = subRoles.findIndex(s => s.key === subKey);
+    if (items[idx]) items[idx].style.background = 'var(--brand-red-light, #fef2f2)';
+  }
+  updateContinueBtn();
+}
+
+function updateContinueBtn() {
+  const btn = document.getElementById('btn-continue-role');
+  if (btn) btn.disabled = !(S.job && S.subRole);
+}
+
 
 /* ── TOAST NOTIFICATION ──────────────────────────── */
 let toastTimer = null;
@@ -200,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
   adminData = loadAdminData();
 
   console.log(
-    '%c Innovision Overseas UAE Hiring Platform v1.0.0 ',
+    '%c Innovision Overseas International Hiring Platform v1.0.0 ',
     'background:#c9a84c;color:#06090f;font-weight:bold;border-radius:4px;padding:4px 8px;'
   );
 

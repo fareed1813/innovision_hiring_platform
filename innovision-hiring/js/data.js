@@ -1,5 +1,5 @@
 /**
- * data.js — Innovision Overseas UAE Hiring Platform
+ * data.js — Innovision Overseas International Hiring Platform
  * Static data: roles, question banks, admin credentials
  * v1.0.0 | © 2024 Innovision Overseas Pvt. Ltd.
  */
@@ -13,39 +13,37 @@ const ADMINS = {
 };
 
 const ROLES = {
-  driver: {
-    label: 'Taxi Driver',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="role-icon"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-1.1 0-2 .9-2 2v7c0 1.1.9 2 2 2h2m12 0c0 1.1-.9 2-2 2s-2-.9-2-2m-8 0c0 1.1-.9 2-2 2s-2-.9-2-2m14-8V9c0-1.1-.9-2-2-2h-3l-4-4H5c-1.1 0-2 .9-2 2v2"></path></svg>`,
-    desc: 'Taxi/driver role for UAE deployments. Valid UAE driving licence and safe driving practices required.'
+  facility_management: {
+    label: 'Facility Management',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="role-icon"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+    desc: 'Facility and housekeeping management roles in offices, hospitals, hotels, and commercial spaces across international postings.',
+    subRoles: [
+      { key: 'hk_supervisor',   label: 'HK Supervisor' },
+      { key: 'housekeeper',     label: 'Housekeeper (M/F)' },
+      { key: 'pantry_boy',      label: 'Pantry Boy' },
+      { key: 'office_boy',      label: 'Office Boys' },
+      { key: 'me_supervisor',   label: 'M&E Supervisor' },
+      { key: 'mst',             label: 'MST (Multi Skilled Technician)' },
+      { key: 'electrician',     label: 'Electrician' },
+    ]
   },
-  security: {
-    label: 'Special Security Guard',
+  security_international: {
+    label: 'Security',
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="role-icon"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>`,
-    desc: 'Armed/unarmed security for high-security facilities, malls, and corporate premises in Dubai & Abu Dhabi.'
-  },
-  housekeeping: {
-    label: 'Housekeeping Staff',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="role-icon"><path d="M12 3V2M12 21v-2M21 12h-2M3 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></svg>`,
-    desc: 'Hotel, hospital & facility cleaning staff for 3★–5★ hospitality clients in UAE.'
-  },
-  supervisor: {
-    label: 'Field Supervisor',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="role-icon"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="19" cy="11" r="3"/></svg>`,
-    desc: 'On-ground team lead for facility management or construction site supervision across UAE projects.'
-  },
-  helper: {
-    label: 'General Helper',
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="role-icon"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
-    desc: 'Multi-skilled helper for construction, warehouse, or facility maintenance roles across UAE.'
+    desc: 'Security personnel positions across facilities, corporates, malls, and residential complexes at international postings.',
+    subRoles: [
+      { key: 'security_guard',        label: 'Security Guard' },
+      { key: 'armed_guard',           label: 'Armed Guard' },
+      { key: 'security_supervisor',   label: 'Security Supervisor' },
+      { key: 'asst_security_officer', label: 'Asst Security Officer' },
+      { key: 'security_officer',      label: 'Security Officer' },
+    ]
   }
 };
 
 const ROLE_THEME_HEX = {
-  driver: '#f59e0b',       // Amber Yellow
-  security: '#2563eb',     // Royal Blue
-  housekeeping: '#10b981', // Emerald Green
-  supervisor: '#7c3aed',   // Vivid Violet
-  helper: '#f97316'        // Bold Orange
+  facility_management:    '#10b981', // Emerald Green
+  security_international: '#2563eb', // Royal Blue
 };
 
 function getRoleThemeHex(jobKey) {
@@ -394,7 +392,7 @@ let QB = {
   housekeeping: [
     {
       id: 'hk_p1_q1', type: 'reading',
-      passage: 'UAE hospitality standards require strict colour-coding for cleaning tools: Red for washrooms and high-risk areas, Blue for general public spaces, Green for food service and kitchen zones, and Yellow for specific isolation or chemical-sensitive areas.',
+      passage: 'International hospitality standards require strict colour-coding for cleaning tools: Red for washrooms and high-risk areas, Blue for general public spaces, Green for food service and kitchen zones, and Yellow for specific isolation or chemical-sensitive areas.',
       question: 'What color cleaning equipment should be used specifically for washrooms and high-risk areas?',
       expectedAnswer: 'Red color-coded equipment should be used for washrooms.'
     },
@@ -422,7 +420,7 @@ let QB = {
   supervisor: [
     {
       id: 'sup_p1_q1', type: 'reading',
-      passage: 'Field Supervisors in UAE facilities management are the primary link between staff and clients. Responsibilities include conducting daily Tool Box Talks (TBT), monitoring attendance rosters, verifying that all workers wear site-mandated PPE, and submitting daily digital shift reports to Innovision management.',
+      passage: 'Field Supervisors in overseas facilities management are the primary link between staff and clients. Responsibilities include conducting daily Tool Box Talks (TBT), monitoring attendance rosters, verifying that all workers wear site-mandated PPE, and submitting daily digital shift reports to Innovision management.',
       question: 'What is the morning briefing given to staff by a supervisor called?',
       expectedAnswer: 'It is called a Tool Box Talk (TBT).'
     },
@@ -445,8 +443,8 @@ let QB = {
   helper: [
     {
       id: 'hlp_p1_q1', type: 'reading',
-      passage: 'General helpers in UAE construction and logistics must comply with the "Midday Break" rule: outdoor work is prohibited between 12:30 PM and 3:00 PM during the summer months (June to September).',
-      question: 'During what months is the UAE Midday Break rule mandatory?',
+      passage: 'General helpers in overseas construction and logistics must comply with the "Midday Break" rule: outdoor work is prohibited between 12:30 PM and 3:00 PM during the summer months (June to September).',
+      question: 'During what months is the Midday Break rule mandatory?',
       expectedAnswer: 'It is mandatory during the summer months of June to September.'
     },
     {
@@ -471,8 +469,8 @@ const BADGE_MAP = { reading: 'badge-reading', comprehension: 'badge-comprehensio
 const BADGE_LBL = { reading: 'Reading', comprehension: 'Comprehension', situational: 'Situational', fluency: 'Fluency', essay: 'Essay' };
 
 const DEMO_CANDIDATES = [
-  { id: 'INV2001001', firstName: 'Rajesh', lastName: 'Sharma', phone: '+91 98100 11223', email: 'rajesh@example.com', city: 'Gurugram, Haryana', experience: '5', passport: 'Valid Passport (6+ months)', education: '12th Pass', languages: 'Hindi, English', gulfExp: 'Yes — UAE', job: 'driver', scores: { reading: 84, voice: 78, quality: 87, total: 83 }, status: 'pending', timestamp: new Date(Date.now() - 3600000).toISOString(), evaluations: {}, answers: {}, voice: {} },
-  { id: 'INV2001002', firstName: 'Priya', lastName: 'Verma', phone: '+91 97200 22334', email: 'priya@example.com', city: 'Delhi', experience: '3', passport: 'Valid Passport (6+ months)', education: 'Graduate', languages: 'Hindi, English, Punjabi', gulfExp: 'No — First time', job: 'security', scores: { reading: 76, voice: 69, quality: 73, total: 73 }, status: 'selected', timestamp: new Date(Date.now() - 7200000).toISOString(), evaluations: {}, answers: {}, voice: {} }
+  { id: 'INV2001001', firstName: 'Rajesh', lastName: 'Sharma', phone: '+91 98100 11223', email: 'rajesh@example.com', city: 'Gurugram, Haryana', experience: '5', passport: 'Valid Passport (6+ months)', education: '12th Pass', languages: 'Hindi, English', gulfExp: 'Yes — International (Middle East)', job: 'facility_management', subRole: 'housekeeper', scores: { reading: 84, voice: 78, quality: 87, total: 83 }, status: 'pending', timestamp: new Date(Date.now() - 3600000).toISOString(), evaluations: {}, answers: {}, voice: {} },
+  { id: 'INV2001002', firstName: 'Priya', lastName: 'Verma', phone: '+91 97200 22334', email: 'priya@example.com', city: 'Delhi', experience: '3', passport: 'Valid Passport (6+ months)', education: 'Graduate', languages: 'Hindi, English, Punjabi', gulfExp: 'No — First time', job: 'security_international', subRole: 'security_guard', scores: { reading: 76, voice: 69, quality: 73, total: 73 }, status: 'selected', timestamp: new Date(Date.now() - 7200000).toISOString(), evaluations: {}, answers: {}, voice: {} }
 ];
 
 const STORAGE_KEY = 'inv_candidates';

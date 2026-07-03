@@ -1,9 +1,45 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
-import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, ShieldCheck, Car, Sparkles, Users, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle, HardHat, Zap, Cog } from 'lucide-react';
+import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, Building2, ShieldCheck, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle } from 'lucide-react';
 import Footer from '../components/Footer';
 import { COUNTRY_CODES } from '../utils/countryCodes';
+
+/* ─── Static International Roles (Category + Sub-roles) ─── */
+const INTERNATIONAL_ROLES = [
+  {
+    key: 'facility_management',
+    label: 'Facility Management',
+    icon: <Building2 className="security-icon" size={32} strokeWidth={1.5} />,
+    desc: 'Facility and housekeeping management roles in offices, hospitals, hotels, and commercial spaces across international postings.',
+    subRoles: [
+      { key: 'hk_supervisor',   label: 'HK Supervisor',                 desc: 'Supervise housekeeping staff and maintain facility cleanliness standards.' },
+      { key: 'housekeeper',     label: 'Housekeeper (M/F)',             desc: 'Housekeeping and cleaning services for premium facilities.' },
+      { key: 'pantry_boy',      label: 'Pantry Boy',                    desc: 'Manage pantry inventory, serve beverages, and maintain cleanliness.' },
+      { key: 'office_boy',      label: 'Office Boys',                   desc: 'General office support, errands, and day-to-day administrative assistance.' },
+      { key: 'me_supervisor',   label: 'M&E Supervisor',                desc: 'Supervise mechanical and electrical operations and maintenance teams.' },
+      { key: 'mst',             label: 'MST (Multi Skilled Technician)', desc: 'Multi-skilled technical maintenance across mechanical, electrical, and plumbing systems.' },
+      { key: 'electrician',     label: 'Electrician',                   desc: 'Electrical installation, maintenance, and repair services for commercial facilities.' },
+    ],
+  },
+  {
+    key: 'security_international',
+    label: 'Security',
+    icon: <Shield className="security-icon" size={32} strokeWidth={1.5} />,
+    desc: 'Security personnel positions across facilities, corporates, malls, and residential complexes at international postings.',
+    subRoles: [
+      { key: 'security_guard',        label: 'Security Guard',          desc: 'Standard security monitoring for residential areas and retail spaces.' },
+      { key: 'armed_guard',           label: 'Armed Guard',             desc: 'Specialized armed security for banks, ATMs, and high-value transports.' },
+      { key: 'security_supervisor',   label: 'Security Supervisor',     desc: 'Supervise security personnel and manage shift operations efficiently.' },
+      { key: 'asst_security_officer', label: 'Asst Security Officer',   desc: 'Assist in coordinating security protocols and team management.' },
+      { key: 'security_officer',      label: 'Security Officer',        desc: 'Oversee overall security operations and compliance for a facility.' },
+    ],
+  },
+];
+
+const SUBROLE_LABELS = Object.fromEntries(
+  INTERNATIONAL_ROLES.flatMap(r => r.subRoles.map(s => [s.key, s.label]))
+);
 
 // Icon map for built-in roles (dynamic roles from DB fall back to Wrench)
 const ICON_MAP = {
@@ -34,9 +70,11 @@ export default function CandidateFlow() {
   const [params] = useSearchParams();
   const navigate  = useNavigate();
 
-  const initialRole = params.get('role') || '';
+  const initialRole    = params.get('role')    || '';
+  const initialSubRole = params.get('subRole') || '';
 
-  const [step, setStep] = useState(initialRole ? 1 : 0);
+  // If both role + subRole are in URL, skip directly to form (step 1)
+  const [step, setStep] = useState(initialRole && initialSubRole ? 1 : 0);
 
   const handleStepChange = (newStep) => {
     if (!document.startViewTransition) { setStep(newStep); window.scrollTo(0, 0); return; }
@@ -48,9 +86,9 @@ export default function CandidateFlow() {
     document.startViewTransition(() => setCurrentQ(newQ));
   };
 
-  const [selectedRole, setSelectedRole] = useState(initialRole);
-  const [dynamicRoles, setDynamicRoles] = useState([]); // fetched from /api/roles
-  const [rolesLoading, setRolesLoading] = useState(true);
+  const [selectedRole,    setSelectedRole]    = useState(initialRole);
+  const [selectedSubRole, setSelectedSubRole] = useState(initialSubRole);
+  const [expandedRole,    setExpandedRole]    = useState(null);
 
   // Personal details (international fields)
   const [form, setForm] = useState({
@@ -85,21 +123,7 @@ export default function CandidateFlow() {
   
   // Custom dropdown state
   const [openDropdown, setOpenDropdown] = useState(null);
-
-  // Fetch dynamic roles from API
-  useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const res = await api.get('/roles');
-        setDynamicRoles(res.data);
-      } catch (err) {
-        console.error('Failed to fetch roles:', err);
-      } finally {
-        setRolesLoading(false);
-      }
-    };
-    fetchRoles();
-  }, []);
+  const [countrySearch, setCountrySearch] = useState('');
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -166,7 +190,8 @@ export default function CandidateFlow() {
     if (draft) {
       const data = JSON.parse(draft);
       if (data.form) setForm(data.form);
-      if (data.selectedRole) setSelectedRole(data.selectedRole);
+      if (data.selectedRole)    setSelectedRole(data.selectedRole);
+      if (data.selectedSubRole) setSelectedSubRole(data.selectedSubRole);
       setStep(Math.min(data.step || 0, 1));
       if (data.answers) setAnswers(data.answers);
       if (data.currentQ !== undefined) setCurrentQ(data.currentQ);
@@ -182,10 +207,10 @@ export default function CandidateFlow() {
   // ── OFFLINE RECOVERY: Auto-Sync ──
   useEffect(() => {
     if (step > 0 && step < 3) {
-      const draft = { form, selectedRole, step, answers, currentQ };
+      const draft = { form, selectedRole, selectedSubRole, step, answers, currentQ };
       localStorage.setItem('candidate_draft', JSON.stringify(draft));
     }
-  }, [form, selectedRole, step, answers, currentQ]);
+  }, [form, selectedRole, selectedSubRole, step, answers, currentQ]);
 
   const handleReset = (qid) => {
     if (resetsRemaining <= 0) return;
@@ -372,14 +397,20 @@ export default function CandidateFlow() {
   };
 
   // Fetch questions when starting assessment
+  // Map new role keys → question bank role names used by the API
+  const getAssessmentRole = () => {
+    if (selectedRole === 'facility_management') return 'housekeeping';
+    if (selectedRole === 'security_international') return 'security';
+    return selectedRole;
+  };
+
   const startAssessment = async () => {
     setValidating(true);
     try {
-      const roleName = dynamicRoles.find(r => r._id === selectedRole)?.name?.toLowerCase() || selectedRole;
-      const res = await api.get('/questions', { params: { role: selectedRole, roleName } });
+      const mappedRole = getAssessmentRole();
+      const res = await api.get('/questions', { params: { role: mappedRole, roleName: mappedRole } });
       setQuestions(res.data);
-      // Shorter time for driver roles
-      const time = roleName.includes('driver') ? 10 * 60 : 25 * 60;
+      const time = 25 * 60;
       setTimeLeft(time);
       setTotalTime(time);
       handleStepChange(2);
@@ -537,28 +568,59 @@ export default function CandidateFlow() {
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             <div className="section-tag">Step 1 of 3</div>
             <h2>Select Your Role</h2>
-            <p className="section-sub">Choose the international role you're applying for. This determines the questions in your assessment.</p>
-            <div className="roles-grid">
-              {rolesLoading ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>Loading roles...</div>
-              ) : dynamicRoles.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>No roles available. Please contact support.</div>
-              ) : dynamicRoles.map(role => (
-                <div
-                  key={role._id}
-                  className={`role-card ${selectedRole === role._id ? 'selected' : ''}`}
-                  onClick={() => setSelectedRole(role._id)}
-                >
-                  <div className="role-card-icon">{getIcon(role.iconKey)}</div>
-                  <h3>{role.name}</h3>
-                  {role.description && <p style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px', lineHeight: '1.5' }}>{role.description}</p>}
+            <p className="section-sub">Choose a category and select the role that matches your skills. This determines your assessment questions.</p>
+
+            <div className="roles-grid" style={{ animation: 'fade-in-page 0.35s ease' }}>
+              {INTERNATIONAL_ROLES.map(role => (
+                <div key={role.key} style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+
+                  {/* Category card */}
+                  <div
+                    className={`role-card domestic-role-card ${expandedRole === role.key ? 'selected' : ''}`}
+                    onClick={() => setExpandedRole(prev => prev === role.key ? null : role.key)}
+                    style={{ cursor: 'pointer', userSelect: 'none' }}
+                  >
+                    <div className="role-card-icon">{role.icon}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <h3 style={{ margin: 0 }}>{role.label}</h3>
+                      <ChevronDown
+                        size={18}
+                        style={{
+                          color: 'var(--brand-red)',
+                          transform: expandedRole === role.key ? 'rotate(180deg)' : 'none',
+                          transition: 'transform 0.25s ease',
+                          flexShrink: 0,
+                          marginTop: '2px'
+                        }}
+                      />
+                    </div>
+                    <p style={{ marginTop: '8px' }}>{role.desc}</p>
+                  </div>
+
+                  {/* Sub-roles */}
+                  {expandedRole === role.key && (
+                    <div className="subrole-list">
+                      {role.subRoles.map(sub => (
+                        <button
+                          key={sub.key}
+                          className="subrole-item"
+                          onClick={() => {
+                            setSelectedRole(role.key);
+                            setSelectedSubRole(sub.key);
+                            handleStepChange(1);
+                          }}
+                        >
+                          <ChevronRight size={15} style={{ color: 'var(--brand-red)', flexShrink: 0, alignSelf: 'flex-start', marginTop: '2px' }} />
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <span style={{ fontWeight: 700, color: 'var(--text)' }}>{sub.label}</span>
+                            <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 400, lineHeight: 1.4 }}>{sub.desc}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
-            </div>
-            <div style={{ marginTop: '32px' }}>
-              <button className="btn btn-primary btn-lg" disabled={!selectedRole} onClick={() => handleStepChange(1)}>
-                Continue <ChevronRight size={16} />
-              </button>
             </div>
           </div>
         </div>
@@ -594,6 +656,69 @@ export default function CandidateFlow() {
         </div>
       </div>
     );
+
+    // ── Searchable country picker with flags ──
+    const renderCountryField = () => {
+      const isOpen = openDropdown === 'applyingCountry';
+      const filtered = COUNTRY_CODES.filter(c =>
+        c.name.toLowerCase().includes(countrySearch.toLowerCase())
+      );
+      const selected = COUNTRY_CODES.find(c => c.name === form.applyingCountry);
+      return (
+        <div className="form-group" key="applyingCountry">
+          <label className="form-label">Which Country Are You Applying To? *</label>
+          <div className="custom-select-container" style={{ width: '100%', marginBottom: 0 }}>
+            <div
+              className={`form-input select-trigger ${isOpen ? 'active' : ''}`}
+              onClick={() => {
+                setOpenDropdown(prev => prev === 'applyingCountry' ? null : 'applyingCountry');
+                setCountrySearch('');
+              }}
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', height: '46px', gap: '8px' }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '10px', color: form.applyingCountry ? 'var(--text)' : 'var(--muted2)', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {selected ? (
+                  <><span style={{ fontSize: '20px', lineHeight: 1 }}>{selected.flag}</span>{selected.name}</>
+                ) : 'Select a country...'}
+              </span>
+              <ChevronDown size={16} style={{ color: 'var(--text-secondary)', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
+            </div>
+            {isOpen && (
+              <div className="select-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 200, maxHeight: '300px', display: 'flex', flexDirection: 'column', padding: 0 }}>
+                {/* Search box */}
+                <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--border)', background: 'var(--surface2)', position: 'sticky', top: 0, zIndex: 1 }}>
+                  <input
+                    autoFocus
+                    className="form-input"
+                    placeholder="🔍  Search country..."
+                    value={countrySearch}
+                    onChange={e => setCountrySearch(e.target.value)}
+                    onClick={e => e.stopPropagation()}
+                    style={{ height: '36px', fontSize: '13px', padding: '0 12px' }}
+                  />
+                </div>
+                {/* Country list */}
+                <div style={{ overflowY: 'auto', maxHeight: '240px' }}>
+                  {filtered.length === 0 ? (
+                    <div style={{ padding: '20px', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>No countries found</div>
+                  ) : filtered.map(c => (
+                    <div
+                      key={c.cca2}
+                      className={`select-option ${form.applyingCountry === c.name ? 'selected' : ''}`}
+                      onClick={() => { handleInputChange('applyingCountry', c.name); setOpenDropdown(null); setCountrySearch(''); }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px' }}
+                    >
+                      <span style={{ fontSize: '22px', lineHeight: 1, flexShrink: 0 }}>{c.flag}</span>
+                      <span style={{ fontSize: '14px', color: 'var(--text)' }}>{c.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
 
     const renderTextField = (fieldKey, label, type = 'text', placeholder = '', fullWidth = false) => (
       <div className={`form-group ${fullWidth ? 'full-width' : ''}`} key={fieldKey}>
@@ -657,8 +782,9 @@ export default function CandidateFlow() {
       </div>
     );
 
-    const roleLabel = dynamicRoles.find(r => r._id === selectedRole || r.name.toLowerCase().replace(/\s+/g, '_') === selectedRole)?.name
-      || selectedRole;
+    const categoryLabel = INTERNATIONAL_ROLES.find(r => r.key === selectedRole)?.label || selectedRole;
+    const subRoleLabel  = SUBROLE_LABELS[selectedSubRole] || selectedSubRole;
+    const roleDisplay   = subRoleLabel ? `${categoryLabel} — ${subRoleLabel}` : categoryLabel;
 
     return (
       <div className="page-wrapper" style={{ paddingTop: 'calc(var(--nav-height) + 40px)' }}>
@@ -667,7 +793,7 @@ export default function CandidateFlow() {
             <div className="section-tag">🌍 International Application</div>
             <h2>Personal Details</h2>
             <p className="section-sub">
-              Applying for: <strong>{roleLabel}</strong>
+              Applying for: <strong>{roleDisplay}</strong>
             </p>
 
             <div className="form-grid">
@@ -686,8 +812,8 @@ export default function CandidateFlow() {
                 'ECNR (Emigration Check Not Required)',
                 'No Passport / In Process'
               ])}
-              {renderTextField('gulfExp', 'Overseas Experience *', 'text', 'e.g. 2 years in UAE as driver')}
-              {renderSelectField('applyingCountry', 'Which Country Are You Applying To? *', ['UAE','Ukraine','Saudi Arabia'])}
+              {renderTextField('gulfExp', 'Overseas Experience *', 'text', 'e.g. 2 years overseas as driver')}
+              {renderCountryField()}
               {renderTextField('dob', 'Date of Birth *', 'date', '')}
               {renderTextField('height', 'Height *', 'text', "e.g. 5'8\" or 173 cm")}
 

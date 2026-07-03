@@ -1,6 +1,6 @@
 /**
  * auth.js — Admin Authentication
- * Innovision Overseas UAE Hiring Platform v1.0.0
+ * Innovision Overseas International Hiring Platform v1.0.0
  */
 
 'use strict';

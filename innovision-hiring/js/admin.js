@@ -1,6 +1,6 @@
 /**
  * admin.js — Admin Dashboard Logic
- * Innovision Overseas UAE Hiring Platform v1.0.0
+ * Innovision Overseas International Hiring Platform v1.0.0
  */
 
 'use strict';
@@ -54,7 +54,7 @@ function refreshAdmin() {
   // but mostly handled via CSS. Adding icons to labels here as well.
   const cards = {
     's-pending':  { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;vertical-align:middle;margin-right:8px;opacity:0.7"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>', label: 'Pending Review' },
-    's-selected': { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;vertical-align:middle;margin-right:8px;opacity:0.7"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>', label: 'Selected for UAE' },
+    's-selected': { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;vertical-align:middle;margin-right:8px;opacity:0.7"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>', label: 'Selected for Overseas' },
     's-rejected': { icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;vertical-align:middle;margin-right:8px;opacity:0.7"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>', label: 'Rejected' }
   };
 
@@ -179,7 +179,7 @@ function setStatus(id, status) {
   refreshAdmin();
   showToast(
     status === 'selected'
-      ? 'Candidate selected for UAE deployment ✓'
+      ? 'Candidate selected for overseas deployment ✓'
       : 'Candidate rejected.',
     status === 'selected' ? 'success' : 'danger'
   );
@@ -303,7 +303,7 @@ function openModal(id) {
     <button class="btn-act ba-sel" style="padding:10px 22px;font-size:13px;"
       onclick="setStatus('${c.id}','selected');closeModal();">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><polyline points="20 6 9 17 4 12"/></svg>
-      Select for UAE Deployment
+      Select for Overseas Deployment
     </button>
     <button class="btn-act ba-rej" style="padding:10px 22px;font-size:13px;"
       onclick="setStatus('${c.id}','rejected');closeModal();">

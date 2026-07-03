@@ -151,6 +151,12 @@ export default function Dashboard() {
     if (tab !== 'roles') fetchCandidates();
   }, [fetchCandidates, tab]);
   useEffect(() => {
+    // Always fetch roles on mount so getRoleLabel() can resolve dynamic role IDs
+    // to names in the candidates table (not just when the Roles tab is active)
+    fetchAllRoles();
+  }, [fetchAllRoles]);
+  useEffect(() => {
+    // Re-fetch roles when switching to the roles tab to pick up any changes
     if (tab === 'roles') fetchAllRoles();
   }, [tab, fetchAllRoles]);
 

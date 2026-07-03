@@ -1,6 +1,6 @@
 /**
  * candidate.js — Candidate Portal Logic
- * Innovision Overseas UAE Hiring Platform v1.0.0
+ * Innovision Overseas International Hiring Platform v1.0.0
  */
 
 'use strict';
@@ -644,7 +644,7 @@ function toggleVoice(qid) {
       const demos = [
         'I would immediately stop and report the defect to my supervisor before moving the vehicle.',
         'I will pull over safely, switch on hazard lights, apply parking brake and call my supervisor.',
-        'I would politely decline and explain UAE traffic law to the client, then take the approved route.',
+        'I would politely decline and explain local traffic law to the client, then take the approved route.',
         'I would document all findings and escalate to Innovision management with a full root cause report.',
         'I would calmly separate the individuals, ensure safety, and notify security control immediately.'
       ];

@@ -1,21 +1,42 @@
-import { useEffect, useState, useRef } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Shield, Car, Sparkles, Users, Wrench, ArrowRight, CheckCircle, Globe, Award, ChevronLeft, ChevronRight, Zap, Cog, HardHat, Briefcase } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Shield, Building2, Users, Wrench, Zap, ArrowRight,
+  CheckCircle, Globe, Award, ChevronDown, ChevronRight
+} from 'lucide-react';
 import Footer from '../components/Footer';
-import api from '../utils/api';
 
-/* ─── Icon map for dynamic roles ─── */
-const ICON_MAP = {
-  driver:       <Car       className="driver-icon"   size={32} strokeWidth={1.5} />,
-  security:     <Shield    className="security-icon" size={32} strokeWidth={1.5} />,
-  housekeeping: <Sparkles  className="house-icon"    size={32} strokeWidth={1.5} />,
-  supervisor:   <Users     className="super-icon"    size={32} strokeWidth={1.5} />,
-  helper:       <Wrench    className="helper-icon"   size={32} strokeWidth={1.5} />,
-  electrician:  <Zap       className="helper-icon"   size={32} strokeWidth={1.5} />,
-  mechanic:     <Cog       className="helper-icon"   size={32} strokeWidth={1.5} />,
-  construction: <HardHat   className="helper-icon"   size={32} strokeWidth={1.5} />,
-};
-const getIcon = (iconKey) => ICON_MAP[iconKey] || <Briefcase className="helper-icon" size={32} strokeWidth={1.5} />;
+/* ─── International Roles (Category + Sub-roles) ─── */
+const INTERNATIONAL_ROLES = [
+  {
+    key: 'facility_management',
+    label: 'Facility Management',
+    icon: <Building2 className="security-icon" size={32} strokeWidth={1.5} />,
+    desc: 'Facility and housekeeping management roles in offices, hospitals, hotels, and commercial spaces across international postings.',
+    subRoles: [
+      { key: 'hk_supervisor',   label: 'HK Supervisor',                 desc: 'Supervise housekeeping staff and maintain facility cleanliness standards.' },
+      { key: 'housekeeper',     label: 'Housekeeper (M/F)',             desc: 'Housekeeping and cleaning services for premium facilities.' },
+      { key: 'pantry_boy',      label: 'Pantry Boy',                    desc: 'Manage pantry inventory, serve beverages, and maintain cleanliness.' },
+      { key: 'office_boy',      label: 'Office Boys',                   desc: 'General office support, errands, and day-to-day administrative assistance.' },
+      { key: 'me_supervisor',   label: 'M&E Supervisor',                desc: 'Supervise mechanical and electrical operations and maintenance teams.' },
+      { key: 'mst',             label: 'MST (Multi Skilled Technician)', desc: 'Multi-skilled technical maintenance across mechanical, electrical, and plumbing systems.' },
+      { key: 'electrician',     label: 'Electrician',                   desc: 'Electrical installation, maintenance, and repair services for commercial facilities.' },
+    ],
+  },
+  {
+    key: 'security_international',
+    label: 'Security',
+    icon: <Shield className="security-icon" size={32} strokeWidth={1.5} />,
+    desc: 'Security personnel positions across facilities, corporates, malls, and residential complexes at international postings.',
+    subRoles: [
+      { key: 'security_guard',        label: 'Security Guard',          desc: 'Standard security monitoring for residential areas and retail spaces.' },
+      { key: 'armed_guard',           label: 'Armed Guard',             desc: 'Specialized armed security for banks, ATMs, and high-value transports.' },
+      { key: 'security_supervisor',   label: 'Security Supervisor',     desc: 'Supervise security personnel and manage shift operations efficiently.' },
+      { key: 'asst_security_officer', label: 'Asst Security Officer',   desc: 'Assist in coordinating security protocols and team management.' },
+      { key: 'security_officer',      label: 'Security Officer',        desc: 'Oversee overall security operations and compliance for a facility.' },
+    ],
+  },
+];
 
 const GlowingDivider = () => (
   <div style={{
@@ -26,128 +47,17 @@ const GlowingDivider = () => (
   }} />
 );
 
-/* ─── Job Carousel Component ─── */
-function JobCarousel({ roles }) {
-  const [current, setCurrent] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const timerRef = useRef(null);
-
-  const goTo = (idx) => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    setCurrent(idx);
-    setTimeout(() => setIsAnimating(false), 400);
-  };
-
-  const next = () => goTo((current + 1) % roles.length);
-  const prev = () => goTo((current - 1 + roles.length) % roles.length);
-
-  // Auto-advance every 3.5 seconds
-  useEffect(() => {
-    if (roles.length <= 1) return;
-    timerRef.current = setInterval(next, 3500);
-    return () => clearInterval(timerRef.current);
-  }, [current, roles.length]);
-
-  if (!roles.length) return null;
-
-  // Show up to 3 visible cards on desktop
-  const visibleCount = Math.min(3, roles.length);
-  const visibleRoles = [];
-  for (let i = 0; i < visibleCount; i++) {
-    visibleRoles.push(roles[(current + i) % roles.length]);
-  }
-
-  return (
-    <div className="job-carousel-wrapper">
-      {roles.length > 1 && (
-        <button className="carousel-nav-btn carousel-prev" onClick={prev} aria-label="Previous">
-          <ChevronLeft size={20} />
-        </button>
-      )}
-
-      <div className="job-carousel-track">
-        {visibleRoles.map((role, i) => (
-          <a
-            key={role._id + '-' + i}
-            href={`/apply?role=${role._id}`}
-            className={`job-carousel-slide ${i === 0 ? 'slide-active' : ''}`}
-            style={{ textDecoration: 'none', color: 'inherit' }}
-          >
-            <div className="carousel-slide-icon">{getIcon(role.iconKey)}</div>
-            <div className="carousel-slide-badge">Now Hiring</div>
-            <h4 className="carousel-slide-title">{role.name}</h4>
-            {role.description && (
-              <p className="carousel-slide-desc">{role.description}</p>
-            )}
-            <span className="carousel-slide-cta">
-              Apply Now <ArrowRight size={13} style={{ display: 'inline', verticalAlign: 'middle' }} />
-            </span>
-          </a>
-        ))}
-      </div>
-
-      {roles.length > 1 && (
-        <button className="carousel-nav-btn carousel-next" onClick={next} aria-label="Next">
-          <ChevronRight size={20} />
-        </button>
-      )}
-
-      {/* Dot indicators */}
-      {roles.length > 1 && (
-        <div className="carousel-dots">
-          {roles.map((_, idx) => (
-            <button
-              key={idx}
-              className={`carousel-dot ${idx === current ? 'active' : ''}`}
-              onClick={() => goTo(idx)}
-              aria-label={`Slide ${idx + 1}`}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function Landing() {
-  const location = useLocation();
   const navigate = useNavigate();
-  const [roles, setRoles] = useState([]);
-  const [rolesLoading, setRolesLoading] = useState(true);
+  const [expandedRole, setExpandedRole] = useState(null);
 
-  // Fetch dynamic roles from API
   useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const res = await api.get('/roles');
-        setRoles(res.data);
-      } catch (err) {
-        console.error('Failed to fetch roles:', err);
-      } finally {
-        setRolesLoading(false);
-      }
-    };
-    fetchRoles();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
-
-  useEffect(() => {
-    if (location.hash) {
-      const id = location.hash.replace('#', '');
-      const el = document.getElementById(id);
-      if (el) {
-        setTimeout(() => {
-          const y = el.getBoundingClientRect().top + window.scrollY - 80;
-          window.scrollTo({ top: y, behavior: 'smooth' });
-        }, 100);
-      }
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [location.hash, location.key]);
 
   return (
     <div className="page-wrapper">
+
       {/* ── Hero ── */}
       <section className="hero">
         <div className="hero-content">
@@ -157,7 +67,8 @@ export default function Landing() {
             With <span>Innovision</span> Global
           </h1>
           <p>
-            MEA-registered manpower consultancy specializing in overseas workforce deployment from India to key global markets, including the UAE, Qatar, Saudi Arabia, and Ukraine. Take a skill test with us and unlock rewarding overseas career opportunities with trusted employers.
+            MEA-registered manpower consultancy specializing in overseas workforce deployment from India to key international markets globally.
+            Take a skill test with us and unlock rewarding overseas career opportunities with trusted employers.
           </p>
           <div className="hero-buttons">
             <a href="#roles" className="btn btn-primary btn-lg">
@@ -170,7 +81,7 @@ export default function Landing() {
           <div className="hero-stats">
             <div className="hero-stat">
               <div className="hero-stat-num">500+</div>
-              <div className="hero-stat-label">Deployed to UAE</div>
+              <div className="hero-stat-label">Deployed Overseas</div>
             </div>
             <div className="hero-stat">
               <div className="hero-stat-num">50+</div>
@@ -188,51 +99,59 @@ export default function Landing() {
       <section className="section" id="roles">
         <div className="section-inner">
           <div className="section-tag">Careers</div>
-          <h2>International Open Roles</h2>
+          <h2>International Open Roles — Select Your Category</h2>
           <p className="section-sub">
-            Select the role that matches your skills and experience to begin your international career assessment.
+            Choose a category below and select the role that best matches your skills and experience.
           </p>
 
-          {/* Dynamic Roles Grid */}
-          {rolesLoading ? (
-            <div style={{ textAlign: 'center', padding: '60px', color: 'var(--muted)' }}>
-              <div style={{ width: '32px', height: '32px', border: '3px solid var(--border)', borderTopColor: 'var(--brand-red)', borderRadius: '50%', animation: 'spin 0.6s linear infinite', margin: '0 auto 16px' }} />
-              Loading available roles...
-            </div>
-          ) : roles.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px', color: 'var(--muted)' }}>
-              No roles currently available. Please check back soon.
-            </div>
-          ) : (
-            <div className="roles-grid">
-              {roles.map(role => (
-                <a
-                  href={`/apply?role=${role._id}`}
-                  key={role._id}
-                  className="role-card"
-                  style={{ textDecoration: 'none', color: 'inherit' }}
-                >
-                  <div className="role-card-icon">{getIcon(role.iconKey)}</div>
-                  <h3>{role.name}</h3>
-                  {role.description && <p>{role.description}</p>}
-                </a>
-              ))}
-            </div>
-          )}
+          <div className="roles-grid" style={{ animation: 'fade-in-page 0.35s ease' }}>
+            {INTERNATIONAL_ROLES.map(role => (
+              <div key={role.key} style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
 
-          {/* ── Latest Openings Carousel ── */}
-          {roles.length > 0 && (
-            <div style={{ marginTop: '64px' }}>
-              <div className="section-tag" style={{ marginBottom: '8px' }}>🆕 Latest Openings</div>
-              <h3 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '8px', color: 'var(--text)' }}>
-                Newly Added Opportunities
-              </h3>
-              <p className="section-sub" style={{ marginBottom: '32px' }}>
-                Fresh job openings — be among the first to apply.
-              </p>
-              <JobCarousel roles={roles} />
-            </div>
-          )}
+                {/* Main role card */}
+                <div
+                  className={`role-card domestic-role-card ${expandedRole === role.key ? 'selected' : ''}`}
+                  onClick={() => setExpandedRole(prev => prev === role.key ? null : role.key)}
+                  style={{ cursor: 'pointer', userSelect: 'none' }}
+                >
+                  <div className="role-card-icon">{role.icon}</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <h3 style={{ margin: 0 }}>{role.label}</h3>
+                    <ChevronDown
+                      size={18}
+                      style={{
+                        color: 'var(--brand-red)',
+                        transform: expandedRole === role.key ? 'rotate(180deg)' : 'none',
+                        transition: 'transform 0.25s ease',
+                        flexShrink: 0,
+                        marginTop: '2px'
+                      }}
+                    />
+                  </div>
+                  <p style={{ marginTop: '8px' }}>{role.desc}</p>
+                </div>
+
+                {/* Sub-roles list */}
+                {expandedRole === role.key && (
+                  <div className="subrole-list">
+                    {role.subRoles.map(sub => (
+                      <button
+                        key={sub.key}
+                        className="subrole-item"
+                        onClick={() => navigate(`/apply?role=${role.key}&subRole=${sub.key}`)}
+                      >
+                        <ChevronRight size={15} style={{ color: 'var(--brand-red)', flexShrink: 0, alignSelf: 'flex-start', marginTop: '2px' }} />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <span style={{ fontWeight: 700, color: 'var(--text)' }}>{sub.label}</span>
+                          <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 400, lineHeight: 1.4 }}>{sub.desc}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -246,9 +165,9 @@ export default function Landing() {
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
             {[
-              { icon: <Globe size={24} />, title: 'MEA Registered', desc: 'Fully registered with the Ministry of External Affairs, Government of India for overseas recruitment.' },
-              { icon: <Award size={24} />, title: 'Premium Clients', desc: 'Partnered with 5-star hotels, corporate campuses, and government facilities across Dubai and Abu Dhabi.' },
-              { icon: <CheckCircle size={24} />, title: 'End-to-End Support', desc: 'From visa processing to travel arrangements, we handle the complete deployment lifecycle for every candidate.' },
+              { icon: <Globe size={24} />,       title: 'MEA Registered',      desc: 'Fully registered with the Ministry of External Affairs, Government of India for overseas recruitment.' },
+              { icon: <Award size={24} />,        title: 'Premium Clients',     desc: 'Partnered with 5-star hotels, corporate campuses, and government facilities across international markets.' },
+              { icon: <CheckCircle size={24} />,  title: 'End-to-End Support',  desc: 'From visa processing to travel arrangements, we handle the complete deployment lifecycle for every candidate.' },
             ].map((item, i) => (
               <div key={i} style={{ background: 'var(--white)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '32px' }}>
                 <div style={{ color: 'var(--brand-red)', marginBottom: '16px' }}>{item.icon}</div>

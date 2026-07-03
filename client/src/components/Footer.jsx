@@ -34,7 +34,7 @@ export default function Footer() {
             <img src="/logo.png?v=2" style={{ height: '42px' }} alt="Innovision Logo" />
           </div>
           <p style={{ fontSize: '14px', lineHeight: '1.8', color: '#aaaaaa', marginBottom: '32px', fontWeight: 400 }}>
-            Established in 2007, Innovision Global is a MEA-registered Overseas Manpower Consultancy providing skilled, unskilled & semi-skilled manpower to overseas companies across the UAE, Qatar, Saudi Arabia, and Ukraine.
+            Established in 2007, Innovision Global is a MEA-registered Overseas Manpower Consultancy providing skilled, unskilled & semi-skilled manpower to overseas companies across international markets worldwide.
             <a href="https://innovision.co.in/about" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand-red)', textDecoration: 'none', marginLeft: '4px' }}>... read more &gt;</a>
           </p>
           <div style={{ display: 'flex', gap: '10px' }}>
