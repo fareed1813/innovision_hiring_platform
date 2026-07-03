@@ -631,41 +631,74 @@ body.hide-navbar .navbar {
   border-color: var(--brand-red) !important;
   background: var(--brand-red-light) !important;
   box-shadow: 0 0 0 1px var(--brand-red), var(--shadow-md) !important;
-  border-bottom-left-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
 }
 .domestic-role-card::after { display: none !important; }
 
-/* ── Sub-role list ── */
+/* ── Domestic Subroles ── */
 .subrole-list {
-  border: 1px solid var(--brand-red);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
   border-top: none;
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  background: var(--white);
-  overflow: hidden;
-  animation: slide-down 0.22s ease;
+  padding: 8px 12px 12px;
+  animation: slide-up 0.2s ease;
 }
-@keyframes slide-down {
+
+@keyframes slide-up {
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Sub-role item button ── */
 .subrole-item {
-  width: 100%;
+  position: relative;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
-  padding: 14px 20px;
-  background: transparent;
-  border: none;
-  border-top: 1px solid var(--border);
+  padding: 11px 16px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
 }
-.subrole-item:first-child { border-top: none; }
-.subrole-item:hover { background: var(--brand-red-light); }
+
+/* Arrow for subroles */
+.subrole-item::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  border-radius: 50%;
+  background: var(--brand-red);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 2px 8px rgba(209, 43, 43, 0.4);
+}
+
+.subrole-item:hover::after {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.subrole-item:hover {
+  border-color: var(--brand-red);
+  background: var(--brand-red-light);
+  color: var(--brand-red);
+}
 
 .role-card-icon {
   width: 64px;
