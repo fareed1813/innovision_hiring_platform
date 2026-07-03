@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, Building2, ShieldCheck, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle } from 'lucide-react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import Footer from '../components/Footer';
 import { COUNTRY_CODES } from '../utils/countryCodes';
 
@@ -712,31 +714,43 @@ export default function CandidateFlow() {
 
     const renderTextField = (fieldKey, label, type = 'text', placeholder = '', fullWidth = false) => {
       const isDate = type === 'date';
-      const isDateEmpty = isDate && !form[fieldKey];
       return (
         <div className={`form-group ${fullWidth ? 'full-width' : ''}`} key={fieldKey}>
           <label className="form-label">{label}</label>
-          <input
-            className={`form-input ${touched[fieldKey] && getFieldError(fieldKey) ? 'invalid' : ''}`}
-            type={isDate ? 'text' : type}
-            placeholder={isDate ? 'mm/dd/yyyy' : placeholder}
-            value={form[fieldKey]}
-            max={isDate ? new Date().toISOString().split('T')[0] : undefined}
-            onFocus={(e) => {
-              if (isDate) {
-                e.target.type = 'date';
-                try { e.target.showPicker(); } catch (err) { /* ignore */ }
-              }
-            }}
-            onBlur={(e) => {
-              if (isDate && !e.target.value) {
-                e.target.type = 'text';
-              }
-              setTouched(prev => ({ ...prev, [fieldKey]: true }));
-            }}
-            onChange={e => handleInputChange(fieldKey, e.target.value)}
-            style={isDate ? { cursor: 'pointer', paddingRight: '12px', color: isDateEmpty ? 'var(--muted2)' : 'var(--text)' } : undefined}
-          />
+          {isDate ? (
+            <div style={{ display: 'flex', width: '100%' }}>
+              <DatePicker
+                selected={form[fieldKey] ? new Date(form[fieldKey]) : null}
+                onChange={(date) => {
+                  if (date) {
+                    const tzOffset = date.getTimezoneOffset() * 60000;
+                    const localISOTime = (new Date(date.getTime() - tzOffset)).toISOString().slice(0, 10);
+                    handleInputChange(fieldKey, localISOTime);
+                  } else {
+                    handleInputChange(fieldKey, '');
+                  }
+                }}
+                onBlur={() => setTouched(prev => ({ ...prev, [fieldKey]: true }))}
+                dateFormat="MM/dd/yyyy"
+                placeholderText="mm/dd/yyyy"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+                maxDate={new Date()}
+                className={`form-input ${touched[fieldKey] && getFieldError(fieldKey) ? 'invalid' : ''}`}
+                wrapperClassName="react-datepicker-wrapper-full"
+              />
+            </div>
+          ) : (
+            <input
+              className={`form-input ${touched[fieldKey] && getFieldError(fieldKey) ? 'invalid' : ''}`}
+              type={type}
+              placeholder={placeholder}
+              value={form[fieldKey]}
+              onChange={e => handleInputChange(fieldKey, e.target.value)}
+              onBlur={() => setTouched(prev => ({ ...prev, [fieldKey]: true }))}
+            />
+          )}
           {touched[fieldKey] && getFieldError(fieldKey) && (
             <div className="error-text"><AlertCircle size={12} /> {getFieldError(fieldKey)}</div>
           )}

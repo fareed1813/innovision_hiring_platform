@@ -2168,15 +2168,32 @@ textarea.form-input { min-height: 120px; resize: vertical; }
 }
 
 /* ═══════════════════════════════════════════
-   DATE INPUT STYLING
+   DATE INPUT STYLING (react-datepicker)
 ═══════════════════════════════════════════ */
-input[type="date"].form-input {
-  color: var(--text);
-  cursor: pointer;
+.react-datepicker-wrapper-full {
+  width: 100%;
+  display: block;
 }
 
-input[type="date"].form-input::-webkit-calendar-picker-indicator {
-  opacity: 0.6;
-  cursor: pointer;
-  filter: invert(0.3);
+.react-datepicker-wrapper-full .react-datepicker__input-container {
+  width: 100%;
+}
+
+.react-datepicker {
+  font-family: inherit !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(0,0,0,0.1) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.react-datepicker__header {
+  background-color: var(--surface) !important;
+  border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+  border-top-left-radius: 12px !important;
+  border-top-right-radius: 12px !important;
+}
+
+.react-datepicker__day--selected, .react-datepicker__day--keyboard-selected {
+  background-color: var(--brand-red) !important;
+  border-radius: 6px !important;
 }
