@@ -41,19 +41,6 @@ const SUBROLE_LABELS = Object.fromEntries(
   INTERNATIONAL_ROLES.flatMap(r => r.subRoles.map(s => [s.key, s.label]))
 );
 
-// Icon map for built-in roles (dynamic roles from DB fall back to Wrench)
-const ICON_MAP = {
-  driver:       <Car      className="driver-icon"   size={32} strokeWidth={1.5} />,
-  security:     <Shield   className="security-icon" size={32} strokeWidth={1.5} />,
-  housekeeping: <Sparkles className="house-icon"    size={32} strokeWidth={1.5} />,
-  supervisor:   <Users    className="super-icon"    size={32} strokeWidth={1.5} />,
-  helper:       <Wrench   className="helper-icon"   size={32} strokeWidth={1.5} />,
-  electrician:  <Zap      className="helper-icon"   size={32} strokeWidth={1.5} />,
-  mechanic:     <Cog      className="helper-icon"   size={32} strokeWidth={1.5} />,
-  construction: <HardHat  className="helper-icon"   size={32} strokeWidth={1.5} />,
-};
-
-const getIcon = (iconKey) => ICON_MAP[iconKey] || <Wrench className="helper-icon" size={32} strokeWidth={1.5} />;
 
 const SOURCES = ['Direct / Walk-in', 'Job Portal', 'Social Media', 'Referral', 'Agent', 'WhatsApp'];
 
