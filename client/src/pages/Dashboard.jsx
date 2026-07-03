@@ -66,6 +66,10 @@ export default function Dashboard() {
   // ── Job Roles Tab State ──
   const [rolesLoading, setRolesLoading] = useState(false);
   const [showAddRole, setShowAddRole] = useState(false);
+  const [addRoleMode, setAddRoleMode] = useState(null); // null | 'manual'
+  const [parsingJd, setParsingJd] = useState(false);
+  const jdInputRef = useRef(null);
+
   const [newRole, setNewRole] = useState({ name: '', description: '', iconKey: 'wrench' });
   const [addRoleError, setAddRoleError] = useState('');
   const [savingRole, setSavingRole] = useState(false);
@@ -162,18 +166,51 @@ export default function Dashboard() {
 
   // ── Role CRUD ──
   const handleAddRole = async () => {
-    if (!newRole.name.trim()) { setAddRoleError('Role name is required.'); return; }
-    setSavingRole(true);
-    setAddRoleError('');
     try {
-      await api.post('/roles', newRole);
-      setNewRole({ name: '', description: '', iconKey: 'wrench' });
+      setSavingRole(true);
+      setAddRoleError('');
+      const res = await api.post('/roles', newRole);
+      setAllRoles(prev => [res.data.role, ...prev]);
       setShowAddRole(false);
-      fetchAllRoles();
+      setAddRoleMode(null);
+      setNewRole({ name: '', description: '', iconKey: 'wrench' });
     } catch (err) {
-      setAddRoleError(err.response?.data?.error || 'Failed to create role.');
+      setAddRoleError(err.response?.data?.error || 'Failed to create role');
     } finally {
       setSavingRole(false);
+    }
+  };
+
+  const handleJdUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') {
+      setAddRoleError('Only PDF files are supported for auto-extraction.');
+      return;
+    }
+
+    try {
+      setParsingJd(true);
+      setAddRoleError('');
+      const formData = new FormData();
+      formData.append('pdf', file);
+      
+      const res = await api.post('/roles/parse-jd', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      setNewRole({
+        name: res.data.name || '',
+        description: res.data.description || '',
+        iconKey: 'wrench' // user will choose manually
+      });
+      setAddRoleMode('manual');
+    } catch (err) {
+      console.error(err);
+      setAddRoleError(err.response?.data?.error || 'Failed to parse JD. Please try manual entry.');
+    } finally {
+      setParsingJd(false);
+      if (jdInputRef.current) jdInputRef.current.value = '';
     }
   };
 
@@ -368,14 +405,14 @@ export default function Dashboard() {
               <button
                 className="btn btn-primary"
                 style={{ gap: '8px' }}
-                onClick={() => { setShowAddRole(true); setAddRoleError(''); }}
+                onClick={() => { setShowAddRole(true); setAddRoleMode(null); setAddRoleError(''); setNewRole({ name: '', description: '', iconKey: 'wrench' }); }}
               >
                 <Plus size={16} /> Add Role
               </button>
             </div>
 
-            {/* Add Role Form */}
-            {showAddRole && (
+            {/* Add Role Form / Options */}
+            {showAddRole && !addRoleMode && (
               <div style={{
                 background: 'var(--surface2)',
                 border: '1.5px solid var(--brand-red)',
@@ -385,8 +422,58 @@ export default function Dashboard() {
                 animation: 'slide-up 0.3s ease'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h4 style={{ fontSize: '16px', fontWeight: 700 }}>New Job Role</h4>
+                  <h4 style={{ fontSize: '16px', fontWeight: 700 }}>How would you like to add a role?</h4>
                   <button onClick={() => setShowAddRole(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}>
+                    <XIcon size={18} />
+                  </button>
+                </div>
+                
+                <div style={{ display: 'flex', gap: '20px' }}>
+                  <div 
+                    style={{ flex: 1, padding: '24px', border: '1px solid var(--border)', borderRadius: '12px', textAlign: 'center', cursor: 'pointer', background: 'var(--white)', transition: 'transform 0.2s' }}
+                    onClick={() => setAddRoleMode('manual')}
+                  >
+                    <div style={{ background: 'var(--brand-red-light)', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: 'var(--brand-red)' }}>
+                      <Edit3 size={24} />
+                    </div>
+                    <h5 style={{ fontSize: '16px', marginBottom: '8px' }}>Manual Entry</h5>
+                    <p style={{ fontSize: '13px', color: 'var(--muted)' }}>Type in the role name and description yourself.</p>
+                  </div>
+
+                  <input type="file" accept="application/pdf" ref={jdInputRef} style={{ display: 'none' }} onChange={handleJdUpload} />
+                  
+                  <div 
+                    style={{ flex: 1, padding: '24px', border: '1px solid var(--brand-red-glow)', borderRadius: '12px', textAlign: 'center', cursor: parsingJd ? 'wait' : 'pointer', background: 'var(--brand-red-light)', opacity: parsingJd ? 0.7 : 1, transition: 'transform 0.2s' }}
+                    onClick={() => !parsingJd && jdInputRef.current?.click()}
+                  >
+                    <div style={{ background: 'var(--brand-red)', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#fff' }}>
+                      {parsingJd ? <div style={{ width: '20px', height: '20px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} /> : <FileText size={24} />}
+                    </div>
+                    <h5 style={{ fontSize: '16px', marginBottom: '8px', color: 'var(--brand-red)' }}>{parsingJd ? 'Extracting with AI...' : 'Auto-Extract (AI)'}</h5>
+                    <p style={{ fontSize: '13px', color: 'var(--brand-red)', opacity: 0.8 }}>Upload a Job Description PDF and let AI extract the details.</p>
+                  </div>
+                </div>
+
+                {addRoleError && (
+                  <div style={{ color: 'var(--danger)', fontSize: '13px', marginTop: '16px', textAlign: 'center', fontWeight: 500 }}>
+                    {addRoleError}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {showAddRole && addRoleMode === 'manual' && (
+              <div style={{
+                background: 'var(--surface2)',
+                border: '1.5px solid var(--brand-red)',
+                borderRadius: '16px',
+                padding: '28px',
+                marginBottom: '28px',
+                animation: 'slide-up 0.3s ease'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <h4 style={{ fontSize: '16px', fontWeight: 700 }}>Review & Save Role</h4>
+                  <button onClick={() => { setShowAddRole(false); setAddRoleMode(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)' }}>
                     <XIcon size={18} />
                   </button>
                 </div>
@@ -420,11 +507,12 @@ export default function Dashboard() {
                   </div>
                   <div className="form-group full-width">
                     <label className="form-label">Description (optional)</label>
-                    <input
+                    <textarea
                       className="form-input"
                       placeholder="Short description of the role..."
                       value={newRole.description}
                       onChange={e => setNewRole(p => ({ ...p, description: e.target.value }))}
+                      style={{ minHeight: '80px', resize: 'vertical' }}
                     />
                   </div>
                 </div>
@@ -443,7 +531,7 @@ export default function Dashboard() {
                   >
                     {savingRole ? 'Saving...' : <><Save size={14} /> Save Role</>}
                   </button>
-                  <button className="btn btn-ghost" onClick={() => setShowAddRole(false)}>Cancel</button>
+                  <button className="btn btn-ghost" onClick={() => { setAddRoleMode(null); setAddRoleError(''); }}>Back</button>
                 </div>
               </div>
             )}

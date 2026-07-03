@@ -1,8 +1,12 @@
 import { Router } from 'express';
+import multer from 'multer';
+import pdf from 'pdf-parse';
+import { GoogleGenAI } from '@google/genai';
 import JobRole from '../models/JobRole.js';
 import authMiddleware from '../middleware/auth.js';
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 /* ─── GET /api/roles — Public: list all active roles ─── */
 router.get('/', async (req, res) => {
@@ -150,6 +154,56 @@ router.delete('/:id/attachments/:attachmentId', authMiddleware, async (req, res)
   } catch (err) {
     console.error('Delete attachment error:', err);
     res.status(500).json({ error: 'Failed to delete attachment.' });
+  }
+});
+
+/* ─── POST /api/roles/parse-jd — Admin: Parse JD PDF with AI ─── */
+router.post('/parse-jd', authMiddleware, upload.single('pdf'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No PDF uploaded.' });
+
+    // 1. Extract raw text from PDF
+    const pdfData = await pdf(req.file.buffer);
+    const rawText = pdfData.text;
+
+    // 2. Setup Gemini AI
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server. Please add it to the .env file.' });
+    }
+
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    
+    const prompt = `
+You are an expert HR assistant. 
+Read the following Job Description (JD) text extracted from a PDF.
+Extract the Job Role Name and a concise Description (1-3 sentences).
+Return ONLY a valid JSON object with EXACTLY two keys: "name" and "description". Do not include any markdown formatting, code blocks, or extra text.
+
+JD Text:
+---
+${rawText.substring(0, 10000)}
+---
+`;
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+    
+    let aiText = response.text || '';
+    aiText = aiText.replace(/```json/gi, '').replace(/```/g, '').trim();
+    
+    let result = {};
+    try {
+      result = JSON.parse(aiText);
+    } catch (e) {
+      console.error('Failed to parse AI JSON:', aiText);
+      return res.status(500).json({ error: 'Failed to parse AI response into JSON.' });
+    }
+
+    res.json(result);
+  } catch (err) {
+    console.error('Parse JD error:', err);
+    res.status(500).json({ error: 'Failed to parse the PDF document.' });
   }
 });
 
