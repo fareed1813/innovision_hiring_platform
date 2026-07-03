@@ -447,8 +447,7 @@ export default function CandidateFlow() {
     const rec = new SpeechRecognition();
     rec.continuous = true;
     rec.interimResults = true;
-    rec.lang = 'en-IN';
-    rec.maxAlternatives = 3;
+    rec.lang = 'en-US';
     
     activeVoiceStateRef.current = { baseText: answers[qid] || '', accumulated: '' };
     
@@ -456,9 +455,6 @@ export default function CandidateFlow() {
       let fin = '', inter = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
         let best = e.results[i][0];
-        for (let a = 1; a < e.results[i].length; a++) {
-          if (e.results[i][a].confidence > best.confidence) best = e.results[i][a];
-        }
         if (e.results[i].isFinal) fin += best.transcript;
         else inter += best.transcript;
       }
@@ -1056,8 +1052,8 @@ export default function CandidateFlow() {
             <div className="test-main-layout">
           {/* Main Assessment Card */}
           <div className="test-card-container">
-            <div className="assessment-card active" style={{ minHeight: '500px', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ flex: 1 }}>
+            <div className="assessment-card active" style={{ height: '620px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ flex: 1, overflowY: 'auto', paddingRight: '16px', paddingBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
                   <span className="q-number">Question {currentQ + 1} of {questions.length}</span>
                   <span className={`q-badge ${q.type}`}>{q.type === 'fluency' ? 'Communication' : q.type}</span>
