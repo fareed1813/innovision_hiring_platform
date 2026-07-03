@@ -1037,7 +1037,7 @@ export default function CandidateFlow() {
           <div className="test-sticky-header">
             <div className="test-header-content">
               <div className="test-info">
-                {(dynamicRoles.find(r => r._id === selectedRole)?.name || selectedRole)} Assessment · Innovision Global
+                {(INTERNATIONAL_ROLES.find(r => r.key === selectedRole)?.label || selectedRole)} Assessment · Innovision Global
               </div>
               <div className={`test-timer ${timeLeft < 60 ? 'critical' : ''}`}>
                 <span className="timer-label">Time remaining :</span>
