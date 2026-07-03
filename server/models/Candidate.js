@@ -75,7 +75,9 @@ const candidateSchema = new mongoose.Schema({
     tabSwitches:     { type: Number, default: 0 },
     fullscreenExits: { type: Number, default: 0 }
   },
-  proctoringViolations: { type: Number, default: 0 }
+  proctoringViolations: { type: Number, default: 0 },
+
+  retestReason: { type: String, trim: true, default: '' }
 
 }, { timestamps: true });
 

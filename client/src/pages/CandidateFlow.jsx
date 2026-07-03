@@ -156,6 +156,7 @@ export default function CandidateFlow() {
   const [formError, setFormError] = useState('');
   const [candidateId, setCandidateId] = useState(null);
   const [formRefId, setFormRefId] = useState('');
+  const [retestReason, setRetestReason] = useState('');
 
   const [showResumePrompt, setShowResumePrompt] = useState(false);
 
@@ -358,6 +359,7 @@ export default function CandidateFlow() {
         job: selectedRole,
         source: form.source || 'Direct',
         type: 'international',
+        retestReason
       });
       setCandidateId(res.data.candidateId);
       setFormRefId(res.data.refId);
@@ -373,7 +375,7 @@ export default function CandidateFlow() {
           setFormSubmitted(true);
           setFormError(`You already submitted this form (Ref: ${data.refId}). You can now start the assessment.`);
         } else {
-          setDupError(`You have already applied for this role. Only one attempt is permitted.`);
+          setDupError(data.message || `You have already applied for this role. Only one attempt is permitted.`);
         }
       } else {
         setFormError('Failed to submit form. Please check your connection and try again.');
@@ -864,18 +866,23 @@ export default function CandidateFlow() {
                   <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6' }}>
                     {dupError} For further assistance, reach out to our support team.
                   </div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-                  <button 
-                    className="btn btn-primary btn-sm"
-                    onClick={() => navigate('/#contact')}
-                    style={{ padding: '8px 20px', borderRadius: '10px' }}
-                  >
-                    Contact Support
-                  </button>
-                  <span style={{ fontSize: '12px', color: 'var(--muted2)', fontWeight: 500 }}>
-                    support@innovision.co.in
-                  </span>
+                  <div style={{ marginTop: '12px' }}>
+                    <textarea 
+                      className="form-input" 
+                      placeholder="Reason for retaking the assessment..." 
+                      value={retestReason}
+                      onChange={(e) => setRetestReason(e.target.value)}
+                      style={{ width: '100%', minHeight: '60px', fontSize: '13px', marginBottom: '8px' }}
+                    />
+                    <button 
+                      className="btn btn-primary btn-sm"
+                      onClick={() => { setDupError(''); submitForm(); }}
+                      disabled={!retestReason.trim() || submittingForm}
+                      style={{ padding: '8px 20px', borderRadius: '10px' }}
+                    >
+                      {submittingForm ? 'Submitting...' : 'Request Retest'}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

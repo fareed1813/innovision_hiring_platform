@@ -13,7 +13,7 @@ const router = Router();
 /* ─── POST /api/candidates/submit-form — Save form details only ─── */
 router.post('/submit-form', async (req, res) => {
   try {
-    const { personal, job, source } = req.body;
+    const { personal, job, source, retestReason } = req.body;
 
     if (!personal || !job) {
       return res.status(400).json({ error: 'Personal details and job role are required.' });
@@ -29,13 +29,33 @@ router.post('/submit-form', async (req, res) => {
     });
 
     if (existing) {
-      return res.status(409).json({
-        error: 'Application already exists.',
-        refId: existing.refId,
-        candidateId: existing._id,
-        message: 'You have already applied for this role.',
-        assessmentStatus: existing.assessmentStatus
-      });
+      if (!retestReason) {
+        return res.status(409).json({
+          error: 'Application already exists.',
+          refId: existing.refId,
+          candidateId: existing._id,
+          message: 'You have already applied for this role. If you wish to retake the assessment, please provide a reason.',
+          assessmentStatus: existing.assessmentStatus
+        });
+      } else {
+        // Allow retest: save reason and reset assessment data
+        existing.retestReason = retestReason;
+        existing.assessmentStatus = 'form_submitted';
+        existing.questions = [];
+        existing.answers = {};
+        existing.audioRecordings = {};
+        existing.evaluations = {};
+        existing.scores = { total: 0, reading: 0, voice: 0, quality: 0 };
+        existing.proctoring = { tabSwitches: 0, fullscreenExits: 0 };
+        existing.proctoringViolations = 0;
+        await existing.save();
+
+        return res.status(200).json({
+          refId: existing.refId,
+          candidateId: existing._id,
+          message: 'Retest requested successfully.'
+        });
+      }
     }
 
     const refId = 'INV' + randomBytes(4).toString('hex').toUpperCase();
