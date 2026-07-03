@@ -710,22 +710,30 @@ export default function CandidateFlow() {
 
     const renderTextField = (fieldKey, label, type = 'text', placeholder = '', fullWidth = false) => {
       const isDate = type === 'date';
+      const isDateEmpty = isDate && !form[fieldKey];
       return (
         <div className={`form-group ${fullWidth ? 'full-width' : ''}`} key={fieldKey}>
           <label className="form-label">{label}</label>
           <input
             className={`form-input ${touched[fieldKey] && getFieldError(fieldKey) ? 'invalid' : ''}`}
-            type={type} placeholder={placeholder}
+            type={isDate ? 'text' : type}
+            placeholder={isDate ? 'mm/dd/yyyy' : placeholder}
             value={form[fieldKey]}
             max={isDate ? new Date().toISOString().split('T')[0] : undefined}
-            onClick={isDate ? (e) => {
-              if (e.target.showPicker) {
+            onFocus={(e) => {
+              if (isDate) {
+                e.target.type = 'date';
                 try { e.target.showPicker(); } catch (err) { /* ignore */ }
               }
-            } : undefined}
+            }}
+            onBlur={(e) => {
+              if (isDate && !e.target.value) {
+                e.target.type = 'text';
+              }
+              setTouched(prev => ({ ...prev, [fieldKey]: true }));
+            }}
             onChange={e => handleInputChange(fieldKey, e.target.value)}
-            onBlur={() => setTouched(prev => ({ ...prev, [fieldKey]: true }))}
-            style={isDate ? { cursor: 'pointer', paddingRight: '12px' } : undefined}
+            style={isDate ? { cursor: 'pointer', paddingRight: '12px', color: isDateEmpty ? 'var(--muted2)' : 'var(--text)' } : undefined}
           />
           {touched[fieldKey] && getFieldError(fieldKey) && (
             <div className="error-text"><AlertCircle size={12} /> {getFieldError(fieldKey)}</div>
