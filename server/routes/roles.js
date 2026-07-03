@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
 import pdf from 'pdf-parse';
-import { GoogleGenAI } from '@google/genai';
 import JobRole from '../models/JobRole.js';
 import authMiddleware from '../middleware/auth.js';
 
@@ -157,50 +156,87 @@ router.delete('/:id/attachments/:attachmentId', authMiddleware, async (req, res)
   }
 });
 
-/* ─── POST /api/roles/parse-jd — Admin: Parse JD PDF with AI ─── */
+/* ─── POST /api/roles/parse-jd — Admin: Parse JD PDF with Local NLP Heuristics ─── */
 router.post('/parse-jd', authMiddleware, upload.single('pdf'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No PDF uploaded.' });
 
     // 1. Extract raw text from PDF
     const pdfData = await pdf(req.file.buffer);
-    const rawText = pdfData.text;
+    const rawText = pdfData.text || '';
 
-    // 2. Setup Gemini AI
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server. Please add it to the .env file.' });
+    // 2. Local Heuristics / NLP parsing
+    let extractedName = '';
+    let extractedDescription = '';
+
+    const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    
+    // Heuristic for Role Name
+    const titleRegex = /^(?:Job Title|Role|Position|Title)\s*:\s*(.+)$/i;
+    for (const line of lines) {
+      const match = line.match(titleRegex);
+      if (match && match[1]) {
+        extractedName = match[1].trim();
+        break;
+      }
+    }
+    
+    // Fallback for Role Name: first reasonably short, non-empty line
+    if (!extractedName) {
+      for (const line of lines) {
+        if (line.length < 60 && !line.toLowerCase().includes('description') && !line.toLowerCase().includes('innovision')) {
+          extractedName = line;
+          break;
+        }
+      }
     }
 
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    
-    const prompt = `
-You are an expert HR assistant. 
-Read the following Job Description (JD) text extracted from a PDF.
-Extract the Job Role Name and a concise Description (1-3 sentences).
-Return ONLY a valid JSON object with EXACTLY two keys: "name" and "description". Do not include any markdown formatting, code blocks, or extra text.
+    // Heuristic for Description
+    const descRegex = /^(?:Description|About the Role|Summary|Job Summary|Overview)\s*[:\n\-]?/i;
+    let foundDescHeader = false;
+    let descLines = [];
 
-JD Text:
----
-${rawText.substring(0, 10000)}
----
-`;
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
+    for (let i = 0; i < lines.length; i++) {
+      if (!foundDescHeader && descRegex.test(lines[i])) {
+        foundDescHeader = true;
+        // If the description is on the same line (e.g. "Description: We are looking for...")
+        const inlineDesc = lines[i].replace(descRegex, '').trim();
+        if (inlineDesc.length > 20) {
+          descLines.push(inlineDesc);
+        }
+        continue;
+      }
+      
+      if (foundDescHeader) {
+        // Stop if we hit another obvious header
+        if (/^(?:Requirements|Qualifications|Responsibilities|Duties|Benefits|Salary)\s*:/i.test(lines[i])) {
+          break;
+        }
+        descLines.push(lines[i]);
+        if (descLines.join(' ').length > 400) break; // Don't grab too much
+      }
+    }
+
+    // Fallback for Description: Grab the first large paragraph if no headers found
+    if (descLines.length === 0) {
+      for (const line of lines) {
+        if (line.length > 100) {
+          extractedDescription = line;
+          break;
+        }
+      }
+    } else {
+      extractedDescription = descLines.join(' ');
+    }
+
+    // Cleanup extracted text
+    if (extractedName.length > 100) extractedName = extractedName.substring(0, 100) + '...';
+    if (extractedDescription.length > 500) extractedDescription = extractedDescription.substring(0, 500) + '...';
+
+    res.json({
+      name: extractedName || '',
+      description: extractedDescription || ''
     });
-    
-    let aiText = response.text || '';
-    aiText = aiText.replace(/```json/gi, '').replace(/```/g, '').trim();
-    
-    let result = {};
-    try {
-      result = JSON.parse(aiText);
-    } catch (e) {
-      console.error('Failed to parse AI JSON:', aiText);
-      return res.status(500).json({ error: 'Failed to parse AI response into JSON.' });
-    }
-
-    res.json(result);
   } catch (err) {
     console.error('Parse JD error:', err);
     res.status(500).json({ error: 'Failed to parse the PDF document.' });
