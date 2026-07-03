@@ -1412,8 +1412,23 @@ textarea.form-input { min-height: 120px; resize: vertical; }
   animation: slideUp 0.3s ease;
 }
 
+/* Fix Windows scrollbar overlapping rounded corners */
+.modal-content::-webkit-scrollbar {
+  width: 14px;
+}
+.modal-content::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 16px 0; /* Keeps scrollbar away from the very top/bottom rounded corners */
+}
+.modal-content::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.15);
+  border-radius: 20px;
+  border: 4px solid var(--white); /* Creates pseudo-padding inside the track */
+}
+
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 /* ═══════════════════════════════════════════
    FOOTER (from innovision.co.in)
