@@ -2197,3 +2197,23 @@ textarea.form-input { min-height: 120px; resize: vertical; }
   background-color: var(--brand-red) !important;
   border-radius: 6px !important;
 }
+
+.react-datepicker__current-month {
+  display: none !important;
+}
+
+.react-datepicker__header select {
+  font-family: inherit;
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.1);
+  background: white;
+  margin: 0 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+.react-datepicker__header select:focus {
+  border-color: var(--brand-red);
+}
