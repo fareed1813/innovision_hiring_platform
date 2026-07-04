@@ -10,6 +10,17 @@ const router = Router();
 
 
 
+/* ─── GET /api/candidates/retest-status/:candidateId ── */
+router.get('/retest-status/:candidateId', async (req, res) => {
+  try {
+    const candidate = await Candidate.findById(req.params.candidateId).lean();
+    if (!candidate) return res.status(404).json({ error: 'Not found.' });
+    res.json({ retestStatus: candidate.retestStatus, assessmentStatus: candidate.assessmentStatus });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 /* ─── POST /api/candidates/submit-form — Save form details only ─── */
 router.post('/submit-form', async (req, res) => {
   try {

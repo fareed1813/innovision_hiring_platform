@@ -394,6 +394,7 @@ export default function CandidateFlow() {
           setFormError(`Form already submitted (Ref: ${data.refId}). You can now start the assessment.`);
         } else if (data.retestStatus === 'pending') {
           // Already has a pending retest request
+          setCandidateId(data.candidateId);
           setRetestPending('pending');
           setDupStatus('assessment_submitted');
         } else if (data.retestStatus === 'approved') {
@@ -407,11 +408,13 @@ export default function CandidateFlow() {
           setFormError('Retest approved! You can now start the assessment.');
         } else if (data.retestStatus === 'rejected') {
           // Admin rejected retest
+          setCandidateId(data.candidateId);
           setRetestPending('rejected');
           setDupStatus('assessment_submitted');
           setDupError(data.message || 'Your retest request was rejected by the admin.');
         } else {
           // Test completed, no retest status — hard block
+          setCandidateId(data.candidateId);
           setDupStatus('assessment_submitted');
           setDupError(data.message || 'You have already applied for this role. Only one attempt is permitted.');
         }
@@ -422,6 +425,31 @@ export default function CandidateFlow() {
       setSubmittingForm(false);
     }
   };
+
+  // Poll for retest status if pending
+  useEffect(() => {
+    let intervalId;
+    if (retestPending === 'pending' && candidateId) {
+      intervalId = setInterval(async () => {
+        try {
+          const res = await api.get(`/candidates/retest-status/${candidateId}`);
+          if (res.data.retestStatus === 'approved') {
+            setRetestPending('approved');
+            setFormSubmitted(true);
+            setDupStatus('');
+            setDupError('');
+            setFormError('Retest approved! You can now start the assessment.');
+          } else if (res.data.retestStatus === 'rejected') {
+            setRetestPending('rejected');
+            setDupError('Your retest request was rejected by the admin.');
+          }
+        } catch (err) {
+          // ignore network errors for polling
+        }
+      }, 5000);
+    }
+    return () => clearInterval(intervalId);
+  }, [retestPending, candidateId]);
 
   // Fetch questions when starting assessment
   const startAssessment = async () => {
