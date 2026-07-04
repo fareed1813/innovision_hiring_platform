@@ -171,7 +171,7 @@ export default function Dashboard() {
       setAllRoles(prev => [res.data.role, ...prev]);
       setShowAddRole(false);
       setAddRoleMode(null);
-      setNewRole({ name: '', description: '', iconKey: 'wrench' });
+      setNewRole({ name: '', description: '', iconKey: 'wrench', subRoles: [] });
     } catch (err) {
       setAddRoleError(err.response?.data?.error || 'Failed to create role');
     } finally {
@@ -537,12 +537,12 @@ export default function Dashboard() {
                         type="button" 
                         className="btn btn-sm btn-ghost" 
                         style={{ fontSize: '11px', padding: '4px 8px' }}
-                        onClick={() => setNewRole(p => ({ ...p, subRoles: [...p.subRoles, { key: `sub_${Date.now()}`, label: '', desc: '' }] }))}
+                        onClick={() => setNewRole(p => ({ ...p, subRoles: [{ key: `sub_${Date.now()}`, label: '', desc: '' }, ...(p.subRoles || [])] }))}
                       >
                         + Add Sub-role
                       </button>
                     </div>
-                    {newRole.subRoles.map((sub, i) => (
+                    {(newRole.subRoles || []).map((sub, i) => (
                       <div key={sub.key} style={{ display: 'flex', gap: '8px', marginBottom: '8px', background: 'var(--surface)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           <input 
@@ -660,7 +660,7 @@ export default function Dashboard() {
                                 type="button" 
                                 className="btn btn-sm btn-ghost" 
                                 style={{ fontSize: '11px', padding: '4px 8px' }}
-                                onClick={() => setEditingRole(p => ({ ...p, subRoles: [...(p.subRoles || []), { key: `sub_${Date.now()}`, label: '', desc: '' }] }))}
+                                onClick={() => setEditingRole(p => ({ ...p, subRoles: [{ key: `sub_${Date.now()}`, label: '', desc: '' }, ...(p.subRoles || [])] }))}
                               >
                                 + Add Sub-role
                               </button>

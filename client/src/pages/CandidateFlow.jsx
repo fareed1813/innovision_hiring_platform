@@ -597,7 +597,7 @@ export default function CandidateFlow() {
           ) : (
             <div className="roles-grid" style={{ animation: 'fade-in-page 0.35s ease' }}>
               {dynamicRoles.map(role => (
-                <div key={role._id} style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                <div key={role._id} style={{ display: 'flex', flexDirection: 'column', gap: '0', height: '100%' }}>
                   {/* Main role card */}
                   <div
                     className={`role-card domestic-role-card ${expandedRole === role._id ? 'selected' : ''}`}
@@ -610,7 +610,7 @@ export default function CandidateFlow() {
                         setStep(2);
                       }
                     }}
-                    style={{ cursor: 'pointer', userSelect: 'none' }}
+                    style={{ cursor: 'pointer', userSelect: 'none', flex: 1, display: 'flex', flexDirection: 'column' }}
                   >
                     <div className="role-card-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {ICON_RENDER[role.iconKey] || ICON_RENDER['wrench']}
@@ -633,7 +633,7 @@ export default function CandidateFlow() {
                       )}
                     </div>
                     {role.description && (
-                      <p style={{ marginTop: '8px', fontSize: '13px', color: 'var(--muted)' }}>
+                      <p style={{ marginTop: '8px', fontSize: '13px', color: 'var(--muted)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                         {role.description}
                       </p>
                     )}
@@ -642,7 +642,7 @@ export default function CandidateFlow() {
                   {/* Sub-roles list */}
                   {expandedRole === role._id && role.subRoles && role.subRoles.length > 0 && (
                     <div className="subrole-list">
-                      {role.subRoles.map(sub => (
+                      {(role.subRoles || []).map(sub => (
                         <button
                           key={sub.key}
                           className="subrole-item"
