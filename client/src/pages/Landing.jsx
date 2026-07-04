@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 import {
   Shield, Building2, Users, Wrench, Zap, ArrowRight,
-  CheckCircle, Globe, Award, ChevronDown, ChevronRight
+  CheckCircle, Globe, Award, ChevronDown, ChevronRight,
+  Cog, HardHat, Car, Sparkles, Briefcase
 } from 'lucide-react';
 import Footer from '../components/Footer';
 
@@ -47,12 +49,37 @@ const GlowingDivider = () => (
   }} />
 );
 
+const ICON_RENDER = {
+  wrench:       <Wrench size={22} />,
+  zap:          <Zap size={22} />,
+  cog:          <Cog size={22} />,
+  construction: <HardHat size={22} />,
+  car:          <Car size={22} />,
+  sparkles:     <Sparkles size={22} />,
+  shield:       <Shield size={22} />,
+  users:        <Users size={22} />,
+  briefcase:    <Briefcase size={22} />,
+};
+
 export default function Landing() {
   const navigate = useNavigate();
   const [expandedRole, setExpandedRole] = useState(null);
+  const [dynamicRoles, setDynamicRoles] = useState([]);
+  const [loadingRoles, setLoadingRoles] = useState(true);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    const fetchRoles = async () => {
+      try {
+        const res = await api.get('/roles');
+        setDynamicRoles(res.data);
+      } catch (err) {
+        console.error('Failed to fetch dynamic roles:', err);
+      } finally {
+        setLoadingRoles(false);
+      }
+    };
+    fetchRoles();
   }, []);
 
   return (
@@ -152,6 +179,54 @@ export default function Landing() {
               </div>
             ))}
           </div>
+
+          {/* Dynamic Roles Carousel */}
+          {!loadingRoles && dynamicRoles.length > 0 && (
+            <div style={{ marginTop: '48px', animation: 'fade-in-page 0.35s ease' }}>
+              <h3 style={{ fontSize: '18px', marginBottom: '16px', color: 'var(--text)' }}>More Opportunities</h3>
+              <div 
+                className="dynamic-roles-carousel"
+                style={{
+                  display: 'flex',
+                  gap: '16px',
+                  overflowX: 'auto',
+                  scrollSnapType: 'x mandatory',
+                  paddingBottom: '16px',
+                  scrollbarWidth: 'none', // Firefox
+                  msOverflowStyle: 'none', // IE/Edge
+                }}
+              >
+                <style>{`.dynamic-roles-carousel::-webkit-scrollbar { display: none; }`}</style>
+                {dynamicRoles.map(role => (
+                  <div
+                    key={role._id}
+                    className="role-card domestic-role-card"
+                    onClick={() => navigate(`/apply?role=${role._id}`)}
+                    style={{
+                      minWidth: '280px',
+                      flex: '0 0 auto',
+                      scrollSnapAlign: 'start',
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}
+                  >
+                    <div className="role-card-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {ICON_RENDER[role.iconKey] || ICON_RENDER['wrench']}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <h3 style={{ margin: 0, fontSize: '16px' }}>{role.name}</h3>
+                      <ChevronRight size={18} style={{ color: 'var(--brand-red)', flexShrink: 0, marginTop: '2px' }} />
+                    </div>
+                    {role.description && (
+                      <p style={{ marginTop: '8px', fontSize: '13px', color: 'var(--muted)' }}>
+                        {role.description}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
