@@ -5,7 +5,8 @@ import {
   Users, Clock, CheckCircle, XCircle, Search, Download, Eye, Check, X,
   ChevronLeft, ChevronRight, LogOut, ChevronDown, ShieldCheck, Info,
   Briefcase, Plus, Trash2, Upload, FileText, Edit2, ToggleLeft, ToggleRight,
-  Paperclip, Save, X as XIcon, Wrench, Zap, Cog, HardHat, Car, Sparkles, Shield as ShieldIcon
+  Paperclip, Save, X as XIcon, Wrench, Zap, Cog, HardHat, Car, Sparkles, Shield as ShieldIcon,
+  RotateCcw, AlertTriangle
 } from 'lucide-react';
 
 const ROLES = {
@@ -129,6 +130,8 @@ export default function Dashboard() {
       if (filter !== 'all') params.status = filter;
       if (jobFilter !== 'all') params.job = jobFilter;
       if (search) params.search = search;
+      // Retest Requests tab: filter by retestStatus=pending
+      if (tab === 'retest') params.retestStatus = 'pending';
       const res = await api.get('/candidates', { params });
       setCandidates(res.data.candidates);
       setTotalPages(res.data.pages);
@@ -303,6 +306,15 @@ export default function Dashboard() {
     } catch (err) { console.error(err); }
   };
 
+  const handleRetestDecision = async (id, decision) => {
+    try {
+      await api.post(`/candidates/${id}/retest-decision`, { decision });
+      fetchCandidates();
+      fetchStats();
+      if (selected?._id === id) setSelected(prev => ({ ...prev, retestStatus: decision, assessmentStatus: decision === 'approved' ? 'form_submitted' : prev.assessmentStatus }));
+    } catch (err) { console.error(err); alert('Failed to process retest decision.'); }
+  };
+
   const exportCSV = async () => {
     try {
       const params = {};
@@ -347,12 +359,13 @@ export default function Dashboard() {
           </div>
         </div>
         {[
-          { key: 'dashboard', label: 'Dashboard',    icon: <Users size={18} /> },
-          { key: 'all',       label: 'All Candidates', icon: <Users size={18} /> },
-          { key: 'pending',   label: 'Pending Review', icon: <Clock size={18} />, badge: stats.pending },
-          { key: 'selected',  label: 'Selected',      icon: <CheckCircle size={18} /> },
-          { key: 'rejected',  label: 'Rejected',      icon: <XCircle size={18} /> },
-          { key: 'roles',     label: 'Job Roles',     icon: <Briefcase size={18} /> },
+          { key: 'dashboard', label: 'Dashboard',       icon: <Users size={18} /> },
+          { key: 'all',       label: 'All Candidates',  icon: <Users size={18} /> },
+          { key: 'pending',   label: 'Pending Review',  icon: <Clock size={18} />, badge: stats.pending },
+          { key: 'selected',  label: 'Selected',        icon: <CheckCircle size={18} /> },
+          { key: 'rejected',  label: 'Rejected',        icon: <XCircle size={18} /> },
+          { key: 'retest',    label: 'Retest Requests', icon: <RotateCcw size={18} />, badge: stats.retestPending },
+          { key: 'roles',     label: 'Job Roles',       icon: <Briefcase size={18} /> },
         ].map(item => (
           <div
             key={item.key}
@@ -361,7 +374,8 @@ export default function Dashboard() {
               setTab(item.key);
               if (item.key === 'dashboard') { setFilter('all'); }
               else if (item.key === 'all')  { setFilter('all'); }
-              else if (item.key !== 'roles') { setFilter(item.key); }
+              else if (item.key !== 'roles' && item.key !== 'retest') { setFilter(item.key); }
+              else { setFilter('all'); }
               setPage(1);
               setSearch('');
             }}
@@ -918,8 +932,20 @@ export default function Dashboard() {
                           {(c.firstName?.[0] || '?') + (c.lastName?.[0] || '')}
                         </div>
                         <div>
-                          <div style={{ fontWeight: 600, fontSize: '14px' }}>{c.firstName} {c.lastName}</div>
-                          <div style={{ fontSize: '12px', color: 'var(--muted)' }}>{c.phone} · {c.city}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontWeight: 600, fontSize: '14px' }}>{c.firstName} {c.lastName}</span>
+                            {c.retestStatus === 'pending' && (
+                              <span style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                background: 'rgba(245,158,11,0.1)', color: '#d97706',
+                                padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700,
+                                border: '1px solid rgba(245,158,11,0.2)'
+                              }}>
+                                <RotateCcw size={10} /> RETEST REQ
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>{c.phone} · {c.city}</div>
                         </div>
                       </div>
                     </td>
@@ -1093,6 +1119,81 @@ export default function Dashboard() {
                 </div>
               );
             })}
+
+            {/* ── Retest Request Panel ── */}
+            {selected.retestReason && (
+              <>
+                <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '20px 0' }} />
+                <div style={{
+                  padding: '20px',
+                  borderRadius: '14px',
+                  border: `1.5px solid ${
+                    selected.retestStatus === 'pending'  ? 'rgba(245,158,11,0.3)' :
+                    selected.retestStatus === 'approved' ? 'rgba(16,185,129,0.3)' :
+                    'rgba(239,68,68,0.2)'
+                  }`,
+                  background: `${
+                    selected.retestStatus === 'pending'  ? 'rgba(245,158,11,0.04)' :
+                    selected.retestStatus === 'approved' ? 'rgba(16,185,129,0.04)' :
+                    'rgba(239,68,68,0.03)'
+                  }`,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                    <RotateCcw size={16} style={{ color:
+                      selected.retestStatus === 'pending'  ? '#d97706' :
+                      selected.retestStatus === 'approved' ? '#059669' : 'var(--brand-red)'
+                    }} />
+                    <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--text)' }}>
+                      Retest Request
+                    </span>
+                    <span style={{
+                      marginLeft: 'auto',
+                      padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700,
+                      background: selected.retestStatus === 'pending'  ? 'rgba(245,158,11,0.15)' :
+                                  selected.retestStatus === 'approved' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.1)',
+                      color: selected.retestStatus === 'pending'  ? '#d97706' :
+                             selected.retestStatus === 'approved' ? '#059669' : 'var(--brand-red)',
+                      border: `1px solid ${
+                        selected.retestStatus === 'pending'  ? 'rgba(245,158,11,0.3)' :
+                        selected.retestStatus === 'approved' ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.2)'
+                      }`
+                    }}>
+                      {selected.retestStatus === 'pending'  ? '⏳ Pending Review' :
+                       selected.retestStatus === 'approved' ? '✅ Approved' : '❌ Rejected'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '4px' }}>Candidate's reason:</div>
+                  <div style={{
+                    fontSize: '13px', color: 'var(--text)', lineHeight: '1.7',
+                    background: 'var(--surface)', padding: '12px 16px', borderRadius: '8px',
+                    border: '1px solid var(--border)', fontStyle: 'italic',
+                    marginBottom: selected.retestStatus === 'pending' ? '16px' : 0
+                  }}>
+                    "{selected.retestReason}"
+                  </div>
+
+                  {/* Action buttons — only show if still pending */}
+                  {selected.retestStatus === 'pending' && (
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                      <button
+                        className="btn-action-tick"
+                        style={{ flex: 1, height: '40px', gap: '8px', fontSize: '13px' }}
+                        onClick={() => handleRetestDecision(selected._id, 'approved')}
+                      >
+                        <Check size={16} /> APPROVE RETEST
+                      </button>
+                      <button
+                        className="btn-action-x"
+                        style={{ flex: 1, height: '40px', gap: '8px', fontSize: '13px' }}
+                        onClick={() => handleRetestDecision(selected._id, 'rejected')}
+                      >
+                        <X size={16} /> REJECT RETEST
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
 
             {/* Actions */}
             {selected.status === 'pending' && (

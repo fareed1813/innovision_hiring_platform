@@ -147,6 +147,8 @@ export default function CandidateFlow() {
   const [dupError, setDupError] = useState('');
   // 'form_submitted' = form done, test not yet taken | 'assessment_submitted' = test already done
   const [dupStatus, setDupStatus] = useState('');
+  // retest request state: '' | 'pending' | 'approved' | 'rejected'
+  const [retestPending, setRetestPending] = useState('');
   const [isFull, setIsFull] = useState(false);
   const [reviewed, setReviewed] = useState(new Set());
   const [resetsRemaining, setResetsRemaining] = useState(2);
@@ -366,26 +368,57 @@ export default function CandidateFlow() {
         type: 'international',
         retestReason
       });
-      setCandidateId(res.data.candidateId);
-      setFormRefId(res.data.refId);
+      const data = res.data;
+
+      // Retest request submitted — waiting for admin
+      if (data.retestStatus === 'pending') {
+        setCandidateId(data.candidateId);
+        setFormRefId(data.refId);
+        setRetestPending('pending');
+        setDupError(''); // keep dupStatus for UI context
+        return;
+      }
+
+      // Normal fresh submission
+      setCandidateId(data.candidateId);
+      setFormRefId(data.refId);
       setFormSubmitted(true);
       setDupStatus('');
-      setResult({ refId: res.data.refId });
+      setRetestPending('');
+      setResult({ refId: data.refId });
     } catch (err) {
       console.error(err);
       if (err.response?.status === 409) {
         const data = err.response.data;
         if (data.assessmentStatus === 'form_submitted') {
-          // Form already submitted but test not taken — let them proceed to assessment
+          // Form already submitted but test not taken — let them proceed
           setCandidateId(data.candidateId);
           setFormRefId(data.refId);
           setFormSubmitted(true);
           setDupStatus('form_submitted');
           setFormError(`Form already submitted (Ref: ${data.refId}). You can now start the assessment.`);
-        } else {
-          // Test already completed — hard block
+        } else if (data.retestStatus === 'pending') {
+          // Already has a pending retest request
+          setRetestPending('pending');
           setDupStatus('assessment_submitted');
-          setDupError(data.message || `You have already applied for this role. Only one attempt is permitted.`);
+        } else if (data.retestStatus === 'approved') {
+          // Admin already approved the retest — let them proceed
+          setCandidateId(data.candidateId);
+          setFormRefId(data.refId);
+          setFormSubmitted(true);
+          setRetestPending('approved');
+          setDupStatus('');
+          setDupError('');
+          setFormError('Retest approved! You can now start the assessment.');
+        } else if (data.retestStatus === 'rejected') {
+          // Admin rejected retest
+          setRetestPending('rejected');
+          setDupStatus('assessment_submitted');
+          setDupError(data.message || 'Your retest request was rejected by the admin.');
+        } else {
+          // Test completed, no retest status — hard block
+          setDupStatus('assessment_submitted');
+          setDupError(data.message || 'You have already applied for this role. Only one attempt is permitted.');
         }
       } else {
         setFormError('Failed to submit form. Please check your connection and try again.');
@@ -854,62 +887,96 @@ export default function CandidateFlow() {
               </div>
             </div>
 
-            {/* Duplicate error */}
-            {/* ── Duplicate: Assessment already taken ── */}
-            {dupError && dupStatus === 'assessment_submitted' && (
+            {/* ── Assessment already taken: show retest banner ── */}
+            {dupStatus === 'assessment_submitted' && (
               <div style={{ 
                 marginTop: '32px',
                 padding: '24px', 
-                background: 'rgba(239, 68, 68, 0.03)', 
-                border: '1.5px solid rgba(239, 68, 68, 0.15)', 
+                background: retestPending === 'pending' ? 'rgba(245,158,11,0.04)' : 'rgba(239,68,68,0.03)',
+                border: `1.5px solid ${retestPending === 'pending' ? 'rgba(245,158,11,0.25)' : 'rgba(239,68,68,0.15)'}`,
                 borderRadius: '16px',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '20px',
+                display: 'flex', alignItems: 'flex-start', gap: '20px',
                 animation: 'slide-up 0.4s ease'
               }}>
                 <div style={{ 
-                  width: '48px', height: '48px', 
-                  borderRadius: '12px', 
-                  background: 'rgba(239, 68, 68, 0.1)', 
-                  color: 'var(--brand-red)',
+                  width: '48px', height: '48px', borderRadius: '12px', 
+                  background: retestPending === 'pending' ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.1)',
+                  color: retestPending === 'pending' ? '#d97706' : 'var(--brand-red)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
-                  marginTop: '2px'
+                  flexShrink: 0, marginTop: '2px'
                 }}>
-                  <ShieldCheck size={24} />
+                  {retestPending === 'pending' ? <AlertTriangle size={24} /> : <ShieldCheck size={24} />}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 800, fontSize: '15px', color: 'var(--text)', marginBottom: '4px' }}>
-                    Application Already Completed
-                  </div>
-                  <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6', marginBottom: '4px' }}>
-                    {dupError}
-                  </div>
-                  <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: '1.5', marginBottom: '16px' }}>
-                    Both the <strong>form submission</strong> and <strong>assessment test</strong> are locked for this role. For further assistance, contact our support team.
-                  </div>
-                  {/* Retest request */}
-                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      Request a Retest
-                    </div>
-                    <textarea 
-                      className="form-input" 
-                      placeholder="Provide a reason for requesting a retest (required)..." 
-                      value={retestReason}
-                      onChange={(e) => setRetestReason(e.target.value)}
-                      style={{ width: '100%', minHeight: '70px', fontSize: '13px', marginBottom: '10px', resize: 'vertical' }}
-                    />
-                    <button 
-                      className="btn btn-primary btn-sm"
-                      onClick={() => { setDupError(''); setDupStatus(''); submitForm(); }}
-                      disabled={!retestReason.trim() || submittingForm}
-                      style={{ padding: '8px 20px', borderRadius: '10px' }}
-                    >
-                      {submittingForm ? 'Submitting...' : 'Request Retest'}
-                    </button>
-                  </div>
+
+                  {/* Sub-state: no retest requested yet — show form */}
+                  {!retestPending && (
+                    <>
+                      <div style={{ fontWeight: 800, fontSize: '15px', color: 'var(--text)', marginBottom: '4px' }}>
+                        Application Already Completed
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6', marginBottom: '4px' }}>
+                        {dupError}
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: '1.5', marginBottom: '16px' }}>
+                        Both the <strong>form submission</strong> and <strong>assessment test</strong> are locked. Contact our support team or submit a retest request below.
+                      </div>
+                      <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                          Request a Retest
+                        </div>
+                        <textarea 
+                          className="form-input" 
+                          placeholder="Explain why you need to retake the assessment (required)..." 
+                          value={retestReason}
+                          onChange={(e) => setRetestReason(e.target.value)}
+                          style={{ width: '100%', minHeight: '70px', fontSize: '13px', marginBottom: '10px', resize: 'vertical' }}
+                        />
+                        <button 
+                          className="btn btn-primary btn-sm"
+                          onClick={submitForm}
+                          disabled={!retestReason.trim() || submittingForm}
+                          style={{ padding: '8px 20px', borderRadius: '10px' }}
+                        >
+                          {submittingForm ? 'Submitting...' : 'Request Retest'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Sub-state: pending admin approval */}
+                  {retestPending === 'pending' && (
+                    <>
+                      <div style={{ fontWeight: 800, fontSize: '15px', color: '#d97706', marginBottom: '6px' }}>
+                        Retest Request Submitted — Awaiting Admin Approval
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6', marginBottom: '14px' }}>
+                        Your request has been received and is under review. Once the admin approves it, you will be able to retake the assessment. Please check back later.
+                      </div>
+                      <div style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '8px',
+                        padding: '7px 14px',
+                        background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)',
+                        borderRadius: '8px', fontSize: '12px', fontWeight: 700, color: '#d97706'
+                      }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#d97706' }} />
+                        Pending Admin Review
+                      </div>
+                    </>
+                  )}
+
+                  {/* Sub-state: rejected by admin */}
+                  {retestPending === 'rejected' && (
+                    <>
+                      <div style={{ fontWeight: 800, fontSize: '15px', color: 'var(--brand-red)', marginBottom: '6px' }}>
+                        Retest Request Rejected
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6' }}>
+                        {dupError || 'Your retest request was reviewed and rejected by the admin. For further assistance, please contact our support team.'}
+                      </div>
+                    </>
+                  )}
+
                 </div>
               </div>
             )}

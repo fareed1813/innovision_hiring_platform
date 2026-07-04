@@ -77,7 +77,14 @@ const candidateSchema = new mongoose.Schema({
   },
   proctoringViolations: { type: Number, default: 0 },
 
-  retestReason: { type: String, trim: true, default: '' }
+  retestReason: { type: String, trim: true, default: '' },
+
+  retestStatus: {
+    type: String,
+    enum: ['none', 'pending', 'approved', 'rejected'],
+    default: 'none',
+    index: true
+  }
 
 }, { timestamps: true });
 

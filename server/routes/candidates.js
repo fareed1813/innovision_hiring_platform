@@ -35,25 +35,28 @@ router.post('/submit-form', async (req, res) => {
           refId: existing.refId,
           candidateId: existing._id,
           message: 'You have already applied for this role. If you wish to retake the assessment, please provide a reason.',
-          assessmentStatus: existing.assessmentStatus
+          assessmentStatus: existing.assessmentStatus,
+          retestStatus: existing.retestStatus
         });
       } else {
-        // Allow retest: save reason and reset assessment data
-        existing.retestReason = retestReason;
-        existing.assessmentStatus = 'form_submitted';
-        existing.questions = [];
-        existing.answers = {};
-        existing.audioRecordings = {};
-        existing.evaluations = {};
-        existing.scores = { total: 0, reading: 0, voice: 0, quality: 0 };
-        existing.proctoring = { tabSwitches: 0, fullscreenExits: 0 };
-        existing.proctoringViolations = 0;
+        // Don't reset yet — save the reason and mark as pending admin approval
+        if (existing.retestStatus === 'pending') {
+          return res.status(200).json({
+            refId: existing.refId,
+            candidateId: existing._id,
+            retestStatus: 'pending',
+            message: 'Your retest request is already pending admin approval.'
+          });
+        }
+        existing.retestReason  = retestReason;
+        existing.retestStatus  = 'pending';
         await existing.save();
 
         return res.status(200).json({
           refId: existing.refId,
           candidateId: existing._id,
-          message: 'Retest requested successfully.'
+          retestStatus: 'pending',
+          message: 'Retest requested successfully. Please wait for admin approval before retaking the test.'
         });
       }
     }
@@ -198,15 +201,52 @@ router.post('/', async (req, res) => {
   }
 });
 
+/* ─── POST /api/candidates/:id/retest-decision — Admin: approve or reject retest ─── */
+router.post('/:id/retest-decision', authMiddleware, async (req, res) => {
+  try {
+    const { decision } = req.body; // 'approved' | 'rejected'
+    if (!['approved', 'rejected'].includes(decision)) {
+      return res.status(400).json({ error: 'Decision must be \'approved\' or \'rejected\'.' });
+    }
+
+    const candidate = await Candidate.findById(req.params.id);
+    if (!candidate) return res.status(404).json({ error: 'Candidate not found.' });
+    if (candidate.retestStatus !== 'pending') {
+      return res.status(400).json({ error: 'No pending retest request for this candidate.' });
+    }
+
+    candidate.retestStatus = decision;
+
+    if (decision === 'approved') {
+      // Reset assessment data so candidate can retake
+      candidate.assessmentStatus   = 'form_submitted';
+      candidate.questions          = [];
+      candidate.answers            = {};
+      candidate.audioRecordings    = {};
+      candidate.evaluations        = {};
+      candidate.scores             = { total: 0, reading: 0, voice: 0, quality: 0 };
+      candidate.proctoring         = { tabSwitches: 0, fullscreenExits: 0 };
+      candidate.proctoringViolations = 0;
+    }
+
+    await candidate.save();
+    res.json({ message: `Retest ${decision}.`, retestStatus: decision });
+  } catch (err) {
+    console.error('Retest decision error:', err);
+    res.status(500).json({ error: 'Failed to process retest decision.' });
+  }
+});
+
 /* ─── GET /api/candidates — List all (admin) ─────────── */
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const { status, job, search, page = 1, limit = 50 } = req.query;
+    const { status, job, search, retestStatus, page = 1, limit = 50 } = req.query;
     const filter = {};
     const andConditions = [];
     
     if (status && status !== 'all') filter.status = status;
     if (job && job !== 'all') filter.job = job;
+    if (retestStatus && retestStatus !== 'all') filter.retestStatus = retestStatus;
 
     if (search) {
       const regex = new RegExp(search, 'i');
@@ -274,13 +314,14 @@ router.get('/check-duplication', async (req, res) => {
 /* ─── GET /api/candidates/stats — Dashboard stats ────── */
 router.get('/stats', authMiddleware, async (req, res) => {
   try {
-    const [total, pending, selected, rejected] = await Promise.all([
+    const [total, pending, selected, rejected, retestPending] = await Promise.all([
       Candidate.countDocuments({}),
       Candidate.countDocuments({ status: 'pending' }),
       Candidate.countDocuments({ status: 'selected' }),
-      Candidate.countDocuments({ status: 'rejected' })
+      Candidate.countDocuments({ status: 'rejected' }),
+      Candidate.countDocuments({ retestStatus: 'pending' })
     ]);
-    res.json({ total, pending, selected, rejected });
+    res.json({ total, pending, selected, rejected, retestPending });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch stats.' });
   }
