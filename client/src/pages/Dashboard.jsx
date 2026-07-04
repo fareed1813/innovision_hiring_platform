@@ -1065,7 +1065,7 @@ export default function Dashboard() {
                             <button className="btn-action-tick" onClick={() => handleRetestDecision(c._id, 'approved')} title="Accept Retest"><Check size={16} /></button>
                             <button className="btn-action-x" onClick={() => handleRetestDecision(c._id, 'rejected')} title="Reject Retest"><X size={16} /></button>
                             
-                            <div style={{ position: 'relative' }} onMouseLeave={() => setActiveReason(null)}>
+                            <div style={{ position: 'relative' }} onMouseEnter={() => setActiveReason(c._id)} onMouseLeave={() => setActiveReason(null)}>
                               <button 
                                 className={`btn btn-sm ${activeReason === c._id ? 'btn-primary' : 'btn-ghost'}`}
                                 style={{ gap: '4px', borderRadius: '16px', padding: '4px 12px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}

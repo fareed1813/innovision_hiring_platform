@@ -1335,7 +1335,6 @@ textarea.form-input { min-height: 120px; resize: vertical; }
   border-collapse: collapse;
   background: var(--white);
   border-radius: var(--radius-lg);
-  overflow: hidden;
   border: 1px solid var(--border);
 }
 
@@ -1350,6 +1349,11 @@ textarea.form-input { min-height: 120px; resize: vertical; }
   background: var(--surface2);
   border-bottom: 1px solid var(--border);
 }
+
+.data-table thead th:first-child { border-top-left-radius: var(--radius-lg); }
+.data-table thead th:last-child { border-top-right-radius: var(--radius-lg); }
+.data-table tbody tr:last-child td:first-child { border-bottom-left-radius: var(--radius-lg); }
+.data-table tbody tr:last-child td:last-child { border-bottom-right-radius: var(--radius-lg); }
 
 .data-table tbody tr {
   transition: background 0.15s;
