@@ -58,6 +58,7 @@ export default function Dashboard() {
   const [comparisonData, setComparisonData] = useState([]);
   const dropdownRef = useRef(null);
   const [activeReason, setActiveReason] = useState(null);
+  const [pinnedReason, setPinnedReason] = useState(null);
 
   // ── Job Roles Tab State ──
   const [rolesLoading, setRolesLoading] = useState(false);
@@ -1067,14 +1068,14 @@ export default function Dashboard() {
                             
                             <div style={{ position: 'relative' }} onMouseEnter={() => setActiveReason(c._id)} onMouseLeave={() => setActiveReason(null)}>
                               <button 
-                                className={`btn btn-sm ${activeReason === c._id ? 'btn-primary' : 'btn-ghost'}`}
+                                className={`btn btn-sm ${activeReason === c._id || pinnedReason === c._id ? 'btn-primary' : 'btn-ghost'}`}
                                 style={{ gap: '4px', borderRadius: '16px', padding: '4px 12px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}
-                                onClick={() => setActiveReason(activeReason === c._id ? null : c._id)}
+                                onClick={() => setPinnedReason(pinnedReason === c._id ? null : c._id)}
                               >
                                 View Reason
                               </button>
                               
-                              {activeReason === c._id && (
+                              {(activeReason === c._id || pinnedReason === c._id) && (
                                 <div style={{
                                   position: 'absolute',
                                   top: '100%',
