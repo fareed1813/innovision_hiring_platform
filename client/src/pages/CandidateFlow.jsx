@@ -1439,9 +1439,48 @@ export default function CandidateFlow() {
               </div>
             </div>
           )}
-          <button className="btn btn-primary" onClick={() => navigate('/')}>
-            Back to Home
-          </button>
+          {!retestPending ? (
+            <div style={{ display: 'flex', gap: '12px', width: '100%', maxWidth: '400px', margin: '0 auto' }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => navigate('/')}>
+                Back to Home
+              </button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setRetestPending('input_reason')}>
+                Retake Test
+              </button>
+            </div>
+          ) : retestPending === 'input_reason' ? (
+            <div style={{ width: '100%', maxWidth: '400px', margin: '0 auto', textAlign: 'left', animation: 'slide-up 0.3s ease' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)', marginBottom: '8px' }}>
+                Reason for Retake Request
+              </div>
+              <textarea 
+                className="form-input" 
+                placeholder="Please explain why you need to retake the test..."
+                value={retestReason}
+                onChange={(e) => setRetestReason(e.target.value)}
+                style={{ width: '100%', minHeight: '80px', fontSize: '13px', marginBottom: '16px', resize: 'vertical' }}
+              />
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button className="btn btn-ghost btn-sm" style={{ flex: 1 }} onClick={() => setRetestPending('')}>Cancel</button>
+                <button 
+                  className="btn btn-primary btn-sm" 
+                  style={{ flex: 1 }} 
+                  onClick={submitForm}
+                  disabled={!retestReason.trim() || submittingForm}
+                >
+                  {submittingForm ? 'Submitting...' : 'Submit Request'}
+                </button>
+              </div>
+            </div>
+          ) : retestPending === 'pending' ? (
+            <div style={{ width: '100%', maxWidth: '400px', margin: '0 auto', padding: '16px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '12px', color: '#d97706', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '12px', animation: 'slide-up 0.3s ease' }}>
+              <AlertTriangle size={24} />
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontWeight: 700, marginBottom: '2px' }}>Request Submitted</div>
+                <div style={{ fontSize: '12px', color: 'rgba(217,119,6,0.8)' }}>Awaiting Admin Approval</div>
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
       <Footer />
