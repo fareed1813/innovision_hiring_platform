@@ -145,6 +145,8 @@ export default function CandidateFlow() {
   const [submitError, setSubmitError] = useState(null);
   const [validating, setValidating] = useState(false);
   const [dupError, setDupError] = useState('');
+  // 'form_submitted' = form done, test not yet taken | 'assessment_submitted' = test already done
+  const [dupStatus, setDupStatus] = useState('');
   const [isFull, setIsFull] = useState(false);
   const [reviewed, setReviewed] = useState(new Set());
   const [resetsRemaining, setResetsRemaining] = useState(2);
@@ -348,7 +350,8 @@ export default function CandidateFlow() {
 
   // ── Submit form details to DB ──
   const submitForm = async () => {
-    if (submittingForm || formSubmitted) return;
+    // Allow re-entry only when in retest mode (dupError cleared before calling)
+    if (submittingForm) return;
     setSubmittingForm(true);
     setFormError('');
     try {
@@ -366,17 +369,22 @@ export default function CandidateFlow() {
       setCandidateId(res.data.candidateId);
       setFormRefId(res.data.refId);
       setFormSubmitted(true);
+      setDupStatus('');
       setResult({ refId: res.data.refId });
     } catch (err) {
       console.error(err);
       if (err.response?.status === 409) {
         const data = err.response.data;
         if (data.assessmentStatus === 'form_submitted') {
+          // Form already submitted but test not taken — let them proceed to assessment
           setCandidateId(data.candidateId);
           setFormRefId(data.refId);
           setFormSubmitted(true);
-          setFormError(`You already submitted this form (Ref: ${data.refId}). You can now start the assessment.`);
+          setDupStatus('form_submitted');
+          setFormError(`Form already submitted (Ref: ${data.refId}). You can now start the assessment.`);
         } else {
+          // Test already completed — hard block
+          setDupStatus('assessment_submitted');
           setDupError(data.message || `You have already applied for this role. Only one attempt is permitted.`);
         }
       } else {
@@ -847,15 +855,16 @@ export default function CandidateFlow() {
             </div>
 
             {/* Duplicate error */}
-            {dupError && (
+            {/* ── Duplicate: Assessment already taken ── */}
+            {dupError && dupStatus === 'assessment_submitted' && (
               <div style={{ 
                 marginTop: '32px',
                 padding: '24px', 
                 background: 'rgba(239, 68, 68, 0.03)', 
-                border: '1.5px solid rgba(239, 68, 68, 0.1)', 
+                border: '1.5px solid rgba(239, 68, 68, 0.15)', 
                 borderRadius: '16px',
                 display: 'flex',
-                alignItems: 'center',
+                alignItems: 'flex-start',
                 gap: '20px',
                 animation: 'slide-up 0.4s ease'
               }}>
@@ -865,28 +874,36 @@ export default function CandidateFlow() {
                   background: 'rgba(239, 68, 68, 0.1)', 
                   color: 'var(--brand-red)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0
+                  flexShrink: 0,
+                  marginTop: '2px'
                 }}>
-                  <Shield size={24} />
+                  <ShieldCheck size={24} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 800, fontSize: '15px', color: 'var(--text)', marginBottom: '4px' }}>
-                    Assessment Already Completed
+                    Application Already Completed
                   </div>
-                  <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6' }}>
-                    {dupError} For further assistance, reach out to our support team.
+                  <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: '1.6', marginBottom: '4px' }}>
+                    {dupError}
                   </div>
-                  <div style={{ marginTop: '12px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: '1.5', marginBottom: '16px' }}>
+                    Both the <strong>form submission</strong> and <strong>assessment test</strong> are locked for this role. For further assistance, contact our support team.
+                  </div>
+                  {/* Retest request */}
+                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      Request a Retest
+                    </div>
                     <textarea 
                       className="form-input" 
-                      placeholder="Reason for retaking the assessment..." 
+                      placeholder="Provide a reason for requesting a retest (required)..." 
                       value={retestReason}
                       onChange={(e) => setRetestReason(e.target.value)}
-                      style={{ width: '100%', minHeight: '60px', fontSize: '13px', marginBottom: '8px' }}
+                      style={{ width: '100%', minHeight: '70px', fontSize: '13px', marginBottom: '10px', resize: 'vertical' }}
                     />
                     <button 
                       className="btn btn-primary btn-sm"
-                      onClick={() => { setDupError(''); submitForm(); }}
+                      onClick={() => { setDupError(''); setDupStatus(''); submitForm(); }}
                       disabled={!retestReason.trim() || submittingForm}
                       style={{ padding: '8px 20px', borderRadius: '10px' }}
                     >
@@ -897,7 +914,7 @@ export default function CandidateFlow() {
               </div>
             )}
 
-            {/* Form submission error */}
+            {/* Form submission info/error */}
             {formError && !dupError && (
               <div style={{
                 marginTop: '16px',
@@ -912,7 +929,7 @@ export default function CandidateFlow() {
                 alignItems: 'center',
                 gap: '10px'
               }}>
-                <CheckCircle size={16} /> {formError}
+                {formSubmitted ? <CheckCircle size={16} /> : <AlertCircle size={16} />} {formError}
               </div>
             )}
 
@@ -929,45 +946,70 @@ export default function CandidateFlow() {
               </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                {/* Submit Form button */}
-                {!formSubmitted ? (
+
+                {/* Submit Form button — 3 states */}
+                {dupStatus === 'assessment_submitted' ? (
+                  /* Test already taken: hard lock on form too */
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '10px 20px',
+                    background: 'rgba(239,68,68,0.06)',
+                    border: '1.5px solid rgba(239,68,68,0.2)',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '13px', fontWeight: 700,
+                    color: 'var(--brand-red)', letterSpacing: '0.04em'
+                  }}>
+                    <Shield size={15} /> Form Locked
+                  </div>
+                ) : !formSubmitted ? (
                   <button
                     className="btn btn-ghost btn-lg"
-                    disabled={!isFormValid() || submittingForm || !!dupError}
+                    disabled={!isFormValid() || submittingForm}
                     onClick={submitForm}
                   >
                     {submittingForm ? 'Saving...' : 'Submit Form'}
                   </button>
                 ) : (
+                  /* Form submitted, test not yet taken */
                   <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
+                    display: 'flex', alignItems: 'center', gap: '8px',
                     padding: '10px 20px',
                     background: 'rgba(16,185,129,0.08)',
                     border: '1.5px solid rgba(16,185,129,0.3)',
                     borderRadius: 'var(--radius-sm)',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    color: '#059669',
-                    letterSpacing: '0.04em'
+                    fontSize: '13px', fontWeight: 700,
+                    color: '#059669', letterSpacing: '0.04em'
                   }}>
                     <CheckCircle size={16} />
                     Form Submitted · Ref: {formRefId}
                   </div>
                 )}
 
-                {/* Start Assessment — only enabled after form submitted */}
-                <button
-                  className="btn btn-primary btn-lg"
-                  disabled={!formSubmitted || validating || !!dupError}
-                  onClick={(e) => {
-                    enterFS();
-                    startAssessment();
-                  }}
-                >
-                  {validating ? 'Loading...' : 'Start Assessment'} <ChevronRight size={16} />
-                </button>
+                {/* Start Assessment — 3 states */}
+                {dupStatus === 'assessment_submitted' ? (
+                  /* Test already done: show a locked badge */
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '12px 28px',
+                    background: 'rgba(239,68,68,0.06)',
+                    border: '1.5px solid rgba(239,68,68,0.2)',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '14px', fontWeight: 700,
+                    color: 'var(--brand-red)', letterSpacing: '0.04em',
+                    cursor: 'not-allowed',
+                    userSelect: 'none'
+                  }}>
+                    <Shield size={16} /> Assessment Locked
+                  </div>
+                ) : (
+                  <button
+                    className="btn btn-primary btn-lg"
+                    disabled={!formSubmitted || validating}
+                    onClick={() => { enterFS(); startAssessment(); }}
+                  >
+                    {validating ? 'Loading...' : 'Start Assessment'} <ChevronRight size={16} />
+                  </button>
+                )}
               </div>
             </div>
           </div>
