@@ -449,8 +449,8 @@ export default function Dashboard() {
                     <div style={{ background: 'var(--brand-red)', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#fff' }}>
                       {parsingJd ? <div style={{ width: '20px', height: '20px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} /> : <FileText size={24} />}
                     </div>
-                    <h5 style={{ fontSize: '16px', marginBottom: '8px', color: 'var(--brand-red)' }}>{parsingJd ? 'Extracting with AI...' : 'Auto-Extract (AI)'}</h5>
-                    <p style={{ fontSize: '13px', color: 'var(--brand-red)', opacity: 0.8 }}>Upload a Job Description PDF and let AI extract the details.</p>
+                    <h5 style={{ fontSize: '16px', marginBottom: '8px', color: 'var(--brand-red)' }}>{parsingJd ? 'Extracting details...' : 'Auto-Extract (PDF)'}</h5>
+                    <p style={{ fontSize: '13px', color: 'var(--brand-red)', opacity: 0.8 }}>Upload a Job Description PDF and let the system extract the details.</p>
                   </div>
                 </div>
 

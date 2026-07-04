@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import pdf from 'pdf-parse';
+import { PDFParse } from 'pdf-parse';
 import JobRole from '../models/JobRole.js';
 import authMiddleware from '../middleware/auth.js';
 
@@ -162,8 +162,9 @@ router.post('/parse-jd', authMiddleware, upload.single('pdf'), async (req, res) 
     if (!req.file) return res.status(400).json({ error: 'No PDF uploaded.' });
 
     // 1. Extract raw text from PDF
-    const pdfData = await pdf(req.file.buffer);
-    const rawText = pdfData.text || '';
+    const parser = new PDFParse({ data: req.file.buffer });
+    const pdfData = await parser.getText();
+    const rawText = pdfData.text || pdfData.pages?.map(p => p.text).join('\n') || '';
 
     // 2. Local Heuristics / NLP parsing
     let extractedName = '';
