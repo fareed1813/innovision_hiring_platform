@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
-import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, Building2, ShieldCheck, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle, Zap, Cog, HardHat, Car, Sparkles, Users, Briefcase } from 'lucide-react';
+import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, Building2, ShieldCheck, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle, Zap, Cog, HardHat, Car, Sparkles, Users, Briefcase, Loader2 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import Footer from '../components/Footer';
@@ -593,7 +593,9 @@ export default function CandidateFlow() {
             <h2>Select Your Role</h2>
             <p className="section-sub">Choose a category and select the role that matches your skills.
           {loadingRoles ? (
-            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>Loading roles...</div>
+            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Loading roles...
+            </div>
           ) : (
             <div className="roles-grid" style={{ animation: 'fade-in-page 0.35s ease' }}>
               {dynamicRoles.map(role => (
@@ -1092,7 +1094,15 @@ export default function CandidateFlow() {
                     disabled={!formSubmitted || validating}
                     onClick={() => { enterFS(); startAssessment(); }}
                   >
-                    {validating ? 'Loading...' : 'Start Assessment'} <ChevronRight size={16} />
+                    {validating ? (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Loading...
+                      </span>
+                    ) : (
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        Start Assessment <ChevronRight size={16} />
+                      </span>
+                    )}
                   </button>
                 )}
               </div>
@@ -1107,7 +1117,7 @@ export default function CandidateFlow() {
   // ── STEP 2: Assessment ──
   if (step === 2) {
     const q = questions[currentQ];
-    if (!q) return <div className="section text-center"><p>Loading questions...</p></div>;
+    if (!q) return <div className="section text-center" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '40px' }}><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /><p style={{ margin: 0 }}>Loading questions...</p></div>;
     const qid = q.qid || q.id;
 
     const answeredCount = Object.keys(answers).length;

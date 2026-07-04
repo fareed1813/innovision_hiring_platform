@@ -6,7 +6,7 @@ import {
   ChevronLeft, ChevronRight, LogOut, ChevronDown, ShieldCheck, Info,
   Briefcase, Plus, Trash2, Upload, FileText, Edit2, ToggleLeft, ToggleRight,
   Paperclip, Save, X as XIcon, Wrench, Zap, Cog, HardHat, Car, Sparkles, Shield as ShieldIcon,
-  RotateCcw, AlertTriangle
+  RotateCcw, AlertTriangle, Loader2
 } from 'lucide-react';
 
 
@@ -597,7 +597,9 @@ export default function Dashboard() {
 
             {/* Roles List */}
             {rolesLoading ? (
-              <div style={{ textAlign: 'center', padding: '60px', color: 'var(--muted)' }}>Loading roles...</div>
+              <div style={{ textAlign: 'center', padding: '60px', color: 'var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Loading roles...
+              </div>
             ) : allRoles.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px', color: 'var(--muted)' }}>
                 No roles yet. Click "Add Role" to create your first job role.
@@ -797,7 +799,11 @@ export default function Dashboard() {
                                 }}
                               >
                                 <Upload size={13} />
-                                {uploadingPdf ? 'Uploading...' : 'Upload PDF'}
+                                {uploadingPdf ? (
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Uploading...
+                                  </span>
+                                ) : 'Upload PDF'}
                               </label>
                               <input
                                 id={`pdf-upload-${role._id}`}
@@ -987,10 +993,9 @@ export default function Dashboard() {
               <tbody>
                 {loadingCandidates ? (
                   <tr>
-                    <td colSpan="7" style={{ textAlign: 'center', padding: '48px', color: 'var(--muted)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-                        <div style={{ width: '20px', height: '20px', border: '2px solid var(--border)', borderTopColor: 'var(--brand-red)', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
-                        Loading candidates...
+                    <td colSpan="7" style={{ textAlign: 'center', padding: '60px', color: 'var(--muted)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Loading candidates...
                       </div>
                     </td>
                   </tr>
