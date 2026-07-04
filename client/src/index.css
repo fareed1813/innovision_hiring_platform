@@ -1220,6 +1220,8 @@ textarea.form-input { min-height: 120px; resize: vertical; }
 .test-sidebar {
   width: 280px;
   flex-shrink: 0;
+  position: sticky;
+  top: 120px;
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
@@ -1721,33 +1723,6 @@ textarea.form-input { min-height: 120px; resize: vertical; }
 /* ═══════════════════════════════════════════
    TEST NAVIGATION SIDEBAR
    ═══════════════════════════════════════════ */
-.test-main-layout {
-  display: flex;
-  gap: 32px;
-  max-width: 1200px;
-  margin: 40px auto;
-  padding: 0 40px;
-  align-items: flex-start;
-}
-
-.test-card-container {
-  flex: 1;
-  min-width: 0;
-}
-
-.test-sidebar {
-  width: 320px;
-  position: sticky;
-  top: 100px;
-  background: #fff;
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-  border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
 
 .sidebar-section {
   display: flex;
@@ -1847,7 +1822,7 @@ textarea.form-input { min-height: 120px; resize: vertical; }
 @media (max-width: 900px) {
   .test-main-layout {
     flex-direction: column;
-    padding: 0 20px;
+    padding: 100px 20px 20px;
   }
   .test-sidebar {
     width: 100%;
