@@ -424,18 +424,10 @@ export default function CandidateFlow() {
   };
 
   // Fetch questions when starting assessment
-  // Map new role keys → question bank role names used by the API
-  const getAssessmentRole = () => {
-    if (selectedRole === 'facility_management') return 'housekeeping';
-    if (selectedRole === 'security_international') return 'security';
-    return selectedRole;
-  };
-
   const startAssessment = async () => {
     setValidating(true);
     try {
-      const mappedRole = getAssessmentRole();
-      const res = await api.get('/questions', { params: { role: mappedRole, roleName: mappedRole } });
+      const res = await api.get('/questions', { params: { role: selectedRole, roleName: selectedRole } });
       setQuestions(res.data);
       const time = 25 * 60;
       setTimeLeft(time);
