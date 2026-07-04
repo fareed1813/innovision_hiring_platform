@@ -1067,11 +1067,11 @@ export default function Dashboard() {
                             
                             <div style={{ position: 'relative' }} onMouseLeave={() => setActiveReason(null)}>
                               <button 
-                                className="btn btn-sm btn-ghost" 
-                                style={{ gap: '4px', border: '1.5px solid var(--border)', background: activeReason === c._id ? 'var(--surface2)' : 'transparent', borderRadius: '16px', padding: '4px 12px' }}
+                                className={`btn btn-sm ${activeReason === c._id ? 'btn-primary' : 'btn-ghost'}`}
+                                style={{ gap: '4px', borderRadius: '16px', padding: '4px 12px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}
                                 onClick={() => setActiveReason(activeReason === c._id ? null : c._id)}
                               >
-                                view reason
+                                View Reason
                               </button>
                               
                               {activeReason === c._id && (
