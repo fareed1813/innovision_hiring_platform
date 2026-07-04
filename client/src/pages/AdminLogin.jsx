@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Lock, User, AlertCircle, Eye, EyeOff, UserCog, Loader2 } from 'lucide-react';
+import { Lock, User, AlertCircle, Eye, EyeOff, UserCog } from 'lucide-react';
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('');
@@ -85,7 +85,7 @@ export default function AdminLogin() {
           <button type="submit" className="btn btn-primary btn-lg" disabled={loading} style={{ width: '100%' }}>
             {loading ? (
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Signing in...
+                <div style={{ width: '18px', height: '18px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} /> Signing in...
               </span>
             ) : 'Sign In'}
           </button>

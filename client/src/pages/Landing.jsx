@@ -4,7 +4,7 @@ import api from '../utils/api';
 import {
   Shield, Building2, Users, Wrench, Zap, ArrowRight,
   CheckCircle, Globe, Award, ChevronDown, ChevronRight,
-  Cog, HardHat, Car, Sparkles, Briefcase, Loader2
+  Cog, HardHat, Car, Sparkles, Briefcase
 } from 'lucide-react';
 import Footer from '../components/Footer';
 
@@ -103,7 +103,7 @@ export default function Landing() {
 
           {loadingRoles ? (
             <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-              <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Loading roles...
+              <div style={{ width: '20px', height: '20px', border: '2px solid var(--border)', borderTopColor: 'var(--brand-red)', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} /> Loading roles...
             </div>
           ) : (
             <div className="roles-grid" style={{ animation: 'fade-in-page 0.35s ease' }}>

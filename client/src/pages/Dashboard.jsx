@@ -6,7 +6,7 @@ import {
   ChevronLeft, ChevronRight, LogOut, ChevronDown, ShieldCheck, Info,
   Briefcase, Plus, Trash2, Upload, FileText, Edit2, ToggleLeft, ToggleRight,
   Paperclip, Save, X as XIcon, Wrench, Zap, Cog, HardHat, Car, Sparkles, Shield as ShieldIcon,
-  RotateCcw, AlertTriangle, Loader2
+  RotateCcw, AlertTriangle
 } from 'lucide-react';
 
 
@@ -598,7 +598,7 @@ export default function Dashboard() {
             {/* Roles List */}
             {rolesLoading ? (
               <div style={{ textAlign: 'center', padding: '60px', color: 'var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Loading roles...
+                <div style={{ width: '20px', height: '20px', border: '2px solid var(--border)', borderTopColor: 'var(--brand-red)', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} /> Loading roles...
               </div>
             ) : allRoles.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px', color: 'var(--muted)' }}>
@@ -801,7 +801,7 @@ export default function Dashboard() {
                                 <Upload size={13} />
                                 {uploadingPdf ? (
                                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Uploading...
+                                    <div style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} /> Uploading...
                                   </span>
                                 ) : 'Upload PDF'}
                               </label>
@@ -995,7 +995,7 @@ export default function Dashboard() {
                   <tr>
                     <td colSpan="7" style={{ textAlign: 'center', padding: '60px', color: 'var(--muted)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                        <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Loading candidates...
+                        <div style={{ width: '20px', height: '20px', border: '2px solid var(--border)', borderTopColor: 'var(--brand-red)', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} /> Loading candidates...
                       </div>
                     </td>
                   </tr>
