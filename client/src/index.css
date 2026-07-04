@@ -1657,6 +1657,7 @@ textarea.form-input { min-height: 120px; resize: vertical; }
     pointer-events: none;
     z-index: 99999;
     transform: translate(-50%, -50%);
+    transition: opacity 0.15s ease;
   }
   
   .cursor-ring {
@@ -1669,7 +1670,7 @@ textarea.form-input { min-height: 120px; resize: vertical; }
     pointer-events: none;
     z-index: 99998;
     transform: translate(-50%, -50%);
-    transition: width 0.2s, height 0.2s, background 0.2s;
+    transition: width 0.2s, height 0.2s, background 0.2s, opacity 0.15s ease;
   }
   
   .cursor-ring.hover {

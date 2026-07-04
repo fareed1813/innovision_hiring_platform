@@ -17,6 +17,26 @@ export default function CustomCursor() {
     };
     window.addEventListener('mousemove', onMove);
 
+    // Hide cursor while dragging a native scrollbar.
+    // During scrollbar drag the browser suppresses mousemove, so the
+    // cursor dot freezes. Detect the drag by checking if the click landed
+    // in the scrollbar gutter (offsetX > clientWidth on the target element).
+    const onMouseDown = (e) => {
+      const target = e.target;
+      // clientWidth is the content width (excludes scrollbar); offsetX is
+      // the click position relative to the element's left edge.
+      if (target && e.offsetX > target.clientWidth) {
+        if (dotRef.current)  dotRef.current.style.opacity  = '0';
+        if (ringRef.current) ringRef.current.style.opacity = '0';
+      }
+    };
+    const onMouseUp = () => {
+      if (dotRef.current)  dotRef.current.style.opacity  = '1';
+      if (ringRef.current) ringRef.current.style.opacity = '1';
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mouseup',   onMouseUp);
+
     let raf;
     const animate = () => {
       // Lerp dot (fast)
@@ -51,6 +71,8 @@ export default function CustomCursor() {
 
     return () => {
       window.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('mouseup',   onMouseUp);
       document.removeEventListener('mouseover', onOver);
       cancelAnimationFrame(raf);
     };
