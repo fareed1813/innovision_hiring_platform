@@ -63,6 +63,7 @@ export default function Dashboard() {
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [comparisonData, setComparisonData] = useState([]);
   const dropdownRef = useRef(null);
+  const [activeReason, setActiveReason] = useState(null);
 
   // ── Job Roles Tab State ──
   const [rolesLoading, setRolesLoading] = useState(false);
@@ -448,7 +449,7 @@ export default function Dashboard() {
                     onClick={() => setAddRoleMode('manual')}
                   >
                     <div style={{ background: 'var(--brand-red-light)', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: 'var(--brand-red)' }}>
-                      <Edit3 size={24} />
+                      <Edit2 size={24} />
                     </div>
                     <h5 style={{ fontSize: '16px', marginBottom: '8px' }}>Manual Entry</h5>
                     <p style={{ fontSize: '13px', color: 'var(--muted)' }}>Type in the role name and description yourself.</p>
@@ -966,9 +967,60 @@ export default function Dashboard() {
                     <td><span className={`status-pill status-${c.status}`}>{c.status === 'selected' ? 'Accepted' : c.status}</span></td>
                     <td style={{ fontSize: '13px', color: 'var(--muted)' }}>{new Date(c.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</td>
                     <td>
-                      <div style={{ display: 'flex', gap: '6px' }}>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                         <button className="btn btn-sm btn-ghost" onClick={() => viewCandidate(c._id)}><Eye size={14} /> View</button>
-                        {c.status === 'pending' && (
+                        {tab === 'retest' && c.retestStatus === 'pending' && (
+                          <>
+                            <button className="btn-action-tick" onClick={() => handleRetestDecision(c._id, 'approved')} title="Accept Retest"><Check size={16} /></button>
+                            <button className="btn-action-x" onClick={() => handleRetestDecision(c._id, 'rejected')} title="Reject Retest"><X size={16} /></button>
+                            
+                            <div style={{ position: 'relative' }} onMouseLeave={() => setActiveReason(null)}>
+                              <button 
+                                className="btn btn-sm btn-ghost" 
+                                style={{ gap: '4px', border: '1.5px solid var(--border)', background: activeReason === c._id ? 'var(--surface2)' : 'transparent', borderRadius: '16px', padding: '4px 12px' }}
+                                onClick={() => setActiveReason(activeReason === c._id ? null : c._id)}
+                              >
+                                view reason
+                              </button>
+                              
+                              {activeReason === c._id && (
+                                <div style={{
+                                  position: 'absolute',
+                                  top: '100%',
+                                  right: 0,
+                                  marginTop: '10px',
+                                  background: '#fff',
+                                  border: '1.5px solid var(--border)',
+                                  borderRadius: '16px',
+                                  padding: '12px 16px',
+                                  width: 'max-content',
+                                  maxWidth: '280px',
+                                  zIndex: 100,
+                                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                                  fontSize: '13px',
+                                  lineHeight: '1.5',
+                                  color: 'var(--text)',
+                                  whiteSpace: 'pre-wrap',
+                                  textAlign: 'left'
+                                }}>
+                                  <div style={{
+                                    position: 'absolute',
+                                    top: '-6px',
+                                    right: '24px',
+                                    width: '10px',
+                                    height: '10px',
+                                    background: '#fff',
+                                    borderTop: '1.5px solid var(--border)',
+                                    borderLeft: '1.5px solid var(--border)',
+                                    transform: 'rotate(45deg)',
+                                  }} />
+                                  {c.retestReason || 'No reason provided.'}
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        )}
+                        {tab !== 'retest' && c.status === 'pending' && (
                           <>
                             <button className="btn-action-tick" onClick={() => updateStatus(c._id, 'selected')} title="Select Candidate"><Check size={16} /></button>
                             <button className="btn-action-x" onClick={() => updateStatus(c._id, 'rejected')} title="Reject Candidate"><X size={16} /></button>
@@ -1040,14 +1092,18 @@ export default function Dashboard() {
             {/* Details */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
               {[
-                ['Experience', `${selected.experience} yr(s)`],
+                ['Phone', selected.phone || '—'],
+                ['Email', selected.email || '—'],
+                ['City', selected.city || '—'],
+                ['Applied To', selected.applyingCountry || '—'],
+                ['Experience', `${selected.experience || 0} yr(s)`],
                 ['Passport', selected.passport || '—'],
                 ['Education', selected.education || '—'],
-                ['Languages', selected.languages],
+                ['Languages', selected.languages || '—'],
                 ['Overseas Exp.', selected.gulfExp || '—'],
                 ['DOB', selected.dob || '—'],
                 ['Height', selected.height || '—'],
-                ['Source', selected.source],
+                ['Source', selected.source || '—'],
                 ['Status', selected.status],
                 ['Assessment', selected.assessmentStatus === 'form_submitted' ? '📋 Form Submitted (No Test)' : '✅ Assessment Completed'],
                 ['Violations', selected.proctoringViolations || 0]

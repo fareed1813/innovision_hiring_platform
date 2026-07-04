@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
-import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, Building2, ShieldCheck, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle } from 'lucide-react';
+import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, Building2, ShieldCheck, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle, Zap, Cog, HardHat, Car, Sparkles, Users, Briefcase } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import Footer from '../components/Footer';
@@ -43,6 +43,18 @@ const SUBROLE_LABELS = Object.fromEntries(
   INTERNATIONAL_ROLES.flatMap(r => r.subRoles.map(s => [s.key, s.label]))
 );
 
+const ICON_RENDER = {
+  wrench:       <Wrench size={22} />,
+  zap:          <Zap size={22} />,
+  cog:          <Cog size={22} />,
+  construction: <HardHat size={22} />,
+  car:          <Car size={22} />,
+  sparkles:     <Sparkles size={22} />,
+  shield:       <Shield size={22} />,
+  users:        <Users size={22} />,
+  briefcase:    <Briefcase size={22} />,
+};
+
 
 const SOURCES = ['Direct / Walk-in', 'Job Portal', 'Social Media', 'Referral', 'Agent', 'WhatsApp'];
 
@@ -58,6 +70,23 @@ const VALIDATION_RULES = {
 export default function CandidateFlow() {
   const [params] = useSearchParams();
   const navigate  = useNavigate();
+
+  const [dynamicRoles, setDynamicRoles] = useState([]);
+  const [loadingRoles, setLoadingRoles] = useState(true);
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const res = await api.get('/roles');
+        setDynamicRoles(res.data);
+      } catch (err) {
+        console.error('Failed to fetch dynamic roles:', err);
+      } finally {
+        setLoadingRoles(false);
+      }
+    };
+    fetchRoles();
+  }, []);
 
   const initialRole    = params.get('role')    || '';
   const initialSubRole = params.get('subRole') || '';
@@ -363,7 +392,7 @@ export default function CandidateFlow() {
       };
       const res = await api.post('/candidates/submit-form', {
         personal,
-        job: selectedRole,
+        job: selectedSubRole || selectedRole,
         source: form.source || 'Direct',
         type: 'international',
         retestReason
@@ -650,6 +679,58 @@ export default function CandidateFlow() {
                 </div>
               ))}
             </div>
+
+            {/* Dynamic Roles Carousel */}
+            {!loadingRoles && dynamicRoles.length > 0 && (
+              <div style={{ marginTop: '48px', animation: 'fade-in-page 0.35s ease' }}>
+                <h3 style={{ fontSize: '18px', marginBottom: '16px', color: 'var(--text)' }}>More Opportunities</h3>
+                <div 
+                  className="dynamic-roles-carousel"
+                  style={{
+                    display: 'flex',
+                    gap: '16px',
+                    overflowX: 'auto',
+                    scrollSnapType: 'x mandatory',
+                    paddingBottom: '16px',
+                    scrollbarWidth: 'none', // Firefox
+                    msOverflowStyle: 'none', // IE/Edge
+                  }}
+                >
+                  <style>{`.dynamic-roles-carousel::-webkit-scrollbar { display: none; }`}</style>
+                  {dynamicRoles.map(role => (
+                    <div
+                      key={role._id}
+                      className="role-card domestic-role-card"
+                      onClick={() => {
+                        setSelectedRole(role._id);
+                        setSelectedSubRole(null);
+                        handleStepChange(1);
+                      }}
+                      style={{
+                        minWidth: '280px',
+                        flex: '0 0 auto',
+                        scrollSnapAlign: 'start',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                      }}
+                    >
+                      <div className="role-card-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {ICON_RENDER[role.iconKey] || ICON_RENDER['wrench']}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <h3 style={{ margin: 0, fontSize: '16px' }}>{role.name}</h3>
+                        <ChevronRight size={18} style={{ color: 'var(--brand-red)', flexShrink: 0, marginTop: '2px' }} />
+                      </div>
+                      {role.description && (
+                        <p style={{ marginTop: '8px', fontSize: '13px', color: 'var(--muted)' }}>
+                          {role.description}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <Footer />
@@ -841,8 +922,8 @@ export default function CandidateFlow() {
       </div>
     );
 
-    const categoryLabel = INTERNATIONAL_ROLES.find(r => r.key === selectedRole)?.label || selectedRole;
-    const subRoleLabel  = SUBROLE_LABELS[selectedSubRole] || selectedSubRole;
+    const categoryLabel = INTERNATIONAL_ROLES.find(r => r.key === selectedRole)?.label || dynamicRoles.find(r => r._id === selectedRole)?.name || selectedRole;
+    const subRoleLabel  = SUBROLE_LABELS[selectedSubRole] || dynamicRoles.find(r => r._id === selectedRole)?.name || selectedSubRole;
     const roleDisplay   = subRoleLabel ? `${categoryLabel} — ${subRoleLabel}` : categoryLabel;
 
     return (
@@ -1142,7 +1223,7 @@ export default function CandidateFlow() {
           <div className="test-sticky-header">
             <div className="test-header-content">
               <div className="test-info">
-                {(INTERNATIONAL_ROLES.find(r => r.key === selectedRole)?.label || selectedRole)} Assessment · Innovision Global
+                {(INTERNATIONAL_ROLES.find(r => r.key === selectedRole)?.label || dynamicRoles.find(r => r._id === selectedRole)?.name || selectedRole)} Assessment · Innovision Global
               </div>
               <div className={`test-timer ${timeLeft < 60 ? 'critical' : ''}`}>
                 <span className="timer-label">Time remaining :</span>
