@@ -21,6 +21,12 @@ const jobRoleSchema = new mongoose.Schema({
     default: 'other'
   },
 
+  subRoles: [{
+    key: { type: String, required: true },
+    label: { type: String, required: true },
+    desc: { type: String, default: '' }
+  }],
+
   // Short description shown on landing page / carousel
   description: {
     type: String,

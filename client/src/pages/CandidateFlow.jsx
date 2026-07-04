@@ -7,41 +7,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import Footer from '../components/Footer';
 import { COUNTRY_CODES } from '../utils/countryCodes';
 
-/* ─── Static International Roles (Category + Sub-roles) ─── */
-const INTERNATIONAL_ROLES = [
-  {
-    key: 'facility_management',
-    label: 'Facility Management',
-    icon: <Building2 className="security-icon" size={32} strokeWidth={1.5} />,
-    desc: 'Facility and housekeeping management roles in offices, hospitals, hotels, and commercial spaces across international postings.',
-    subRoles: [
-      { key: 'hk_supervisor',   label: 'HK Supervisor',                 desc: 'Supervise housekeeping staff and maintain facility cleanliness standards.' },
-      { key: 'housekeeper',     label: 'Housekeeper (M/F)',             desc: 'Housekeeping and cleaning services for premium facilities.' },
-      { key: 'pantry_boy',      label: 'Pantry Boy',                    desc: 'Manage pantry inventory, serve beverages, and maintain cleanliness.' },
-      { key: 'office_boy',      label: 'Office Boys',                   desc: 'General office support, errands, and day-to-day administrative assistance.' },
-      { key: 'me_supervisor',   label: 'M&E Supervisor',                desc: 'Supervise mechanical and electrical operations and maintenance teams.' },
-      { key: 'mst',             label: 'MST (Multi Skilled Technician)', desc: 'Multi-skilled technical maintenance across mechanical, electrical, and plumbing systems.' },
-      { key: 'electrician',     label: 'Electrician',                   desc: 'Electrical installation, maintenance, and repair services for commercial facilities.' },
-    ],
-  },
-  {
-    key: 'security_international',
-    label: 'Security',
-    icon: <Shield className="security-icon" size={32} strokeWidth={1.5} />,
-    desc: 'Security personnel positions across facilities, corporates, malls, and residential complexes at international postings.',
-    subRoles: [
-      { key: 'security_guard',        label: 'Security Guard',          desc: 'Standard security monitoring for residential areas and retail spaces.' },
-      { key: 'armed_guard',           label: 'Armed Guard',             desc: 'Specialized armed security for banks, ATMs, and high-value transports.' },
-      { key: 'security_supervisor',   label: 'Security Supervisor',     desc: 'Supervise security personnel and manage shift operations efficiently.' },
-      { key: 'asst_security_officer', label: 'Asst Security Officer',   desc: 'Assist in coordinating security protocols and team management.' },
-      { key: 'security_officer',      label: 'Security Officer',        desc: 'Oversee overall security operations and compliance for a facility.' },
-    ],
-  },
-];
 
-const SUBROLE_LABELS = Object.fromEntries(
-  INTERNATIONAL_ROLES.flatMap(r => r.subRoles.map(s => [s.key, s.label]))
-);
 
 const ICON_RENDER = {
   wrench:       <Wrench size={22} />,
@@ -625,50 +591,69 @@ export default function CandidateFlow() {
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             <div className="section-tag">Step 1 of 3</div>
             <h2>Select Your Role</h2>
-            <p className="section-sub">Choose a category and select the role that matches your skills. This determines your assessment questions.</p>
-
+            <p className="section-sub">Choose a category and select the role that matches your skills.
+          {loadingRoles ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--muted)' }}>Loading roles...</div>
+          ) : (
             <div className="roles-grid" style={{ animation: 'fade-in-page 0.35s ease' }}>
-              {INTERNATIONAL_ROLES.map(role => (
-                <div key={role.key} style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-
-                  {/* Category card */}
+              {dynamicRoles.map(role => (
+                <div key={role._id} style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                  {/* Main role card */}
                   <div
-                    className={`role-card domestic-role-card ${expandedRole === role.key ? 'selected' : ''}`}
-                    onClick={() => setExpandedRole(prev => prev === role.key ? null : role.key)}
+                    className={`role-card domestic-role-card ${expandedRole === role._id ? 'selected' : ''}`}
+                    onClick={() => {
+                      if (role.subRoles && role.subRoles.length > 0) {
+                        setExpandedRole(prev => prev === role._id ? null : role._id);
+                      } else {
+                        setSelectedRole(role._id);
+                        setSelectedSubRole(role._id);
+                        setStep(2);
+                      }
+                    }}
                     style={{ cursor: 'pointer', userSelect: 'none' }}
                   >
-                    <div className="role-card-icon">{role.icon}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <h3 style={{ margin: 0 }}>{role.label}</h3>
-                      <ChevronDown
-                        size={18}
-                        style={{
-                          color: 'var(--brand-red)',
-                          transform: expandedRole === role.key ? 'rotate(180deg)' : 'none',
-                          transition: 'transform 0.25s ease',
-                          flexShrink: 0,
-                          marginTop: '2px'
-                        }}
-                      />
+                    <div className="role-card-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {ICON_RENDER[role.iconKey] || ICON_RENDER['wrench']}
                     </div>
-                    <p style={{ marginTop: '8px' }}>{role.desc}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <h3 style={{ margin: 0, fontSize: '16px' }}>{role.name}</h3>
+                      {role.subRoles && role.subRoles.length > 0 ? (
+                        <ChevronDown
+                          size={18}
+                          style={{
+                            color: 'var(--brand-red)',
+                            transform: expandedRole === role._id ? 'rotate(180deg)' : 'none',
+                            transition: 'transform 0.25s ease',
+                            flexShrink: 0,
+                            marginTop: '2px'
+                          }}
+                        />
+                      ) : (
+                        <ChevronRight size={18} style={{ color: 'var(--brand-red)', flexShrink: 0, marginTop: '2px' }} />
+                      )}
+                    </div>
+                    {role.description && (
+                      <p style={{ marginTop: '8px', fontSize: '13px', color: 'var(--muted)' }}>
+                        {role.description}
+                      </p>
+                    )}
                   </div>
-
-                  {/* Sub-roles */}
-                  {expandedRole === role.key && (
+  
+                  {/* Sub-roles list */}
+                  {expandedRole === role._id && role.subRoles && role.subRoles.length > 0 && (
                     <div className="subrole-list">
                       {role.subRoles.map(sub => (
                         <button
                           key={sub.key}
                           className="subrole-item"
                           onClick={() => {
-                            setSelectedRole(role.key);
+                            setSelectedRole(role._id);
                             setSelectedSubRole(sub.key);
-                            handleStepChange(1);
+                            setStep(2);
                           }}
                         >
                           <ChevronRight size={15} style={{ color: 'var(--brand-red)', flexShrink: 0, alignSelf: 'flex-start', marginTop: '2px' }} />
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'left' }}>
                             <span style={{ fontWeight: 700, color: 'var(--text)' }}>{sub.label}</span>
                             <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 400, lineHeight: 1.4 }}>{sub.desc}</span>
                           </div>
@@ -679,58 +664,8 @@ export default function CandidateFlow() {
                 </div>
               ))}
             </div>
-
-            {/* Dynamic Roles Carousel */}
-            {!loadingRoles && dynamicRoles.length > 0 && (
-              <div style={{ marginTop: '48px', animation: 'fade-in-page 0.35s ease' }}>
-                <h3 style={{ fontSize: '18px', marginBottom: '16px', color: 'var(--text)' }}>More Opportunities</h3>
-                <div 
-                  className="dynamic-roles-carousel"
-                  style={{
-                    display: 'flex',
-                    gap: '16px',
-                    overflowX: 'auto',
-                    scrollSnapType: 'x mandatory',
-                    paddingBottom: '16px',
-                    scrollbarWidth: 'none', // Firefox
-                    msOverflowStyle: 'none', // IE/Edge
-                  }}
-                >
-                  <style>{`.dynamic-roles-carousel::-webkit-scrollbar { display: none; }`}</style>
-                  {dynamicRoles.map(role => (
-                    <div
-                      key={role._id}
-                      className="role-card domestic-role-card"
-                      onClick={() => {
-                        setSelectedRole(role._id);
-                        setSelectedSubRole(null);
-                        handleStepChange(1);
-                      }}
-                      style={{
-                        minWidth: '280px',
-                        flex: '0 0 auto',
-                        scrollSnapAlign: 'start',
-                        cursor: 'pointer',
-                        userSelect: 'none'
-                      }}
-                    >
-                      <div className="role-card-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {ICON_RENDER[role.iconKey] || ICON_RENDER['wrench']}
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <h3 style={{ margin: 0, fontSize: '16px' }}>{role.name}</h3>
-                        <ChevronRight size={18} style={{ color: 'var(--brand-red)', flexShrink: 0, marginTop: '2px' }} />
-                      </div>
-                      {role.description && (
-                        <p style={{ marginTop: '8px', fontSize: '13px', color: 'var(--muted)' }}>
-                          {role.description}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+          )}
+            </p>
           </div>
         </div>
         <Footer />
@@ -922,9 +857,11 @@ export default function CandidateFlow() {
       </div>
     );
 
-    const categoryLabel = INTERNATIONAL_ROLES.find(r => r.key === selectedRole)?.label || dynamicRoles.find(r => r._id === selectedRole)?.name || selectedRole;
-    const subRoleLabel  = SUBROLE_LABELS[selectedSubRole] || dynamicRoles.find(r => r._id === selectedRole)?.name || selectedSubRole;
-    const roleDisplay   = subRoleLabel ? `${categoryLabel} — ${subRoleLabel}` : categoryLabel;
+    const parentRole = dynamicRoles.find(r => r._id === selectedRole);
+    const subRoleObj = parentRole?.subRoles?.find(s => s.key === selectedSubRole);
+    const subRoleLabel = subRoleObj ? subRoleObj.label : (parentRole?.name || selectedSubRole);
+    const categoryLabel = parentRole?.name || selectedRole;
+    const roleDisplay   = (subRoleLabel && subRoleLabel !== categoryLabel) ? `${categoryLabel} — ${subRoleLabel}` : categoryLabel;
 
     return (
       <div className="page-wrapper" style={{ paddingTop: 'calc(var(--nav-height) + 40px)' }}>

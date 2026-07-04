@@ -9,13 +9,7 @@ import {
   RotateCcw, AlertTriangle
 } from 'lucide-react';
 
-const ROLES = {
-  driver:       'Taxi Driver',
-  security:     'Special Security Guard',
-  housekeeping: 'Housekeeping Staff',
-  supervisor:   'Field Supervisor',
-  helper:       'General Helper',
-};
+
 
 // Icon options for role creation
 const ICON_OPTIONS = [
@@ -72,7 +66,7 @@ export default function Dashboard() {
   const [parsingJd, setParsingJd] = useState(false);
   const jdInputRef = useRef(null);
 
-  const [newRole, setNewRole] = useState({ name: '', description: '', iconKey: 'wrench' });
+  const [newRole, setNewRole] = useState({ name: '', description: '', iconKey: 'wrench', subRoles: [] });
   const [addRoleError, setAddRoleError] = useState('');
   const [savingRole, setSavingRole] = useState(false);
   const [editingRole, setEditingRole] = useState(null); // role being edited
@@ -341,9 +335,14 @@ export default function Dashboard() {
   const scoreClass = (s) => s >= 70 ? 'score-high' : s >= 40 ? 'score-mid' : 'score-low';
 
   // Merged roles lookup (DB roles + legacy static roles)
+  // Merged roles lookup (DB roles + sub-roles)
   const getRoleLabel = (jobKey) => {
-    const dbRole = allRoles.find(r => r._id === jobKey);
-    return dbRole?.name || ROLES[jobKey] || jobKey;
+    for (const r of allRoles) {
+      if (r._id === jobKey) return r.name;
+      const sub = r.subRoles?.find(s => s.key === jobKey);
+      if (sub) return `${r.name} — ${sub.label}`;
+    }
+    return jobKey;
   };
 
   return (
@@ -530,6 +529,50 @@ export default function Dashboard() {
                       style={{ minHeight: '80px', resize: 'vertical' }}
                     />
                   </div>
+                  
+                  <div className="form-group full-width">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <label className="form-label" style={{ marginBottom: 0 }}>Sub-roles (optional)</label>
+                      <button 
+                        type="button" 
+                        className="btn btn-sm btn-ghost" 
+                        style={{ fontSize: '11px', padding: '4px 8px' }}
+                        onClick={() => setNewRole(p => ({ ...p, subRoles: [...p.subRoles, { key: `sub_${Date.now()}`, label: '', desc: '' }] }))}
+                      >
+                        + Add Sub-role
+                      </button>
+                    </div>
+                    {newRole.subRoles.map((sub, i) => (
+                      <div key={sub.key} style={{ display: 'flex', gap: '8px', marginBottom: '8px', background: 'var(--surface)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <input 
+                            className="form-input" 
+                            placeholder="Sub-role name (e.g. HK Supervisor)" 
+                            value={sub.label}
+                            onChange={e => {
+                              const newSub = [...newRole.subRoles];
+                              newSub[i].label = e.target.value;
+                              newSub[i].key = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '_') || sub.key;
+                              setNewRole(p => ({ ...p, subRoles: newSub }));
+                            }}
+                          />
+                          <input 
+                            className="form-input" 
+                            placeholder="Short description..." 
+                            value={sub.desc}
+                            onChange={e => {
+                              const newSub = [...newRole.subRoles];
+                              newSub[i].desc = e.target.value;
+                              setNewRole(p => ({ ...p, subRoles: newSub }));
+                            }}
+                          />
+                        </div>
+                        <button type="button" onClick={() => setNewRole(p => ({ ...p, subRoles: p.subRoles.filter((_, idx) => idx !== i) }))} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '4px' }}>
+                          <XIcon size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {addRoleError && (
@@ -608,6 +651,50 @@ export default function Dashboard() {
                               value={editingRole.description || ''}
                               onChange={e => setEditingRole(p => ({ ...p, description: e.target.value }))}
                             />
+                          </div>
+
+                          <div className="form-group full-width">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                              <label className="form-label" style={{ marginBottom: 0 }}>Sub-roles</label>
+                              <button 
+                                type="button" 
+                                className="btn btn-sm btn-ghost" 
+                                style={{ fontSize: '11px', padding: '4px 8px' }}
+                                onClick={() => setEditingRole(p => ({ ...p, subRoles: [...(p.subRoles || []), { key: `sub_${Date.now()}`, label: '', desc: '' }] }))}
+                              >
+                                + Add Sub-role
+                              </button>
+                            </div>
+                            {(editingRole.subRoles || []).map((sub, i) => (
+                              <div key={sub.key || i} style={{ display: 'flex', gap: '8px', marginBottom: '8px', background: 'var(--surface)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                  <input 
+                                    className="form-input" 
+                                    placeholder="Sub-role name (e.g. HK Supervisor)" 
+                                    value={sub.label}
+                                    onChange={e => {
+                                      const newSub = [...(editingRole.subRoles || [])];
+                                      newSub[i].label = e.target.value;
+                                      if (!newSub[i].key) newSub[i].key = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                                      setEditingRole(p => ({ ...p, subRoles: newSub }));
+                                    }}
+                                  />
+                                  <input 
+                                    className="form-input" 
+                                    placeholder="Short description..." 
+                                    value={sub.desc}
+                                    onChange={e => {
+                                      const newSub = [...(editingRole.subRoles || [])];
+                                      newSub[i].desc = e.target.value;
+                                      setEditingRole(p => ({ ...p, subRoles: newSub }));
+                                    }}
+                                  />
+                                </div>
+                                <button type="button" onClick={() => setEditingRole(p => ({ ...p, subRoles: p.subRoles.filter((_, idx) => idx !== i) }))} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '4px' }}>
+                                  <XIcon size={16} />
+                                </button>
+                              </div>
+                            ))}
                           </div>
                         </div>
                         <div style={{ display: 'flex', gap: '10px' }}>
@@ -850,24 +937,22 @@ export default function Dashboard() {
                     >
                       All Roles
                     </div>
-                    {/* Static legacy roles */}
-                    {Object.entries(ROLES).map(([k, v]) => (
-                      <div 
-                        key={k} 
-                        className={`select-option ${jobFilter === k ? 'selected' : ''}`}
-                        onClick={() => { setJobFilter(k); setPage(1); setIsDropdownOpen(false); }}
-                      >
-                        {v}
-                      </div>
-                    ))}
-                    {/* Dynamic roles from DB */}
-                    {allRoles.map(r => (
+                    {/* Dynamic roles and subroles from DB */}
+                    {allRoles.flatMap(r => {
+                      const opts = [{ key: r._id, label: r.name }];
+                      if (r.subRoles) {
+                        r.subRoles.forEach(sub => {
+                          opts.push({ key: sub.key, label: `↳ ${sub.label}` });
+                        });
+                      }
+                      return opts;
+                    }).map(opt => (
                       <div
-                        key={r._id}
-                        className={`select-option ${jobFilter === r._id ? 'selected' : ''}`}
-                        onClick={() => { setJobFilter(r._id); setPage(1); setIsDropdownOpen(false); }}
+                        key={opt.key}
+                        className={`select-option ${jobFilter === opt.key ? 'selected' : ''}`}
+                        onClick={() => { setJobFilter(opt.key); setPage(1); setIsDropdownOpen(false); }}
                       >
-                        {r.name}
+                        {opt.label}
                       </div>
                     ))}
                   </div>

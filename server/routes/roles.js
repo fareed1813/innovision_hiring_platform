@@ -38,7 +38,7 @@ router.get('/all', authMiddleware, async (req, res) => {
 /* ─── POST /api/roles — Admin: create a new role ─── */
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { name, category = 'other', description = '', iconKey = 'wrench' } = req.body;
+    const { name, category = 'other', description = '', iconKey = 'wrench', subRoles = [] } = req.body;
     if (!name?.trim()) {
       return res.status(400).json({ error: 'Role name is required.' });
     }
@@ -49,7 +49,7 @@ router.post('/', authMiddleware, async (req, res) => {
       return res.status(409).json({ error: 'A role with this name already exists.' });
     }
 
-    const role = new JobRole({ name: name.trim(), category, description: description.trim(), iconKey });
+    const role = new JobRole({ name: name.trim(), category, description: description.trim(), iconKey, subRoles });
     await role.save();
 
     res.status(201).json({ message: 'Role created.', role: { ...role.toObject(), attachments: [] } });
@@ -62,12 +62,13 @@ router.post('/', authMiddleware, async (req, res) => {
 /* ─── PATCH /api/roles/:id — Admin: update a role ─── */
 router.patch('/:id', authMiddleware, async (req, res) => {
   try {
-    const { name, description, active, iconKey } = req.body;
+    const { name, description, active, iconKey, subRoles } = req.body;
     const updates = {};
     if (name !== undefined)        updates.name        = name.trim();
     if (description !== undefined) updates.description = description.trim();
     if (active !== undefined)      updates.active      = active;
     if (iconKey !== undefined)     updates.iconKey     = iconKey;
+    if (subRoles !== undefined)    updates.subRoles    = subRoles;
 
     const role = await JobRole.findByIdAndUpdate(req.params.id, updates, { new: true })
       .select('-attachments.fileData')
