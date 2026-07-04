@@ -220,6 +220,7 @@ export default function Dashboard() {
         name: editingRole.name,
         description: editingRole.description,
         iconKey: editingRole.iconKey,
+        subRoles: editingRole.subRoles,
       });
       setEditingRole(null);
       fetchAllRoles();
