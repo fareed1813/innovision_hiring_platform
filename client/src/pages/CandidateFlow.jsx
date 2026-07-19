@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
-import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, Building2, ShieldCheck, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle, Zap, Cog, HardHat, Car, Sparkles, Users, Briefcase } from 'lucide-react';
+import { Mic, MicOff, ChevronRight, ChevronLeft, Shield, Building2, ShieldCheck, Wrench, Flag, RotateCcw, Send, CheckCircle, AlertCircle, Info, Maximize, ChevronDown, AlertTriangle, Zap, Cog, HardHat, Car, Sparkles, Users, Briefcase, FileText, X as XIcon } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import Footer from '../components/Footer';
@@ -39,6 +39,10 @@ export default function CandidateFlow() {
 
   const [dynamicRoles, setDynamicRoles] = useState([]);
   const [loadingRoles, setLoadingRoles] = useState(true);
+  const [pdfModal, setPdfModal] = useState(null); // { url, title, attachments }
+
+  // Derive base URL for PDF links (no /api suffix)
+  const apiBaseUrl = import.meta.env.PROD ? '' : 'http://localhost:5000';
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -637,30 +641,57 @@ export default function CandidateFlow() {
                     <div className="role-card-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {ICON_RENDER[role.iconKey] || ICON_RENDER['wrench']}
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <h3 style={{ margin: 0, fontSize: '16px' }}>{role.name}</h3>
-                      {role.subRoles && role.subRoles.length > 0 ? (
-                        <ChevronDown
-                          size={18}
-                          style={{
-                            color: 'var(--brand-red)',
-                            transform: expandedRole === role._id ? 'rotate(180deg)' : 'none',
-                            transition: 'transform 0.25s ease',
-                            flexShrink: 0,
-                            marginTop: '2px'
-                          }}
-                        />
-                      ) : (
-                        <ChevronRight size={18} style={{ color: 'var(--brand-red)', flexShrink: 0, marginTop: '2px' }} />
-                      )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                      <h3 style={{ margin: 0, fontSize: '16px', flex: 1 }}>{role.name}</h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                        {role.attachments && role.attachments.length > 0 && (
+                          <button
+                            onClick={e => {
+                              e.stopPropagation();
+                              setPdfModal({
+                                title: role.name,
+                                attachments: role.attachments.map(att => ({
+                                  label: att.fileName,
+                                  url: `${apiBaseUrl}/api/roles/${role._id}/attachments/${att._id}`
+                                }))
+                              });
+                            }}
+                            style={{
+                              display: 'inline-flex', alignItems: 'center', gap: '4px',
+                              background: 'var(--brand-red)', color: '#fff',
+                              border: 'none', borderRadius: '6px',
+                              fontSize: '11px', fontWeight: 700,
+                              padding: '4px 9px', cursor: 'pointer',
+                              transition: 'opacity 0.2s'
+                            }}
+                            title="View uploaded PDF"
+                          >
+                            <FileText size={12} /> View PDF
+                          </button>
+                        )}
+                        {role.subRoles && role.subRoles.length > 0 ? (
+                          <ChevronDown
+                            size={18}
+                            style={{
+                              color: 'var(--brand-red)',
+                              transform: expandedRole === role._id ? 'rotate(180deg)' : 'none',
+                              transition: 'transform 0.25s ease',
+                              flexShrink: 0,
+                              marginTop: '2px'
+                            }}
+                          />
+                        ) : (
+                          <ChevronRight size={18} style={{ color: 'var(--brand-red)', flexShrink: 0, marginTop: '2px' }} />
+                        )}
+                      </div>
                     </div>
                     {role.description && (
-                      <p style={{ marginTop: '8px', fontSize: '13px', color: 'var(--muted)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      <p style={{ marginTop: '8px', fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6 }}>
                         {role.description}
                       </p>
                     )}
                   </div>
-  
+
                   {/* Sub-roles list */}
                   {expandedRole === role._id && role.subRoles && role.subRoles.length > 0 && (
                     <div className="subrole-list">
@@ -675,9 +706,37 @@ export default function CandidateFlow() {
                           }}
                         >
                           <ChevronRight size={15} style={{ color: 'var(--brand-red)', flexShrink: 0, alignSelf: 'flex-start', marginTop: '2px' }} />
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'left' }}>
-                            <span style={{ fontWeight: 700, color: 'var(--text)' }}>{sub.label}</span>
-                            <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 400, lineHeight: 1.4 }}>{sub.desc}</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left', flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                              <span style={{ fontWeight: 700, color: 'var(--text)' }}>{sub.label}</span>
+                              {role.attachments && role.attachments.length > 0 && (
+                                <span
+                                  role="button"
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    setPdfModal({
+                                      title: `${role.name} — ${sub.label}`,
+                                      attachments: role.attachments.map(att => ({
+                                        label: att.fileName,
+                                        url: `${apiBaseUrl}/api/roles/${role._id}/attachments/${att._id}`
+                                      }))
+                                    });
+                                  }}
+                                  style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                    background: 'var(--brand-red)', color: '#fff',
+                                    borderRadius: '6px', fontSize: '11px', fontWeight: 700,
+                                    padding: '3px 8px', cursor: 'pointer', flexShrink: 0
+                                  }}
+                                  title="View uploaded PDF"
+                                >
+                                  <FileText size={11} /> View PDF
+                                </span>
+                              )}
+                            </div>
+                            {sub.desc && (
+                              <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 400, lineHeight: 1.4 }}>{sub.desc}</span>
+                            )}
                           </div>
                         </button>
                       ))}
@@ -690,6 +749,101 @@ export default function CandidateFlow() {
             </p>
           </div>
         </div>
+
+        {/* ── PDF Viewer Modal ── */}
+        {pdfModal && (
+          <div
+            onClick={() => setPdfModal(null)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 9999,
+              background: 'rgba(0,0,0,0.72)',
+              backdropFilter: 'blur(6px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: '20px',
+              animation: 'fade-in-page 0.2s ease'
+            }}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{
+                background: 'var(--white)',
+                borderRadius: '16px',
+                width: '100%', maxWidth: '900px',
+                height: '90vh',
+                display: 'flex', flexDirection: 'column',
+                overflow: 'hidden',
+                boxShadow: '0 32px 80px rgba(0,0,0,0.4)'
+              }}
+            >
+              {/* Modal Header */}
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '16px 20px',
+                borderBottom: '1px solid var(--border)',
+                background: 'var(--surface2)', flexShrink: 0
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{
+                    width: '34px', height: '34px', borderRadius: '8px',
+                    background: 'rgba(209,43,43,0.1)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: 'var(--brand-red)'
+                  }}>
+                    <FileText size={17} />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text)' }}>{pdfModal.title}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--muted)' }}>Job Description PDF</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setPdfModal(null)}
+                  style={{
+                    background: 'var(--surface)', border: '1px solid var(--border)',
+                    borderRadius: '8px', padding: '6px', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: 'var(--text)', transition: 'background 0.2s'
+                  }}
+                  title="Close"
+                >
+                  <XIcon size={18} />
+                </button>
+              </div>
+
+              {/* Tab selector when multiple attachments */}
+              {pdfModal.attachments.length > 1 && (
+                <div style={{
+                  display: 'flex', gap: '4px', padding: '10px 20px',
+                  borderBottom: '1px solid var(--border)', overflowX: 'auto',
+                  background: 'var(--surface)', flexShrink: 0
+                }}>
+                  {pdfModal.attachments.map((att, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setPdfModal(prev => ({ ...prev, activeIdx: idx }))}
+                      style={{
+                        padding: '5px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
+                        border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
+                        background: (pdfModal.activeIdx ?? 0) === idx ? 'var(--brand-red)' : 'var(--border)',
+                        color: (pdfModal.activeIdx ?? 0) === idx ? '#fff' : 'var(--text)'
+                      }}
+                    >
+                      {att.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* PDF iframe */}
+              <iframe
+                src={pdfModal.attachments[pdfModal.activeIdx ?? 0]?.url}
+                title={pdfModal.title}
+                style={{ flex: 1, border: 'none', width: '100%' }}
+              />
+            </div>
+          </div>
+        )}
+
         <Footer />
       </div>
     );
