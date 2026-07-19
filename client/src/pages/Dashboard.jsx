@@ -81,6 +81,9 @@ export default function Dashboard() {
   const [uploadingSubPdf, setUploadingSubPdf] = useState(false);
   const [subAttachmentError, setSubAttachmentError] = useState('');
   const subPdfInputRef = useRef(null);
+  
+  const [quickAddSubRole, setQuickAddSubRole] = useState({}); // { roleId: 'text' }
+  const [savingSubRole, setSavingSubRole] = useState(false);
 
   const toggleCompare = (id) => {
     setCompareSelection(prev => {
@@ -347,6 +350,28 @@ export default function Dashboard() {
     link.download = fileName;
     link.target = '_blank';
     link.click();
+  };
+
+  const handleQuickAddSubRole = async (role) => {
+    const label = quickAddSubRole[role._id]?.trim();
+    if (!label) return;
+    setSavingSubRole(true);
+    try {
+      const newSub = {
+        label,
+        key: label.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+        desc: ''
+      };
+      const updatedSubRoles = [...(role.subRoles || []), newSub];
+      await api.patch(`/roles/${role._id}`, { subRoles: updatedSubRoles });
+      setQuickAddSubRole(prev => ({ ...prev, [role._id]: '' }));
+      fetchAllRoles();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to add sub-role. Ensure the name is unique.');
+    } finally {
+      setSavingSubRole(false);
+    }
   };
 
   const updateStatus = async (id, status) => {
@@ -1013,6 +1038,50 @@ export default function Dashboard() {
                                 </div>
                               );
                             })}
+                            
+                            {/* Quick Add Sub-role */}
+                            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                              <input 
+                                className="form-input" 
+                                style={{ padding: '6px 12px', fontSize: '13px' }} 
+                                placeholder="Quick add sub-role (e.g. HR Manager)"
+                                value={quickAddSubRole[role._id] || ''}
+                                onChange={e => setQuickAddSubRole(p => ({ ...p, [role._id]: e.target.value }))}
+                                onKeyDown={e => e.key === 'Enter' && handleQuickAddSubRole(role)}
+                              />
+                              <button 
+                                className="btn btn-primary" 
+                                style={{ padding: '6px 14px', fontSize: '13px', flexShrink: 0, gap: '6px' }}
+                                disabled={savingSubRole || !quickAddSubRole[role._id]?.trim()}
+                                onClick={() => handleQuickAddSubRole(role)}
+                              >
+                                {savingSubRole && quickAddSubRole[role._id]?.trim() ? 'Adding...' : <><Plus size={14} /> Add</>}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        {/* Fallback Quick Add when there are no sub-roles yet */}
+                        {(!role.subRoles || role.subRoles.length === 0) && (
+                          <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Sub-role PDFs</div>
+                            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                              <input 
+                                className="form-input" 
+                                style={{ padding: '6px 12px', fontSize: '13px' }} 
+                                placeholder="Quick add sub-role (e.g. HR Manager)"
+                                value={quickAddSubRole[role._id] || ''}
+                                onChange={e => setQuickAddSubRole(p => ({ ...p, [role._id]: e.target.value }))}
+                                onKeyDown={e => e.key === 'Enter' && handleQuickAddSubRole(role)}
+                              />
+                              <button 
+                                className="btn btn-primary" 
+                                style={{ padding: '6px 14px', fontSize: '13px', flexShrink: 0, gap: '6px' }}
+                                disabled={savingSubRole || !quickAddSubRole[role._id]?.trim()}
+                                onClick={() => handleQuickAddSubRole(role)}
+                              >
+                                {savingSubRole && quickAddSubRole[role._id]?.trim() ? 'Adding...' : <><Plus size={14} /> Add</>}
+                              </button>
+                            </div>
                           </div>
                         )}
                       </>
