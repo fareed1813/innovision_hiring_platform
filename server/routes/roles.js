@@ -172,69 +172,97 @@ router.post('/parse-jd', authMiddleware, upload.single('pdf'), async (req, res) 
     let extractedName = '';
     let extractedDescription = '';
 
+    // Split text into lines, trim, and remove empty lines
     const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     
-    // Heuristic for Role Name
-    const titleRegex = /^(?:Job Title|Role|Position|Title)\s*:\s*(.+)$/i;
+    // -- IMPROVED HEURISTIC FOR ROLE NAME --
+    // Look for explicit tags first (case-insensitive, allowing spaces and hyphens)
+    const titleRegex = /(?:Job Title|Role|Position|Title)[\s:-]+(.+)/i;
     for (const line of lines) {
       const match = line.match(titleRegex);
-      if (match && match[1]) {
+      if (match && match[1] && match[1].length < 100) {
         extractedName = match[1].trim();
         break;
       }
     }
     
-    // Fallback for Role Name: first reasonably short, non-empty line
+    // Fallback: analyze the first few lines to find something that looks like a title
     if (!extractedName) {
-      for (const line of lines) {
-        if (line.length < 60 && !line.toLowerCase().includes('description') && !line.toLowerCase().includes('innovision')) {
-          extractedName = line;
-          break;
-        }
+      const skipWords = ['job description', 'page', 'innovision', 'confidential', 'hiring', 'proposal', 'overview'];
+      for (let i = 0; i < Math.min(10, lines.length); i++) {
+        const line = lines[i];
+        const lowerLine = line.toLowerCase();
+        
+        // Skip obvious non-titles
+        if (skipWords.some(w => lowerLine.includes(w))) continue;
+        if (line.length > 60 || line.length < 3) continue; // Too long or short
+        
+        // Prefer lines that are Title Case or ALL CAPS, or just the first valid short string
+        extractedName = line;
+        break;
       }
     }
 
-    // Heuristic for Description
-    const descRegex = /^(?:Description|About the Role|Summary|Job Summary|Overview)\s*[:\n\-]?/i;
+    // -- IMPROVED HEURISTIC FOR DESCRIPTION --
+    // Common headers for descriptions
+    const descHeaderRegex = /^(?:Description|About the Role|Summary|Job Summary|Overview|About the Job|The Role|Position Overview)[\s:-]*/i;
+    // Common headers for sections that come AFTER the description
+    const nextSectionRegex = /^(?:Requirements|Qualifications|Responsibilities|Duties|Benefits|Salary|What You'll Do|What You Will Do|Skills|Experience)[\s:-]*/i;
+    
     let foundDescHeader = false;
     let descLines = [];
 
     for (let i = 0; i < lines.length; i++) {
-      if (!foundDescHeader && descRegex.test(lines[i])) {
+      const line = lines[i];
+      
+      if (!foundDescHeader && descHeaderRegex.test(line)) {
         foundDescHeader = true;
-        // If the description is on the same line (e.g. "Description: We are looking for...")
-        const inlineDesc = lines[i].replace(descRegex, '').trim();
-        if (inlineDesc.length > 20) {
+        // Check if there is text on the same line after the header
+        const inlineDesc = line.replace(descHeaderRegex, '').trim();
+        if (inlineDesc.length > 15) {
           descLines.push(inlineDesc);
         }
         continue;
       }
       
       if (foundDescHeader) {
-        // Stop if we hit another obvious header
-        if (/^(?:Requirements|Qualifications|Responsibilities|Duties|Benefits|Salary)\s*:/i.test(lines[i])) {
+        // Stop if we hit the next major section header
+        if (nextSectionRegex.test(line) && line.length < 50) {
           break;
         }
-        descLines.push(lines[i]);
-        if (descLines.join(' ').length > 400) break; // Don't grab too much
+        descLines.push(line);
+        // Stop if we've accumulated enough (around 800 chars)
+        if (descLines.join(' ').length > 800) break;
       }
     }
 
-    // Fallback for Description: Grab the first large paragraph if no headers found
+    // Fallback for Description: If no explicit headers found, find the first substantial paragraph
     if (descLines.length === 0) {
+      let gathering = false;
       for (const line of lines) {
-        if (line.length > 100) {
-          extractedDescription = line;
+        // A substantial paragraph is usually long and doesn't look like a header
+        if (line.length > 80 && !nextSectionRegex.test(line)) {
+          gathering = true;
+          descLines.push(line);
+        } else if (gathering && line.length > 30) {
+          // Keep gathering if the next line is also text
+          descLines.push(line);
+        } else if (gathering) {
+          // Break once the paragraph ends
           break;
         }
+        if (descLines.join(' ').length > 800) break;
       }
-    } else {
-      extractedDescription = descLines.join(' ');
     }
 
-    // Cleanup extracted text
-    if (extractedName.length > 100) extractedName = extractedName.substring(0, 100) + '...';
-    if (extractedDescription.length > 500) extractedDescription = extractedDescription.substring(0, 500) + '...';
+    extractedDescription = descLines.join(' ').trim();
+
+    // -- FINAL CLEANUP --
+    extractedName = extractedName.replace(/\s+/g, ' ').replace(/[^\w\s\-,&/()]/g, '');
+    extractedDescription = extractedDescription.replace(/\s+/g, ' ');
+
+    if (extractedName.length > 100) extractedName = extractedName.substring(0, 100).trim() + '...';
+    if (extractedDescription.length > 1000) extractedDescription = extractedDescription.substring(0, 1000).trim() + '...';
 
     res.json({
       name: extractedName || '',
