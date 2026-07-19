@@ -76,6 +76,12 @@ export default function Dashboard() {
   const [attachmentError, setAttachmentError] = useState('');
   const pdfInputRef = useRef(null);
 
+  // Sub-role PDF state
+  const [expandedSubRole, setExpandedSubRole] = useState(null); // 'roleId:subKey'
+  const [uploadingSubPdf, setUploadingSubPdf] = useState(false);
+  const [subAttachmentError, setSubAttachmentError] = useState('');
+  const subPdfInputRef = useRef(null);
+
   const toggleCompare = (id) => {
     setCompareSelection(prev => {
       if (prev.includes(id)) return prev.filter(x => x !== id);
@@ -292,6 +298,55 @@ export default function Dashboard() {
       await api.delete(`/roles/${roleId}/attachments/${attId}`);
       fetchAllRoles();
     } catch (err) { console.error(err); }
+  };
+
+  // ── Sub-role PDF Attachments ──
+  const handleSubPdfUpload = async (roleId, subKey, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') {
+      setSubAttachmentError('Only PDF files are accepted.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setSubAttachmentError('File too large. Max 10 MB.');
+      return;
+    }
+    setUploadingSubPdf(true);
+    setSubAttachmentError('');
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      try {
+        await api.post(`/roles/${roleId}/subroles/${subKey}/attachments`, {
+          fileName: file.name,
+          fileData: reader.result,
+          mimeType: file.type,
+        });
+        fetchAllRoles();
+      } catch (err) {
+        setSubAttachmentError(err.response?.data?.error || 'Upload failed.');
+      } finally {
+        setUploadingSubPdf(false);
+        if (subPdfInputRef.current) subPdfInputRef.current.value = '';
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDeleteSubAttachment = async (roleId, subKey, attId) => {
+    if (!window.confirm('Remove this sub-role attachment?')) return;
+    try {
+      await api.delete(`/roles/${roleId}/subroles/${subKey}/attachments/${attId}`);
+      fetchAllRoles();
+    } catch (err) { console.error(err); }
+  };
+
+  const handleDownloadSubPdf = (roleId, subKey, attId, fileName) => {
+    const link = document.createElement('a');
+    link.href = `${api.defaults.baseURL}/roles/${roleId}/subroles/${subKey}/attachments/${attId}`;
+    link.download = fileName;
+    link.target = '_blank';
+    link.click();
   };
 
   const updateStatus = async (id, status) => {
@@ -865,6 +920,99 @@ export default function Dashboard() {
                                 ))}
                               </div>
                             )}
+                          </div>
+                        )}
+
+                        {/* ── Sub-role PDF Panels ── */}
+                        {role.subRoles && role.subRoles.length > 0 && (
+                          <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+                            <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>Sub-role PDFs</div>
+                            {role.subRoles.map(sub => {
+                              const panelKey = `${role._id}:${sub.key}`;
+                              const isOpen = expandedSubRole === panelKey;
+                              return (
+                                <div key={sub.key} style={{ marginBottom: '8px', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
+                                  {/* Sub-role row */}
+                                  <div
+                                    style={{
+                                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                      padding: '8px 12px',
+                                      background: isOpen ? 'rgba(209,43,43,0.05)' : 'var(--surface)',
+                                      cursor: 'pointer'
+                                    }}
+                                    onClick={() => setExpandedSubRole(isOpen ? null : panelKey)}
+                                  >
+                                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>{sub.label}</span>
+                                    <span style={{
+                                      display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                      fontSize: '11px', fontWeight: 700,
+                                      color: isOpen ? 'var(--brand-red)' : 'var(--muted)',
+                                      padding: '3px 8px', borderRadius: '6px',
+                                      background: isOpen ? 'rgba(209,43,43,0.08)' : 'var(--border)'
+                                    }}>
+                                      <Paperclip size={11} /> PDF ({sub.attachments?.length || 0})
+                                    </span>
+                                  </div>
+                                  {/* Expanded sub-role PDF panel */}
+                                  {isOpen && (
+                                    <div style={{ padding: '12px 14px', background: 'var(--white)', borderTop: '1px solid var(--border)', animation: 'slide-up 0.2s ease' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                        <span style={{ fontSize: '12px', color: 'var(--muted)' }}>PDFs for <strong>{sub.label}</strong></span>
+                                        <label
+                                          htmlFor={`sub-pdf-${role._id}-${sub.key}`}
+                                          style={{
+                                            display: 'inline-flex', alignItems: 'center', gap: '5px',
+                                            padding: '5px 12px', borderRadius: '7px',
+                                            background: 'var(--brand-red)', color: '#fff',
+                                            fontSize: '11px', fontWeight: 700,
+                                            cursor: uploadingSubPdf ? 'not-allowed' : 'pointer',
+                                            opacity: uploadingSubPdf ? 0.6 : 1
+                                          }}
+                                        >
+                                          <Upload size={11} />
+                                          {uploadingSubPdf ? 'Uploading...' : 'Upload PDF'}
+                                        </label>
+                                        <input
+                                          id={`sub-pdf-${role._id}-${sub.key}`}
+                                          ref={subPdfInputRef}
+                                          type="file"
+                                          accept="application/pdf"
+                                          style={{ display: 'none' }}
+                                          onChange={e => handleSubPdfUpload(role._id, sub.key, e)}
+                                          disabled={uploadingSubPdf}
+                                        />
+                                      </div>
+                                      {subAttachmentError && (
+                                        <div style={{ color: 'var(--danger)', fontSize: '12px', marginBottom: '8px', fontWeight: 500 }}>{subAttachmentError}</div>
+                                      )}
+                                      {(!sub.attachments || sub.attachments.length === 0) ? (
+                                        <div style={{ textAlign: 'center', padding: '16px', color: 'var(--muted)', fontSize: '12px' }}>No PDFs yet for this sub-role.</div>
+                                      ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                          {sub.attachments.map(att => (
+                                            <div key={att._id} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--surface)', borderRadius: '8px', padding: '8px 12px', border: '1px solid var(--border)' }}>
+                                              <FileText size={14} style={{ color: 'var(--brand-red)', flexShrink: 0 }} />
+                                              <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{att.fileName}</div>
+                                                <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '1px' }}>
+                                                  {att.uploadedAt ? new Date(att.uploadedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
+                                                </div>
+                                              </div>
+                                              <button className="btn btn-sm btn-ghost" style={{ gap: '4px' }} onClick={() => handleDownloadSubPdf(role._id, sub.key, att._id, att.fileName)}>
+                                                <Download size={12} /> Download
+                                              </button>
+                                              <button className="btn btn-sm btn-ghost" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteSubAttachment(role._id, sub.key, att._id)}>
+                                                <Trash2 size={12} />
+                                              </button>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                       </>

@@ -193,17 +193,23 @@ export default function Landing() {
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                               <span style={{ fontWeight: 700, color: 'var(--text)' }}>{sub.label}</span>
-                              {role.attachments && role.attachments.length > 0 && (
+                              {((sub.attachments && sub.attachments.length > 0) || (role.attachments && role.attachments.length > 0)) && (
                                 <span
                                   role="button"
                                   onClick={e => {
                                     e.stopPropagation();
+                                    const hasSub = sub.attachments && sub.attachments.length > 0;
                                     setPdfModal({
                                       title: `${role.name} — ${sub.label}`,
-                                      attachments: role.attachments.map(att => ({
-                                        label: att.fileName,
-                                        url: `${apiBaseUrl}/api/roles/${role._id}/attachments/${att._id}`
-                                      }))
+                                      attachments: hasSub
+                                        ? sub.attachments.map(att => ({
+                                            label: att.fileName,
+                                            url: `${apiBaseUrl}/api/roles/${role._id}/subroles/${sub.key}/attachments/${att._id}`
+                                          }))
+                                        : role.attachments.map(att => ({
+                                            label: att.fileName,
+                                            url: `${apiBaseUrl}/api/roles/${role._id}/attachments/${att._id}`
+                                          }))
                                     });
                                   }}
                                   style={{

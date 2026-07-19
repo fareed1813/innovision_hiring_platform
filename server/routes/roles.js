@@ -13,7 +13,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.get('/', async (req, res) => {
   try {
     const roles = await JobRole.find({ active: true })
-      .select('-attachments.fileData') // Don't send binary data in the list
+      .select('-attachments.fileData -subRoles.attachments.fileData') // Don't send binary data in the list
       .sort({ createdAt: -1 })
       .lean();
     res.json(roles);
@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
 router.get('/all', authMiddleware, async (req, res) => {
   try {
     const roles = await JobRole.find()
-      .select('-attachments.fileData')
+      .select('-attachments.fileData -subRoles.attachments.fileData')
       .sort({ createdAt: -1 })
       .lean();
     res.json(roles);
@@ -243,6 +243,69 @@ router.post('/parse-jd', authMiddleware, upload.single('pdf'), async (req, res) 
   } catch (err) {
     console.error('Parse JD error:', err);
     res.status(500).json({ error: 'Failed to parse the PDF document.' });
+  }
+});
+
+/* ─── POST /api/roles/:id/subroles/:subKey/attachments — Upload PDF for a sub-role ─── */
+router.post('/:id/subroles/:subKey/attachments', authMiddleware, async (req, res) => {
+  try {
+    const { fileName, fileData, mimeType } = req.body;
+    if (!fileName || !fileData) {
+      return res.status(400).json({ error: 'fileName and fileData are required.' });
+    }
+    const role = await JobRole.findById(req.params.id);
+    if (!role) return res.status(404).json({ error: 'Role not found.' });
+    const sub = role.subRoles.find(s => s.key === req.params.subKey);
+    if (!sub) return res.status(404).json({ error: 'Sub-role not found.' });
+
+    sub.attachments.push({ fileName, fileData, mimeType: mimeType || 'application/pdf', uploadedAt: new Date() });
+    await role.save();
+
+    const added = sub.attachments[sub.attachments.length - 1];
+    res.status(201).json({
+      message: 'Sub-role attachment uploaded.',
+      attachment: { _id: added._id, fileName: added.fileName, mimeType: added.mimeType, uploadedAt: added.uploadedAt }
+    });
+  } catch (err) {
+    console.error('Upload sub-role attachment error:', err);
+    res.status(500).json({ error: 'Failed to upload sub-role attachment.' });
+  }
+});
+
+/* ─── GET /api/roles/:id/subroles/:subKey/attachments/:attId — Stream sub-role PDF ─── */
+router.get('/:id/subroles/:subKey/attachments/:attId', async (req, res) => {
+  try {
+    const role = await JobRole.findById(req.params.id);
+    if (!role) return res.status(404).json({ error: 'Role not found.' });
+    const sub = role.subRoles.find(s => s.key === req.params.subKey);
+    if (!sub) return res.status(404).json({ error: 'Sub-role not found.' });
+    const att = sub.attachments.id(req.params.attId);
+    if (!att) return res.status(404).json({ error: 'Attachment not found.' });
+
+    const base64Data = att.fileData.replace(/^data:[^;]+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    res.setHeader('Content-Type', att.mimeType || 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${att.fileName}"`);
+    res.send(buffer);
+  } catch (err) {
+    console.error('Stream sub-role attachment error:', err);
+    res.status(500).json({ error: 'Failed to stream sub-role attachment.' });
+  }
+});
+
+/* ─── DELETE /api/roles/:id/subroles/:subKey/attachments/:attId — Remove sub-role PDF ─── */
+router.delete('/:id/subroles/:subKey/attachments/:attId', authMiddleware, async (req, res) => {
+  try {
+    const role = await JobRole.findById(req.params.id);
+    if (!role) return res.status(404).json({ error: 'Role not found.' });
+    const sub = role.subRoles.find(s => s.key === req.params.subKey);
+    if (!sub) return res.status(404).json({ error: 'Sub-role not found.' });
+    sub.attachments.pull({ _id: req.params.attId });
+    await role.save();
+    res.json({ message: 'Sub-role attachment removed.' });
+  } catch (err) {
+    console.error('Delete sub-role attachment error:', err);
+    res.status(500).json({ error: 'Failed to delete sub-role attachment.' });
   }
 });
 

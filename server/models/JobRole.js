@@ -24,7 +24,8 @@ const jobRoleSchema = new mongoose.Schema({
   subRoles: [{
     key: { type: String, required: true },
     label: { type: String, required: true },
-    desc: { type: String, default: '' }
+    desc: { type: String, default: '' },
+    attachments: [attachmentSchema]
   }],
 
   // Short description shown on landing page / carousel
