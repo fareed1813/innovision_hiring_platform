@@ -84,6 +84,9 @@ export default function Dashboard() {
   
   const [quickAddSubRole, setQuickAddSubRole] = useState({}); // { roleId: 'text' }
   const [savingSubRole, setSavingSubRole] = useState(false);
+  
+  const [inlineEditSubRole, setInlineEditSubRole] = useState(null); // { roleId, subKey, label, desc }
+  const [savingInlineSubRole, setSavingInlineSubRole] = useState(false);
 
   const toggleCompare = (id) => {
     setCompareSelection(prev => {
@@ -371,6 +374,45 @@ export default function Dashboard() {
       alert('Failed to add sub-role. Ensure the name is unique.');
     } finally {
       setSavingSubRole(false);
+    }
+  };
+
+  const handleSaveInlineSubRole = async () => {
+    if (!inlineEditSubRole || !inlineEditSubRole.label.trim()) return;
+    setSavingInlineSubRole(true);
+    try {
+      const role = allRoles.find(r => r._id === inlineEditSubRole.roleId);
+      if (!role) return;
+      
+      const updatedSubRoles = role.subRoles.map(sub => {
+        if (sub.key === inlineEditSubRole.subKey) {
+          return { ...sub, label: inlineEditSubRole.label, desc: inlineEditSubRole.desc };
+        }
+        return sub;
+      });
+
+      await api.patch(`/roles/${role._id}`, { subRoles: updatedSubRoles });
+      setInlineEditSubRole(null);
+      fetchAllRoles();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update sub-role.');
+    } finally {
+      setSavingInlineSubRole(false);
+    }
+  };
+
+  const handleDeleteInlineSubRole = async (roleId, subKey) => {
+    if (!window.confirm("Are you sure you want to delete this sub-role?")) return;
+    try {
+      const role = allRoles.find(r => r._id === roleId);
+      if (!role) return;
+      const updatedSubRoles = role.subRoles.filter(sub => sub.key !== subKey);
+      await api.patch(`/roles/${roleId}`, { subRoles: updatedSubRoles });
+      fetchAllRoles();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete sub-role.");
     }
   };
 
@@ -965,18 +1007,70 @@ export default function Dashboard() {
                                       background: isOpen ? 'rgba(209,43,43,0.05)' : 'var(--surface)',
                                       cursor: 'pointer'
                                     }}
-                                    onClick={() => setExpandedSubRole(isOpen ? null : panelKey)}
+                                    onClick={(e) => {
+                                      // Don't expand accordion if clicking edit buttons or if editing
+                                      if (e.target.closest('.sub-action-btn') || (inlineEditSubRole && inlineEditSubRole.roleId === role._id && inlineEditSubRole.subKey === sub.key)) return;
+                                      setExpandedSubRole(isOpen ? null : panelKey);
+                                    }}
                                   >
-                                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>{sub.label}</span>
-                                    <span style={{
-                                      display: 'inline-flex', alignItems: 'center', gap: '4px',
-                                      fontSize: '11px', fontWeight: 700,
-                                      color: isOpen ? 'var(--brand-red)' : 'var(--muted)',
-                                      padding: '3px 8px', borderRadius: '6px',
-                                      background: isOpen ? 'rgba(209,43,43,0.08)' : 'var(--border)'
-                                    }}>
-                                      <Paperclip size={11} /> PDF ({sub.attachments?.length || 0})
-                                    </span>
+                                    {inlineEditSubRole && inlineEditSubRole.roleId === role._id && inlineEditSubRole.subKey === sub.key ? (
+                                      <div style={{ display: 'flex', gap: '8px', flex: 1, alignItems: 'center' }}>
+                                        <input 
+                                          className="form-input" 
+                                          style={{ padding: '4px 8px', fontSize: '12px', flex: 1 }}
+                                          value={inlineEditSubRole.label}
+                                          onChange={e => setInlineEditSubRole(p => ({ ...p, label: e.target.value }))}
+                                          autoFocus
+                                        />
+                                        <input 
+                                          className="form-input" 
+                                          style={{ padding: '4px 8px', fontSize: '12px', flex: 2 }}
+                                          placeholder="Description..."
+                                          value={inlineEditSubRole.desc}
+                                          onChange={e => setInlineEditSubRole(p => ({ ...p, desc: e.target.value }))}
+                                        />
+                                        <div className="sub-action-btn" style={{ display: 'flex', gap: '6px' }}>
+                                          <button className="btn btn-primary" style={{ padding: '4px 10px', fontSize: '11px', height: 'auto' }} onClick={handleSaveInlineSubRole} disabled={savingInlineSubRole}>Save</button>
+                                          <button className="btn btn-ghost" style={{ padding: '4px 8px', fontSize: '11px', height: 'auto' }} onClick={() => setInlineEditSubRole(null)}>Cancel</button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                                          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>{sub.label}</span>
+                                          {sub.desc && <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 400 }}>— {sub.desc}</span>}
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                          <div className="sub-action-btn" style={{ display: 'flex', gap: '4px' }}>
+                                            <button 
+                                              className="btn btn-sm btn-ghost" 
+                                              title="Edit sub-role" 
+                                              style={{ padding: '4px', height: 'auto' }}
+                                              onClick={(e) => { e.stopPropagation(); setInlineEditSubRole({ roleId: role._id, subKey: sub.key, label: sub.label, desc: sub.desc || '' }); }}
+                                            >
+                                              <Edit2 size={13} />
+                                            </button>
+                                            <button 
+                                              className="btn btn-sm btn-ghost" 
+                                              title="Delete sub-role" 
+                                              style={{ padding: '4px', height: 'auto', color: 'var(--danger)' }}
+                                              onClick={(e) => { e.stopPropagation(); handleDeleteInlineSubRole(role._id, sub.key); }}
+                                            >
+                                              <Trash2 size={13} />
+                                            </button>
+                                          </div>
+                                          <span style={{
+                                            display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                            fontSize: '11px', fontWeight: 700,
+                                            color: isOpen ? 'var(--brand-red)' : 'var(--muted)',
+                                            padding: '3px 8px', borderRadius: '6px',
+                                            background: isOpen ? 'rgba(209,43,43,0.08)' : 'var(--border)'
+                                          }}>
+                                            <Paperclip size={11} /> PDF ({sub.attachments?.length || 0})
+                                          </span>
+                                        </div>
+                                      </>
+                                    )}
                                   </div>
                                   {/* Expanded sub-role PDF panel */}
                                   {isOpen && (
