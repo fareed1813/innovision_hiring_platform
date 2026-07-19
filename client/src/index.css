@@ -525,7 +525,6 @@ body.hide-navbar .navbar {
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
-  overflow: hidden;
 }
 
 .role-card::before {
