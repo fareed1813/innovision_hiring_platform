@@ -135,7 +135,7 @@ router.get('/:id/attachments/:attachmentId', async (req, res) => {
     const buffer = Buffer.from(base64Data, 'base64');
 
     res.setHeader('Content-Type', att.mimeType || 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${att.fileName}"`);
+    res.setHeader('Content-Disposition', `inline; filename="${att.fileName}"`);
     res.send(buffer);
   } catch (err) {
     console.error('Download attachment error:', err);
